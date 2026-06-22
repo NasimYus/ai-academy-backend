@@ -9,12 +9,18 @@ from app.core.security import (
 )
 from app.repositories import users as users_repo
 from app.schemas.auth import LoginRequest, RegisterResponse, Token
+from app.schemas.common import error_responses
 from app.schemas.user import UserCreate, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=RegisterResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(status.HTTP_409_CONFLICT),
+)
 async def register(payload: UserCreate, db: DbSession) -> RegisterResponse:
     existing = await users_repo.get_by_email(db, payload.email)
     if existing:
@@ -27,7 +33,10 @@ async def register(payload: UserCreate, db: DbSession) -> RegisterResponse:
     return RegisterResponse(user_id=user.id, verification_token=token)
 
 
-@router.post("/verify")
+@router.post(
+    "/verify",
+    responses=error_responses(status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND),
+)
 async def verify_email(token: str, db: DbSession) -> dict[str, str]:
     subject = decode_token(token, expected_purpose=VERIFY_EMAIL)
     if subject is None:
@@ -41,7 +50,11 @@ async def verify_email(token: str, db: DbSession) -> dict[str, str]:
     return {"detail": "Email verified"}
 
 
-@router.post("/login", response_model=Token)
+@router.post(
+    "/login",
+    response_model=Token,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+)
 async def login(payload: LoginRequest, db: DbSession) -> Token:
     user = await users_repo.get_by_email(db, payload.email)
     if user is None or not verify_password(payload.password, user.hashed_password):
@@ -53,6 +66,10 @@ async def login(payload: LoginRequest, db: DbSession) -> Token:
     return Token(access_token=create_token(str(user.id)))
 
 
-@router.get("/me", response_model=UserRead)
+@router.get(
+    "/me",
+    response_model=UserRead,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED),
+)
 async def me(current_user: CurrentUser) -> UserRead:
     return current_user
