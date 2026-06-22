@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, DbSession
@@ -9,11 +11,12 @@ from app.repositories import users as users_repo
 from app.schemas.auth import (
     AuthToken,
     LoginRequest,
+    LoginResponse,
+    LogoutResult,
     RegisterStep1,
     RegisterStep1Response,
     RegisterStep2,
     RegisterStep3,
-    Token,
     VerificationConfirm,
     VerificationResult,
 )
@@ -143,18 +146,67 @@ async def verification(payload: VerificationConfirm, db: DbSession) -> Verificat
 
 @router.post(
     "/login",
-    response_model=Token,
+    response_model=LoginResponse,
     responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
 )
-async def login(payload: LoginRequest, db: DbSession) -> Token:
-    user = await users_repo.get_by_email(db, payload.email)
+async def login(payload: LoginRequest, db: DbSession) -> LoginResponse:
+    field = verification_svc.detect_field(payload.username)
+    value = payload.username.lstrip("+") if field == "mobile" else payload.username
+
+    user = await users_repo.get_by_field(db, field, value)
     if user is None or not verify_password(payload.password, user.password or ""):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password"
         )
+
+    # Ban check, with auto-unban once the ban window has elapsed.
+    if user.ban and user.ban_end_at is not None:
+        now = datetime.now(timezone.utc)
+        if user.ban_end_at > now:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="banned_account")
+        user.ban = False
+        user.ban_start_at = None
+        user.ban_end_at = None
+        await db.commit()
+
+    # Inactive accounts trigger a fresh verification code instead of logging in.
     if user.status != UserStatus.active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account disabled")
-    return Token(access_token=create_token(str(user.id)))
+        await verification_svc.check_confirmed(
+            db,
+            user=user,
+            field=field,
+            value=f"+{value}" if field == "mobile" else value,
+        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_verified")
+
+    # Device limit (legacy security setting; off by default).
+    if settings.login_device_limit and user.logged_count >= settings.number_of_allowed_devices:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="limit_account")
+
+    user.logged_count += 1
+    # TODO(Phase 5): UserFirebaseSessions row + login-history entry.
+    await db.commit()
+
+    profile_completion = [] if user.full_name else ["full_name"]
+    return LoginResponse(
+        access_token=create_token(str(user.id)),
+        user_id=user.id,
+        profile_completion=profile_completion,
+    )
+
+
+@router.post(
+    "/logout",
+    response_model=LogoutResult,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED),
+)
+async def logout(current_user: CurrentUser, db: DbSession) -> LogoutResult:
+    if current_user.logged_count > 0:
+        current_user.logged_count -= 1
+    # TODO: delete the UserFirebaseSessions row and add the JWT to a denylist
+    # once those subsystems land (stateless JWT has no server-side revocation yet).
+    await db.commit()
+    return LogoutResult()
 
 
 @router.get(

@@ -2,8 +2,19 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    username: str  # email or mobile (legacy parity)
     password: str
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: int
+    profile_completion: list[str] = []
+
+
+class LogoutResult(BaseModel):
+    status: str = "logout"
 
 
 class Token(BaseModel):

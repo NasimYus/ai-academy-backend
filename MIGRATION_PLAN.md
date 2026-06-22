@@ -52,10 +52,14 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] API: типы перегенерированы  [x] FE: `features/auth/register` (3-шаговая форма) + `pages/register` + route + ссылки login↔register
   - [x] test: smoke step1→2→3→login→me + wrong-code/already-registered/short-pw
   - [ ] admin (управление верификацией/настройками)
-- [ ] **1.2 Forgot / reset password**
+- [x] **1.2 Login (email/mobile, ban, device-limit) + logout** — паритет легаси
+  - [x] BE: вход по email/mobile, бан с авторазбаном, неактивный→`not_verified`(+код),
+        device-limit (settings-гейт), `logged_count`, `profile_completion`; `/logout` (logged_count--)
+  - [x] BE-заглушки: UserFirebaseSessions, история входов, JWT-denylist (Phase 5 / infra)
+  - [x] API типы перегенерированы  [x] FE: login шлёт `username`; `features/auth/logout` (server logout→очистка сессии), Header
+  - [x] test: login active/wrong-pw/pending(not_verified) + logout
+- [ ] **1.3 Forgot / reset password**
   - [ ] BE (токен + email)  [ ] FE `features/auth/reset-password`  [ ] test
-- [ ] **1.3 Logout / стратегия токена** (stateless JWT, refresh — решить)
-  - [ ] BE  [ ] FE (очистка сессии)  [ ] test
 - [ ] **1.4 Профиль: get/update, смена пароля, загрузка аватара**
   - [ ] BE `profile-setting` endpoints  [ ] FE `entities/user` + `pages/profile`  [ ] test  [ ] admin (users)
 - [ ] **1.5 Роли и гварды доступа** (student/teacher/admin → FastAPI-зависимости; на фронте — route guards)

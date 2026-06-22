@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     # Default value of the per-user `affiliate` flag at registration (Phase 5).
     users_affiliate_status: bool = False
 
+    # --- login (legacy security settings parity) ---
+    login_device_limit: bool = False
+    number_of_allowed_devices: int = 1
+
     # Comma-separated in env; use `cors_origins` (the parsed list) in code.
     cors_origins_raw: str = "http://localhost:3000,http://localhost:5173"
 
