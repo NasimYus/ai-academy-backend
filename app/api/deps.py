@@ -1,0 +1,45 @@
+from typing import Annotated
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.core.security import ACCESS, decode_token
+from app.models.user import User, UserRole
+from app.repositories import users as users_repo
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+
+
+async def get_current_user(
+    db: DbSession, token: Annotated[str, Depends(oauth2_scheme)]
+) -> User:
+    credentials_exc = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    subject = decode_token(token, expected_purpose=ACCESS)
+    if subject is None:
+        raise credentials_exc
+    user = await users_repo.get_by_id(db, int(subject))
+    if user is None or not user.is_active:
+        raise credentials_exc
+    return user
+
+
+CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def require_role(*roles: UserRole):
+    async def checker(user: CurrentUser) -> User:
+        if user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+            )
+        return user
+
+    return checker
