@@ -1,3 +1,5 @@
+import secrets
+import string
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, status
@@ -7,9 +9,12 @@ from app.core.config import settings
 from app.core.security import create_token, hash_password, verify_password
 from app.models.role import Role
 from app.models.user import UserStatus
+from app.repositories import password_resets as password_resets_repo
 from app.repositories import users as users_repo
 from app.schemas.auth import (
     AuthToken,
+    ForgotPasswordRequest,
+    ForgotPasswordResult,
     LoginRequest,
     LoginResponse,
     LogoutResult,
@@ -17,9 +22,16 @@ from app.schemas.auth import (
     RegisterStep1Response,
     RegisterStep2,
     RegisterStep3,
+    ResetPasswordRequest,
+    ResetPasswordResult,
     VerificationConfirm,
     VerificationResult,
 )
+
+
+def _random_password(length: int = 6) -> str:
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 from app.schemas.common import error_responses
 from app.schemas.user import UserRead
 from app.services import verification as verification_svc
@@ -142,6 +154,71 @@ async def verification(payload: VerificationConfirm, db: DbSession) -> Verificat
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid or expired code"
         )
     return VerificationResult()
+
+
+@router.post(
+    "/forget-password",
+    response_model=ForgotPasswordResult,
+    responses=error_responses(status.HTTP_404_NOT_FOUND, status.HTTP_422_UNPROCESSABLE_ENTITY),
+)
+async def forget_password(payload: ForgotPasswordRequest, db: DbSession) -> ForgotPasswordResult:
+    if payload.type == "mobile":
+        if not payload.mobile or not payload.country_code:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="mobile and country_code are required",
+            )
+        mobile = payload.country_code.lstrip("+") + payload.mobile.lstrip("0")
+        user = await users_repo.get_by_mobile(db, mobile)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="mobile not found")
+        # Legacy generates a new password and SMSes it. SMS delivery is deferred (F.3).
+        new_password = _random_password(6)
+        user.password = hash_password(new_password)
+        await db.commit()
+        return ForgotPasswordResult(
+            status="done", new_password=new_password if settings.debug else None
+        )
+
+    # email flow
+    if not payload.email:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="email is required"
+        )
+    user = await users_repo.get_by_email(db, payload.email)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="email not found")
+
+    token = secrets.token_urlsafe(45)  # ~60 chars, like legacy Str::random(60)
+    await password_resets_repo.create(db, email=payload.email, token=token)
+    # Email delivery is deferred (F.3); the token is surfaced in debug for testing.
+    return ForgotPasswordResult(status="done", token=token if settings.debug else None)
+
+
+@router.post(
+    "/reset-password/{token}",
+    response_model=ResetPasswordResult,
+    responses=error_responses(status.HTTP_422_UNPROCESSABLE_ENTITY),
+)
+async def reset_password(
+    token: str, payload: ResetPasswordRequest, db: DbSession
+) -> ResetPasswordResult:
+    if payload.password != payload.password_confirmation:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="passwords do not match"
+        )
+
+    request_row = await password_resets_repo.find(db, email=payload.email, token=token)
+    if request_row is None:
+        # Legacy returns a benign response (no error) when the token is unknown.
+        return ResetPasswordResult(status="no_request")
+
+    user = await users_repo.get_by_email(db, payload.email)
+    if user is not None:
+        user.password = hash_password(payload.password)
+    await password_resets_repo.delete_by_email(db, payload.email)
+    await db.commit()
+    return ResetPasswordResult(status="reset")
 
 
 @router.post(

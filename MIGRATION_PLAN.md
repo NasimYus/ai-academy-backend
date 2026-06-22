@@ -58,8 +58,12 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] BE-заглушки: UserFirebaseSessions, история входов, JWT-denylist (Phase 5 / infra)
   - [x] API типы перегенерированы  [x] FE: login шлёт `username`; `features/auth/logout` (server logout→очистка сессии), Header
   - [x] test: login active/wrong-pw/pending(not_verified) + logout
-- [ ] **1.3 Forgot / reset password**
-  - [ ] BE (токен + email)  [ ] FE `features/auth/reset-password`  [ ] test
+- [x] **1.3 Forgot / reset password** — паритет легаси
+  - [x] BE: `password_resets` таблица/модель/миграция; `/forget-password`
+        (email→токен / mobile→новый пароль) + `/reset-password/{token}`; доставка email/SMS — deferred (F.3), в debug токен/пароль в ответе
+  - [x] API типы перегенерированы  [x] FE: `features/auth/reset-password` (forgot+reset формы), `pages/forgot-password` + `pages/reset-password` + routes, ссылка со входа
+  - [x] test: forgot→reset→login, bad-token (benign), unknown-email 404, mismatch 422
+  - _mobile-flow UI отложен (register_method=email); API-паритет есть_
 - [ ] **1.4 Профиль: get/update, смена пароля, загрузка аватара**
   - [ ] BE `profile-setting` endpoints  [ ] FE `entities/user` + `pages/profile`  [ ] test  [ ] admin (users)
 - [ ] **1.5 Роли и гварды доступа** (student/teacher/admin → FastAPI-зависимости; на фронте — route guards)

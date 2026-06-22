@@ -65,3 +65,30 @@ class VerificationConfirm(BaseModel):
     username: str  # email or mobile
     code: str
     referral_code: str | None = None
+
+
+# --- forgot / reset password (legacy parity) ---
+
+
+class ForgotPasswordRequest(BaseModel):
+    type: str | None = None  # "mobile" or None/anything else => email
+    email: EmailStr | None = None
+    mobile: str | None = None
+    country_code: str | None = None
+
+
+class ForgotPasswordResult(BaseModel):
+    status: str  # "done"
+    # Delivery (email/SMS) is deferred; these are surfaced only in debug for testing.
+    token: str | None = None
+    new_password: str | None = None
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=6)
+    password_confirmation: str
+
+
+class ResetPasswordResult(BaseModel):
+    status: str  # "reset" | "no_request"
