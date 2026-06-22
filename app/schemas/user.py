@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models.user import UserRole
+from app.models.user import UserStatus
 
 
 class UserCreate(BaseModel):
@@ -15,9 +15,11 @@ class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    email: EmailStr
+    email: EmailStr | None
+    mobile: str | None
     full_name: str | None
-    role: UserRole
-    is_active: bool
-    is_verified: bool
+    role_name: str
+    status: UserStatus
+    verified: bool
+    avatar: str | None
     created_at: datetime

@@ -40,6 +40,11 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 
 ## Phase 1 — Auth & профиль
 
+- [x] **1.0 User-модель под паритет + roles + миграция**
+  - [x] BE: `roles` (+сид) и `users` (64 колонки, паритет легаси), Alembic-миграция применена
+  - [x] BE: реконсиляция schemas/repo/deps/routes (`status`/`verified`/`role_name`/`password`)
+  - [x] API: типы перегенерированы (`UserRead`)  [x] FE: сборка/линт/типы зелёные
+  - [x] test: smoke register→login→me против реальной БД
 - [ ] **1.1 Verification (код/токен)** — выровнять текущий verify с легаси-флоу подтверждения
   - [ ] BE endpoints  [ ] FE  [ ] test  [ ] admin
 - [ ] **1.2 Forgot / reset password**

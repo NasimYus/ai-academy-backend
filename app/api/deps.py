@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.security import ACCESS, decode_token
-from app.models.user import User, UserRole
+from app.models.user import User, UserStatus
 from app.repositories import users as users_repo
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -26,7 +26,7 @@ async def get_current_user(
     if subject is None:
         raise credentials_exc
     user = await users_repo.get_by_id(db, int(subject))
-    if user is None or not user.is_active:
+    if user is None or user.status != UserStatus.active:
         raise credentials_exc
     return user
 
@@ -34,9 +34,9 @@ async def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-def require_role(*roles: UserRole):
+def require_role(*role_names: str):
     async def checker(user: CurrentUser) -> User:
-        if user.role not in roles:
+        if user.role_name not in role_names:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
             )

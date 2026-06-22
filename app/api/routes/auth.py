@@ -7,6 +7,7 @@ from app.core.security import (
     decode_token,
     verify_password,
 )
+from app.models.user import UserStatus
 from app.repositories import users as users_repo
 from app.schemas.auth import LoginRequest, RegisterResponse, Token
 from app.schemas.common import error_responses
@@ -57,11 +58,11 @@ async def verify_email(token: str, db: DbSession) -> dict[str, str]:
 )
 async def login(payload: LoginRequest, db: DbSession) -> Token:
     user = await users_repo.get_by_email(db, payload.email)
-    if user is None or not verify_password(payload.password, user.hashed_password):
+    if user is None or not verify_password(payload.password, user.password or ""):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password"
         )
-    if not user.is_active:
+    if user.status != UserStatus.active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account disabled")
     return Token(access_token=create_token(str(user.id)))
 
