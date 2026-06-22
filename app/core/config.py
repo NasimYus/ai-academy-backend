@@ -16,6 +16,14 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     algorithm: str = "HS256"
 
+    # --- registration (legacy "general settings" parity) ---
+    # Which identifier registration uses: "email" or "mobile".
+    register_method: str = "email"
+    # When true, accounts are active immediately and codes are not required.
+    disable_registration_verification_process: bool = False
+    # Default value of the per-user `affiliate` flag at registration (Phase 5).
+    users_affiliate_status: bool = False
+
     # Comma-separated in env; use `cors_origins` (the parsed list) in code.
     cors_origins_raw: str = "http://localhost:3000,http://localhost:5173"
 

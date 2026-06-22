@@ -1,54 +1,144 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, DbSession
-from app.core.security import (
-    VERIFY_EMAIL,
-    create_token,
-    decode_token,
-    verify_password,
-)
+from app.core.config import settings
+from app.core.security import create_token, hash_password, verify_password
+from app.models.role import Role
 from app.models.user import UserStatus
 from app.repositories import users as users_repo
-from app.schemas.auth import LoginRequest, RegisterResponse, Token
+from app.schemas.auth import (
+    AuthToken,
+    LoginRequest,
+    RegisterStep1,
+    RegisterStep1Response,
+    RegisterStep2,
+    RegisterStep3,
+    Token,
+    VerificationConfirm,
+    VerificationResult,
+)
 from app.schemas.common import error_responses
-from app.schemas.user import UserCreate, UserRead
+from app.schemas.user import UserRead
+from app.services import verification as verification_svc
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post(
-    "/register",
-    response_model=RegisterResponse,
-    status_code=status.HTTP_201_CREATED,
-    responses=error_responses(status.HTTP_409_CONFLICT),
+    "/register/step/1",
+    response_model=RegisterStep1Response,
+    responses=error_responses(status.HTTP_409_CONFLICT, status.HTTP_422_UNPROCESSABLE_ENTITY),
 )
-async def register(payload: UserCreate, db: DbSession) -> RegisterResponse:
-    existing = await users_repo.get_by_email(db, payload.email)
-    if existing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+async def register_step_one(payload: RegisterStep1, db: DbSession) -> RegisterStep1Response:
+    # Determine the identifier type from what was sent.
+    if payload.mobile:
+        field = "mobile"
+    elif payload.email:
+        field = "email"
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="email or mobile is required"
+        )
+
+    if settings.register_method != field:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="invalid_register_method")
+
+    if payload.password != payload.password_confirmation:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="passwords do not match"
+        )
+
+    if field == "mobile":
+        if not payload.country_code:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="country_code is required"
+            )
+        value = payload.country_code.lstrip("+") + payload.mobile.lstrip("0")
+        verification_value = f"+{value}"
+    else:
+        value = payload.email
+        verification_value = payload.email
+
+    existing = await users_repo.get_by_field(db, field, value)
+    if existing is not None:
+        result = await verification_svc.check_confirmed(
+            db, user=existing, field=field, value=verification_value
+        )
+        existing.password = hash_password(payload.password)
+        await db.commit()
+        if result["status"] == "verified":
+            if existing.full_name:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT, detail="already_registered"
+                )
+            return RegisterStep1Response(status="go_step_3", user_id=existing.id)
+        return RegisterStep1Response(status="go_step_2", user_id=existing.id, code=result["code"])
+
     user = await users_repo.create(
-        db, email=payload.email, password=payload.password, full_name=payload.full_name
+        db,
+        email=value if field == "email" else None,
+        mobile=value if field == "mobile" else None,
+        password=payload.password,
+        role_name=Role.USER,
+        status=(
+            UserStatus.active
+            if settings.disable_registration_verification_process
+            else UserStatus.pending
+        ),
+        affiliate=settings.users_affiliate_status,
     )
-    # TODO: send this token by e-mail. Surfaced in the response for dev only.
-    token = create_token(str(user.id), purpose=VERIFY_EMAIL, expires_minutes=60 * 24)
-    return RegisterResponse(user_id=user.id, verification_token=token)
+    # NOTE(Phase 5): custom form fields / certificate meta are skipped until those
+    # subsystems are ported (no-op on a clean install, as in legacy).
+    result = await verification_svc.check_confirmed(
+        db, user=user, field=field, value=verification_value
+    )
+    return RegisterStep1Response(status="stored", user_id=user.id, code=result["code"])
 
 
 @router.post(
-    "/verify",
-    responses=error_responses(status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND),
+    "/register/step/2",
+    response_model=VerificationResult,
+    responses=error_responses(status.HTTP_404_NOT_FOUND, status.HTTP_422_UNPROCESSABLE_ENTITY),
 )
-async def verify_email(token: str, db: DbSession) -> dict[str, str]:
-    subject = decode_token(token, expected_purpose=VERIFY_EMAIL)
-    if subject is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token"
-        )
-    user = await users_repo.get_by_id(db, int(subject))
+async def register_step_two(payload: RegisterStep2, db: DbSession) -> VerificationResult:
+    user = await users_repo.get_by_id(db, payload.user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    await users_repo.set_verified(db, user)
-    return {"detail": "Email verified"}
+    value = user.email or user.mobile
+    if value is None or not await verification_svc.confirm_code(db, value=value, code=payload.code):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid or expired code"
+        )
+    return VerificationResult()
+
+
+@router.post(
+    "/register/step/3",
+    response_model=AuthToken,
+    responses=error_responses(status.HTTP_404_NOT_FOUND),
+)
+async def register_step_three(payload: RegisterStep3, db: DbSession) -> AuthToken:
+    user = await users_repo.get_by_id(db, payload.user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user.full_name = payload.full_name
+    # NOTE(Phase 5): registration bonus, reward accounting and referral handling
+    # are gated behind their settings (off on a clean install) — ported later.
+    await db.commit()
+    return AuthToken(access_token=create_token(str(user.id)), user_id=user.id)
+
+
+@router.post(
+    "/verification",
+    response_model=VerificationResult,
+    responses=error_responses(status.HTTP_422_UNPROCESSABLE_ENTITY),
+)
+async def verification(payload: VerificationConfirm, db: DbSession) -> VerificationResult:
+    if not await verification_svc.confirm_code(db, value=payload.username, code=payload.code):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid or expired code"
+        )
+    return VerificationResult()
 
 
 @router.post(

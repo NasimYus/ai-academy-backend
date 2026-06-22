@@ -45,8 +45,13 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] BE: реконсиляция schemas/repo/deps/routes (`status`/`verified`/`role_name`/`password`)
   - [x] API: типы перегенерированы (`UserRead`)  [x] FE: сборка/линт/типы зелёные
   - [x] test: smoke register→login→me против реальной БД
-- [ ] **1.1 Verification (код/токен)** — выровнять текущий verify с легаси-флоу подтверждения
-  - [ ] BE endpoints  [ ] FE  [ ] test  [ ] admin
+- [x] **1.1 Register (3 шага) + Verification по коду** — паритет легаси
+  - [x] BE: `verifications` таблица/модель/миграция; `check_confirmed`/`confirm_code`;
+        `/register/step/{1,2,3}` + `/verification`; settings-гейты (register_method,
+        disable_verification, users_affiliate); satellite (reward/affiliate/bonus/form-fields) — заглушки
+  - [x] API: типы перегенерированы  [x] FE: `features/auth/register` (3-шаговая форма) + `pages/register` + route + ссылки login↔register
+  - [x] test: smoke step1→2→3→login→me + wrong-code/already-registered/short-pw
+  - [ ] admin (управление верификацией/настройками)
 - [ ] **1.2 Forgot / reset password**
   - [ ] BE (токен + email)  [ ] FE `features/auth/reset-password`  [ ] test
 - [ ] **1.3 Logout / стратегия токена** (stateless JWT, refresh — решить)
