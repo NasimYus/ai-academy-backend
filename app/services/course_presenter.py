@@ -3,6 +3,7 @@
 Shared by the courses and search routes. Relationships must be eager-loaded by
 the repository (they are `lazy="raise"`).
 """
+
 from app.models.course import Course
 from app.schemas.course import CourseDetail, CourseRead, CourseTeacher
 

@@ -103,8 +103,11 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] FE: `widgets/course-filters` (категория/тип/сортировка/бесплатные) на странице курсов; `coursesQueryOptions(filters)`
   - [x] test: list active/public-only, filter free/type/downloadable, sort, search (+too-short)
   - _discount/filter_option/moreOptions фильтры → свои фазы; global-search UI отложен (endpoint готов)_
-- [ ] **2.4 Featured courses**
-  - [ ] BE  [ ] FE блок на главной  [ ] test  [ ] admin
+- [x] **2.4 Featured courses** — паритет легаси (FeatureWebinarController)
+  - [x] BE: `FeaturedCourse` модель/миграция (`a7b8c9d0e1f2`); `GET /featured-courses` (page home/home_categories + publish → brief активных публичных)
+  - [x] FE: `featuredCoursesQueryOptions` + блок «Рекомендуемые» на странице курсов
+  - [x] test: published-home only / pending+wrong-page excluded / empty
+  - [ ] admin (управление витриной)
 - [ ] **2.5 Instructors / providers + публичный профиль**
   - [ ] BE `instructors/organizations/{id}/profile`  [ ] FE `entities/instructor` + `pages/instructor`  [ ] test
 - [ ] **2.6 Reviews & comments (чтение)**

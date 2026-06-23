@@ -31,7 +31,7 @@
 - ✅ 🧪 **2.1** Categories + trend (`/categories`, `/trend-categories`; модели `Category`/`TrendCategory`)
 - ✅ 🧪 **2.2** Course detail: `Course` расширен под `webinars`-паритет (миграция `f6a7b8c9d0e1`), `GET /courses/{slug}` → `CourseDetail` (legacy brief+details; поздние секции — стабы), list → `brief`, `webinars_count` оживлён. Relationship'ы `lazy="raise"` + `selectinload` (greenlet-safe)
 - ✅ 🧪 **2.3** Filters на `GET /courses` (cat/free/type/upcoming/downloadable/reward/sort — column-backed; discount/filter_option/moreOptions → их фазы) + global `GET /search` (webinars/users/teachers/organizations, min 3 симв.); пресентер `course_presenter`
-- ⬜ **2.4** Featured courses
+- ✅ 🧪 **2.4** Featured (`GET /featured-courses`; `FeaturedCourse` модель/миграция; page home/home_categories + status publish → brief активных публичных курсов)
 - ⬜ **2.5** Instructors/providers + публичный профиль
 - ⬜ **2.6** Reviews & comments (чтение)
 

@@ -64,6 +64,31 @@ async def search_by_title(db: AsyncSession, query: str, limit: int = 50) -> list
     return list(result.scalars().all())
 
 
+async def list_featured(db: AsyncSession) -> list[Course]:
+    """Legacy FeatureWebinarController@index: home/home_categories, published.
+
+    Returns the related active, non-private courses (newest-featured first).
+    """
+    from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
+
+    result = await db.execute(
+        select(FeaturedCourse)
+        .join(Course, FeaturedCourse.course_id == Course.id)
+        .where(
+            FeaturedCourse.page.in_([FeaturedPage.home, FeaturedPage.home_categories]),
+            FeaturedCourse.status == FeaturedStatus.publish,
+            Course.status == CourseStatus.active,
+            Course.private.is_(False),
+        )
+        .options(
+            selectinload(FeaturedCourse.course).selectinload(Course.teacher),
+            selectinload(FeaturedCourse.course).selectinload(Course.category),
+        )
+        .order_by(FeaturedCourse.order.asc(), FeaturedCourse.updated_at.desc())
+    )
+    return [fc.course for fc in result.scalars().all()]
+
+
 async def get_by_slug(db: AsyncSession, slug: str) -> Course | None:
     """Legacy WebinarController@show: non-private match by slug."""
     result = await db.execute(
