@@ -14,9 +14,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
 
-async def get_current_user(
-    db: DbSession, token: Annotated[str, Depends(oauth2_scheme)]
-) -> User:
+async def get_current_user(db: DbSession, token: Annotated[str, Depends(oauth2_scheme)]) -> User:
     credentials_exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

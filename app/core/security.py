@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
@@ -29,8 +29,10 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_token(subject: str, purpose: str = ACCESS, expires_minutes: int | None = None) -> str:
-    minutes = expires_minutes if expires_minutes is not None else settings.access_token_expire_minutes
-    now = datetime.now(timezone.utc)
+    minutes = (
+        expires_minutes if expires_minutes is not None else settings.access_token_expire_minutes
+    )
+    now = datetime.now(UTC)
     payload = {
         "sub": subject,
         "purpose": purpose,

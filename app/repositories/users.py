@@ -69,9 +69,7 @@ async def get_by_provider_or_email(
 ) -> User | None:
     """Find a user by OAuth provider id (google_id/facebook_id) or email."""
     column = getattr(User, provider_field)
-    result = await db.execute(
-        select(User).where(or_(column == provider_id, User.email == email))
-    )
+    result = await db.execute(select(User).where(or_(column == provider_id, User.email == email)))
     return result.scalars().first()
 
 

@@ -4,6 +4,7 @@ Minimal disk-backed storage for uploads. Files are written under
 `settings.media_root` and served at `settings.media_url` (mounted in main).
 An S3-compatible backend can replace this later behind the same interface.
 """
+
 import uuid
 from pathlib import Path
 

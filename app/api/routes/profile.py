@@ -29,7 +29,9 @@ async def get_profile(current_user: CurrentUser) -> ProfileRead:
     response_model=ProfileRead,
     responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_409_CONFLICT),
 )
-async def update_profile(payload: ProfileUpdate, current_user: CurrentUser, db: DbSession) -> ProfileRead:
+async def update_profile(
+    payload: ProfileUpdate, current_user: CurrentUser, db: DbSession
+) -> ProfileRead:
     data = payload.model_dump(exclude_unset=True)
 
     # Uniqueness checks (excluding self), mirroring the legacy unique rules.
@@ -40,7 +42,9 @@ async def update_profile(payload: ProfileUpdate, current_user: CurrentUser, db: 
     if "mobile" in data and data["mobile"]:
         other = await users_repo.get_by_mobile(db, data["mobile"])
         if other is not None and other.id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="mobile already in use")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="mobile already in use"
+            )
 
     if "password" in data:
         current_user.password = hash_password(data.pop("password"))

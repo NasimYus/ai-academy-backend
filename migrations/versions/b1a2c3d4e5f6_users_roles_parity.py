@@ -9,6 +9,7 @@ Revises: 453e4ae9688e
 Create Date: 2026-06-22
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -38,7 +39,10 @@ def upgrade() -> None:
         sa.Column("users_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("is_admin", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -145,7 +149,10 @@ def upgrade() -> None:
         sa.Column("offline_message", sa.Text(), nullable=True),
         # timestamps
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
@@ -181,13 +188,14 @@ def downgrade() -> None:
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("full_name", sa.String(length=255), nullable=True),
         sa.Column("hashed_password", sa.String(length=255), nullable=False),
-        sa.Column(
-            "role", sa.Enum("student", "teacher", "admin", name="user_role"), nullable=False
-        ),
+        sa.Column("role", sa.Enum("student", "teacher", "admin", name="user_role"), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("is_verified", sa.Boolean(), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.PrimaryKeyConstraint("id"),
     )

@@ -5,9 +5,10 @@ is disabled); `confirm_code` validates a submitted code and activates the user.
 Code delivery (SMS/email) is a no-op outside production until the email/SMS
 infrastructure lands (F.2/F.3); in debug the code is surfaced to the caller.
 """
+
 import random
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +30,7 @@ def _new_code() -> str:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 async def check_confirmed(

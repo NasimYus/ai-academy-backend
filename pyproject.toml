@@ -31,6 +31,12 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+# Keep the explicit `str, Enum` pattern (used for Pydantic/SQLAlchemy enums).
+ignore = ["UP042"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# Share one event loop across the session so the async engine/pool isn't
+# bound to a per-test loop.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"

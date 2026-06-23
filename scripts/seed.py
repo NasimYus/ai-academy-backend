@@ -3,6 +3,7 @@
 Run with:  uv run python -m scripts.seed
 Idempotent — safe to run repeatedly.
 """
+
 import asyncio
 
 from app.core.database import AsyncSessionLocal

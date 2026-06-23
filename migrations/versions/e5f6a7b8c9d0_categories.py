@@ -5,6 +5,7 @@ Revises: d4e5f6a7b8c9
 Create Date: 2026-06-22
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -39,7 +40,10 @@ def upgrade() -> None:
         sa.Column("icon", sa.String(length=255), nullable=True),
         sa.Column("color", sa.String(length=32), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["category_id"], ["categories.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),

@@ -35,6 +35,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 - [x] BE: честные error-ответы в OpenAPI (`ErrorResponse`)
 - [x] FE: TanStack Start SPA, **FSD** + steiger, TanStack Query, Zustand-сессия, typed openapi-fetch
 - [x] FE: брендинг (токены, шрифты, header), login/courses страницы
+- [x] Тесты + CI: BE pytest (auth/profile/categories/guards) на Postgres; FE vitest
+      (store/guards/схемы); GitHub Actions `on: push` в обоих репо
 
 ---
 

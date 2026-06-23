@@ -13,9 +13,7 @@ async def create(db: AsyncSession, *, email: str, token: str) -> PasswordReset:
 
 async def find(db: AsyncSession, *, email: str, token: str) -> PasswordReset | None:
     result = await db.execute(
-        select(PasswordReset).where(
-            PasswordReset.email == email, PasswordReset.token == token
-        )
+        select(PasswordReset).where(PasswordReset.email == email, PasswordReset.token == token)
     )
     return result.scalars().first()
 

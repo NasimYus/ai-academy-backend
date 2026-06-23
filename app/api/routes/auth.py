@@ -1,6 +1,6 @@
 import secrets
 import string
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -29,8 +29,6 @@ from app.schemas.auth import (
     VerificationConfirm,
     VerificationResult,
 )
-
-
 from app.schemas.common import error_responses
 from app.schemas.user import UserRead
 from app.services import verification as verification_svc
@@ -225,7 +223,9 @@ async def reset_password(
     return ResetPasswordResult(status="reset")
 
 
-async def _oauth_callback(db: DbSession, provider_field: str, payload: OAuthCallback) -> OAuthResult:
+async def _oauth_callback(
+    db: DbSession, provider_field: str, payload: OAuthCallback
+) -> OAuthResult:
     # NOTE: like legacy, the posted profile is trusted as-is. Verifying the
     # provider token server-side is a hardening TODO.
     user = await users_repo.get_by_provider_or_email(
@@ -283,7 +283,7 @@ async def login(payload: LoginRequest, db: DbSession) -> LoginResponse:
 
     # Ban check, with auto-unban once the ban window has elapsed.
     if user.ban and user.ban_end_at is not None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if user.ban_end_at > now:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="banned_account")
         user.ban = False

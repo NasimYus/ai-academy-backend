@@ -5,6 +5,7 @@ Revises: b1a2c3d4e5f6
 Create Date: 2026-06-22
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -27,7 +28,10 @@ def upgrade() -> None:
         sa.Column("verified_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("expired_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
