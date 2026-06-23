@@ -29,6 +29,19 @@ async def create(
     return enrollment
 
 
+async def get(db: AsyncSession, *, user_id: int, course_id: int) -> Enrollment | None:
+    result = await db.execute(
+        select(Enrollment).where(Enrollment.user_id == user_id, Enrollment.course_id == course_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def course_ids_for_user(db: AsyncSession, user_id: int) -> list[int]:
+    """Ids of courses the user is enrolled in (legacy getPurchasedCoursesIds)."""
+    result = await db.execute(select(Enrollment.course_id).where(Enrollment.user_id == user_id))
+    return [row[0] for row in result.all()]
+
+
 async def list_courses_for_user(db: AsyncSession, user_id: int) -> list[Course]:
     """Courses the user is enrolled in (for 'my courses')."""
     result = await db.execute(

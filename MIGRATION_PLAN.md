@@ -137,8 +137,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 - [x] **3.4 Quizzes: прохождение + результаты** — паритет легаси (QuizzesController/QuizzesResultController, student-flow)
   - [x] BE `Quiz`/`QuizQuestion`/`QuizQuestionAnswer`/`QuizResult`+миграция; show/start/store-result/status/result + course-list; грейдинг (multiple/descriptive→waiting, negative_grade, max_attempt)  [x] FE `entities/quiz` + `features/take-quiz` (QuizRunner) + `pages/quiz`  [x] test  [ ] admin (CRUD, instructor-review) — Phase 6
   - NOTE: rewards (Phase 5), certificate issue (3.6), notifications (gated), instructor review/updateResult — отложено
-- [ ] **3.5 Assignments: список/сдача + сообщения**
-  - [ ] BE  [ ] FE `features/submit-assignment`  [ ] test  [ ] admin
+- [~] **3.5 Assignments: список/сдача + сообщения** — паритет легаси (AssignmentController/AssignmentHistoryMessageController, student-flow)
+  - [x] BE `Assignment`/`AssignmentHistory`/`AssignmentHistoryMessage`+миграция; show/course-list/my_assignments/messages(get+post); deadline+attempts гейт, access-gate, history-on-first-message  [ ] FE `features/submit-assignment`  [x] test  [ ] admin (грейдинг/review — Phase 6)
 - [ ] **3.6 Certificates** (achievements, validation, рендер/скачивание)
   - [ ] BE + генерация (PDF)  [ ] FE `pages/certificates`  [ ] test  [ ] admin (шаблоны)
 - [ ] **3.7 Personal notes**  — [ ] BE  [ ] FE  [ ] test

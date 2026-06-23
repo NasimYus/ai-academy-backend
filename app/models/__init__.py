@@ -1,3 +1,10 @@
+from app.models.assignment import (
+    Assignment,
+    AssignmentHistory,
+    AssignmentHistoryMessage,
+    AssignmentHistoryStatus,
+    AssignmentStatus,
+)
 from app.models.category import Category, TrendCategory
 from app.models.comment import Comment, CommentStatus
 from app.models.content import (
@@ -62,6 +69,11 @@ __all__ = [
     "QuizStatus",
     "QuestionType",
     "ResultStatus",
+    "Assignment",
+    "AssignmentStatus",
+    "AssignmentHistory",
+    "AssignmentHistoryStatus",
+    "AssignmentHistoryMessage",
     "Verification",
     "PasswordReset",
 ]
