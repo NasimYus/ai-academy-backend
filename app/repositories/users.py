@@ -20,6 +20,22 @@ async def get_by_mobile(db: AsyncSession, mobile: str) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def search(db: AsyncSession, query: str) -> list[User]:
+    """Legacy SearchController: active users matching name/email/mobile."""
+    like = f"%{query}%"
+    result = await db.execute(
+        select(User).where(
+            User.status == UserStatus.active,
+            or_(
+                User.full_name.ilike(like),
+                User.email.ilike(like),
+                User.mobile.ilike(like),
+            ),
+        )
+    )
+    return list(result.scalars().all())
+
+
 async def get_by_field(db: AsyncSession, field: str, value: str) -> User | None:
     """Look a user up by 'email' or 'mobile'."""
     if field == "mobile":

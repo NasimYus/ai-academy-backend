@@ -23,3 +23,15 @@ class UserRead(BaseModel):
     verified: bool
     avatar: str | None
     created_at: datetime
+
+
+class UserBrief(BaseModel):
+    """Public, minimal user card (legacy user->brief subset)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    full_name: str | None
+    role_name: str
+    avatar: str | None
+    headline: str | None

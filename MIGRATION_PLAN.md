@@ -98,8 +98,11 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] test: list(active/draft/private)/detail/404/private-hidden + categories webinars_count; FE tsc/lint/steiger/vitest/build зелёные
   - [ ] admin (курсы)
   - _greenlet-фикс из HANDOFF §7.1 закрыт превентивно: relationship'ы `lazy="raise"` + `selectinload(teacher,category)` в repo_
-- [ ] **2.3 Search & filters** (категория, цена, уровень, тип)
-  - [ ] BE `GET /search` + query-параметры  [ ] FE `widgets/course-filters` + `pages/catalog`  [ ] test
+- [x] **2.3 Search & filters** (категория, цена, тип, сортировка) — паритет легаси (handleFilters + SearchController)
+  - [x] BE: фильтры на `GET /courses` (cat/free/type/upcoming/downloadable/reward/sort, column-backed); `GET /search` (webinars/users/teachers/organizations); `course_presenter`
+  - [x] FE: `widgets/course-filters` (категория/тип/сортировка/бесплатные) на странице курсов; `coursesQueryOptions(filters)`
+  - [x] test: list active/public-only, filter free/type/downloadable, sort, search (+too-short)
+  - _discount/filter_option/moreOptions фильтры → свои фазы; global-search UI отложен (endpoint готов)_
 - [ ] **2.4 Featured courses**
   - [ ] BE  [ ] FE блок на главной  [ ] test  [ ] admin
 - [ ] **2.5 Instructors / providers + публичный профиль**
