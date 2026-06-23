@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,6 +30,24 @@ async def get_current_user(db: DbSession, token: Annotated[str, Depends(oauth2_s
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_optional_user(
+    db: DbSession, authorization: Annotated[str | None, Header()] = None
+) -> User | None:
+    """Resolve the user from a Bearer token if present; never raises."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    subject = decode_token(authorization[7:], expected_purpose=ACCESS)
+    if subject is None:
+        return None
+    user = await users_repo.get_by_id(db, int(subject))
+    if user is None or user.status != UserStatus.active:
+        return None
+    return user
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 
 
 def require_role(*role_names: str):

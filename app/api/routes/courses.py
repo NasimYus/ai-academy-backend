@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.api.deps import DbSession
+from app.api.deps import DbSession, OptionalUser
 from app.models.comment import Comment
 from app.models.course import CourseType
 from app.repositories import comments as comments_repo
@@ -12,6 +12,7 @@ from app.schemas.common import error_responses
 from app.schemas.course import CourseDetail, CourseRateType, CourseRead
 from app.schemas.review import CommentRead, ReviewRead
 from app.schemas.user import UserBrief
+from app.services import access
 from app.services.course_presenter import to_brief, to_detail
 
 router = APIRouter(prefix="/courses", tags=["courses"])
@@ -50,7 +51,7 @@ async def list_courses(
     response_model=CourseDetail,
     responses=error_responses(status.HTTP_404_NOT_FOUND),
 )
-async def get_course(slug: str, db: DbSession) -> CourseDetail:
+async def get_course(slug: str, db: DbSession, current_user: OptionalUser) -> CourseDetail:
     course = await courses_repo.get_by_slug(db, slug)
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
@@ -58,9 +59,12 @@ async def get_course(slug: str, db: DbSession) -> CourseDetail:
     reviews = await reviews_repo.list_for_course(db, course.id)
     agg = await reviews_repo.aggregate_for_course(db, course.id)
     comments = await comments_repo.list_for_course(db, course.id)
+    has_access = await access.has_course_access(db, current_user, course)
 
     return to_detail(course).model_copy(
         update={
+            "auth": current_user is not None,
+            "auth_has_bought": has_access,
             "rate": agg["rate"],
             "reviews_count": agg["count"],
             "rate_type": CourseRateType(

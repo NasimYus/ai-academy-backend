@@ -122,7 +122,10 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 
 ## Phase 3 — Обучение (enrolled, ядро LMS)
 
-- [ ] **3.1 Enrollment + проверка доступа** (покупка/бесплатный → доступ к контенту)
+- [x] **3.1 Enrollment + проверка доступа** — паритет легаси (checkUserHasBought + free-enroll)
+  - [x] BE: `Enrollment` модель/миграция `c9d0e1f2a3b4`; `POST /panel/courses/{id}/free`; `services/access.has_course_access` (owner|enrolled; subscribe/installment/gift/bundle→Phase 4); `OptionalUser` dep; `auth`/`auth_has_bought` в `GET /courses/{slug}`
+  - [x] FE: `features/course-enroll` + кнопки на детали курса (Записаться бесплатно / Вы записаны / Войдите)
+  - [x] test: free-enroll grants access (+idempotent), paid rejected, requires auth, anon no access
   - [ ] BE `enrollments` + access-зависимость  [ ] FE гейтинг контента  [ ] test
 - [ ] **3.2 Chapters + lesson items** (video / text / file / session)
   - [ ] BE модели `Chapter`, `ChapterItem`, `TextLesson`, `File`  [ ] FE `entities/lesson` + `pages/learn`  [ ] test  [ ] admin

@@ -97,6 +97,10 @@ async def list_featured(db: AsyncSession) -> list[Course]:
     return [fc.course for fc in result.scalars().all()]
 
 
+async def get_by_id(db: AsyncSession, course_id: int) -> Course | None:
+    return await db.get(Course, course_id)
+
+
 async def get_by_slug(db: AsyncSession, slug: str) -> Course | None:
     """Legacy WebinarController@show: non-private match by slug."""
     result = await db.execute(

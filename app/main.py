@@ -8,6 +8,7 @@ from app.api.routes import (
     auth,
     categories,
     courses,
+    enrollment,
     featured,
     profile,
     providers,
@@ -34,6 +35,7 @@ app.include_router(courses.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
 app.include_router(featured.router, prefix="/api/v1")
 app.include_router(providers.router, prefix="/api/v1")
+app.include_router(enrollment.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(profile.router, prefix="/api/v1")
 

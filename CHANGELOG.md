@@ -37,7 +37,7 @@
 
 ## Phase 3 — Обучение (enrolled)
 
-- ⬜ **3.1** Enrollment + проверка доступа
+- ✅ 🧪 **3.1** Enrollment + проверка доступа: `Enrollment` модель/миграция; `POST /panel/courses/{id}/free` (free-enroll); `access.has_course_access` (owner|enrolled; paid→Phase 4); optional-auth → `auth`/`auth_has_bought` в детали курса
 - ⬜ **3.2** Chapters + lesson items (video/text/file)
 - ⬜ **3.3** Прогресс обучения
 - ⬜ **3.4** Quizzes (прохождение + результаты)
