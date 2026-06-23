@@ -13,6 +13,15 @@ from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
 from app.models.learning import CourseLearning
 from app.models.password_reset import PasswordReset
+from app.models.quiz import (
+    QuestionType,
+    Quiz,
+    QuizQuestion,
+    QuizQuestionAnswer,
+    QuizResult,
+    QuizStatus,
+    ResultStatus,
+)
 from app.models.review import CourseReview, ReviewStatus
 from app.models.role import Role
 from app.models.user import MeetingType, ThemeColorMode, User, UserStatus
@@ -46,6 +55,13 @@ __all__ = [
     "TextLesson",
     "CourseSession",
     "CourseLearning",
+    "Quiz",
+    "QuizQuestion",
+    "QuizQuestionAnswer",
+    "QuizResult",
+    "QuizStatus",
+    "QuestionType",
+    "ResultStatus",
     "Verification",
     "PasswordReset",
 ]

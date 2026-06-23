@@ -134,8 +134,9 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [ ] admin (CRUD контента) — Phase 6
 - [x] **3.3 Прогресс обучения** (learning status toggle) — паритет легаси (WebinarController@learningStatus)
   - [x] BE `CourseLearning`+миграция, `POST /courses/{id}/learning`, `completed` в content  [x] FE отметки пройдено (`features/lesson-progress` + чекбоксы)  [x] test (toggle/unmark/access/404)
-- [ ] **3.4 Quizzes: прохождение + результаты**
-  - [ ] BE `Quiz`, `Question`, `Result` + start/store-result  [ ] FE `features/take-quiz`  [ ] test  [ ] admin
+- [x] **3.4 Quizzes: прохождение + результаты** — паритет легаси (QuizzesController/QuizzesResultController, student-flow)
+  - [x] BE `Quiz`/`QuizQuestion`/`QuizQuestionAnswer`/`QuizResult`+миграция; show/start/store-result/status/result + course-list; грейдинг (multiple/descriptive→waiting, negative_grade, max_attempt)  [x] FE `entities/quiz` + `features/take-quiz` (QuizRunner) + `pages/quiz`  [x] test  [ ] admin (CRUD, instructor-review) — Phase 6
+  - NOTE: rewards (Phase 5), certificate issue (3.6), notifications (gated), instructor review/updateResult — отложено
 - [ ] **3.5 Assignments: список/сдача + сообщения**
   - [ ] BE  [ ] FE `features/submit-assignment`  [ ] test  [ ] admin
 - [ ] **3.6 Certificates** (achievements, validation, рендер/скачивание)
