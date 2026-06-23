@@ -127,8 +127,11 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] FE: `features/course-enroll` + кнопки на детали курса (Записаться бесплатно / Вы записаны / Войдите)
   - [x] test: free-enroll grants access (+idempotent), paid rejected, requires auth, anon no access
   - [ ] BE `enrollments` + access-зависимость  [ ] FE гейтинг контента  [ ] test
-- [ ] **3.2 Chapters + lesson items** (video / text / file / session)
-  - [ ] BE модели `Chapter`, `ChapterItem`, `TextLesson`, `File`  [ ] FE `entities/lesson` + `pages/learn`  [ ] test  [ ] admin
+- [x] **3.2 Chapters + lesson items** (file/text/session) — паритет легаси (WebinarController@content)
+  - [x] BE: модели `Chapter`/`File`/`TextLesson`/`CourseSession` + миграция `d0e1f2a3b4c5` (direct chapter_id+order); `GET /courses/{slug}/content` с гейтингом (free | has_access; locked прячет file/content/link)
+  - [x] FE: `pages/learn` (/learn/$slug) + `courseContentQueryOptions`; ссылка «Перейти к обучению»
+  - [x] test: anon (free/ paid-locked+preview), enrolled (unlocked), 404
+  - [ ] admin (CRUD контента) — Phase 6
 - [ ] **3.3 Прогресс обучения** (learning status toggle)
   - [ ] BE  [ ] FE отметки пройдено  [ ] test
 - [ ] **3.4 Quizzes: прохождение + результаты**

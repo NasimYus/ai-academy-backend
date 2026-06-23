@@ -1,5 +1,13 @@
 from app.models.category import Category, TrendCategory
 from app.models.comment import Comment, CommentStatus
+from app.models.content import (
+    Accessibility,
+    Chapter,
+    ChapterStatus,
+    CourseSession,
+    File,
+    TextLesson,
+)
 from app.models.course import Course, CourseStatus, CourseType, VideoDemoSource
 from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
@@ -30,6 +38,12 @@ __all__ = [
     "ReviewStatus",
     "Comment",
     "CommentStatus",
+    "Chapter",
+    "ChapterStatus",
+    "Accessibility",
+    "File",
+    "TextLesson",
+    "CourseSession",
     "Verification",
     "PasswordReset",
 ]
