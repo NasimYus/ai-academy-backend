@@ -1,0 +1,73 @@
+# Changelog — AI Academy Backend
+
+Прогресс переписывания LMS с Laravel на FastAPI. Полный roadmap и принципы —
+см. `MIGRATION_PLAN.md`. Этот файл — живой трекер: отмечаем по мере готовности.
+
+**Легенда:** ✅ готово · 🧪 покрыто тестами · 🟡 частично · ⬜ todo
+Тесты: `pytest` (async, на Postgres) — `uv run pytest`. CI: GitHub Actions `on: push`.
+
+---
+
+## Phase 0 — Фундамент
+
+- ✅ FastAPI + async SQLAlchemy + Alembic + JWT; слои models/schemas/repositories/api/core
+- ✅ JWT (`create_token`/`decode_token`), bcrypt (`hash_password`/`verify_password`)
+- ✅ Честные error-ответы в OpenAPI (`ErrorResponse` + `error_responses()`)
+- ✅ 🧪 Тестовая инфраструктура (`tests/conftest.py`: схема + truncate + сид ролей) и CI (postgres service + ruff + pytest)
+
+## Phase 1 — Auth & профиль
+
+- ✅ 🧪 **1.0** `roles` (+сид user/admin/organization/teacher) и `users` (64 колонки, паритет легаси); Alembic
+- ✅ 🧪 **1.1** Регистрация 3 шага + верификация по коду (`/auth/register/step/{1,2,3}`, `/auth/verification`, `verifications` таблица)
+- ✅ 🧪 **1.2** Login (email/mobile, бан+авторазбан, `not_verified`, device-limit, `logged_count`, `profile_completion`) + `/auth/logout`
+- ✅ 🧪 **1.3** Forgot/reset password (`/auth/forget-password`, `/auth/reset-password/{token}`, `password_resets`)
+- ✅ 🧪 **1.4** Профиль `/panel/profile-setting` (get/update/password/images) + **F.1** локальное хранилище `/media`
+- ✅ 🧪 **1.5** Гварды `require_role`/`require_level` (иерархия LevelAccess)
+- ✅ 🧪 **1.6** OAuth callbacks `/auth/{google,facebook}/callback`
+- ⬜ admin-CRUD для users/ролей (наращиваем постепенно)
+
+## Phase 2 — Каталог (public)
+
+- ✅ 🧪 **2.1** Categories + trend (`/categories`, `/trend-categories`; модели `Category`/`TrendCategory`)
+- ⬜ **2.2** Course detail: расширить `Course` (category_id, инструктор, метаданные) + `GET /courses/{slug}`; оживить `webinars_count`
+- ⬜ **2.3** Search & filters (`/search` + query-параметры)
+- ⬜ **2.4** Featured courses
+- ⬜ **2.5** Instructors/providers + публичный профиль
+- ⬜ **2.6** Reviews & comments (чтение)
+
+## Phase 3 — Обучение (enrolled)
+
+- ⬜ **3.1** Enrollment + проверка доступа
+- ⬜ **3.2** Chapters + lesson items (video/text/file)
+- ⬜ **3.3** Прогресс обучения
+- ⬜ **3.4** Quizzes (прохождение + результаты)
+- ⬜ **3.5** Assignments (сдача + сообщения)
+- ⬜ **3.6** Certificates (+ генерация PDF)
+- ⬜ **3.7** Personal notes · **3.8** Noticeboards · **3.9** Forums (Q&A)
+
+## Phase 4 — Коммерция
+
+- ⬜ **4.1** Cart · **4.2** Coupons/discounts · **4.3** Checkout/Orders
+- ⬜ **4.4** Payments (абстракция шлюзов + verify/webhook) · **4.5** Покупка→enrollment · **4.6** Purchases
+
+## Сквозные задачи (foundation)
+
+- ✅ **F.1** Файловое хранилище (локальный диск, `/media`; S3 — позже)
+- ⬜ **F.2** Фоновые задачи (arq/Celery) — email/FCM/PDF
+- ⬜ **F.3** Email/SMS отправка (verification, reset, чеки) — сейчас заглушки
+- ⬜ **F.4** i18n контента (translatable: категории/курсы/…)
+- ⬜ **F.5** Мультивалюта (`MultiCurrency`)
+
+## Backlog (после MVP)
+
+- ⬜ **Phase 5** Вовлечение: favorites, follow, notifications(+FCM), support, blog, newsletter, rewards
+- ⬜ **Phase 6** Инструктор: создание курсов/квизов, грейдинг, bundles, store, статистика
+- ⬜ **Phase 7** Live & advanced: meetings/reservations, Agora/Zoom/BBB, subscriptions, gifts
+- ⬜ **Admin**: панель (наращиваем по фазам)
+
+## Гейт-заглушки (включаются в своих фазах)
+
+- 🟡 reward/affiliate/registration-bonus/form-fields в регистрации (Phase 5)
+- 🟡 UserFirebaseSessions, история входов, JWT-denylist в login/logout (Phase 5 / infra)
+- 🟡 Newsletter+reward, UserMeta (gender/age), Zoom API в профиле (Phase 5)
+- 🟡 верификация provider-токена в OAuth (hardening)
