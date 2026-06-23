@@ -33,7 +33,7 @@
 - ✅ 🧪 **2.3** Filters на `GET /courses` (cat/free/type/upcoming/downloadable/reward/sort — column-backed; discount/filter_option/moreOptions → их фазы) + global `GET /search` (webinars/users/teachers/organizations, min 3 симв.); пресентер `course_presenter`
 - ✅ 🧪 **2.4** Featured (`GET /featured-courses`; `FeaturedCourse` модель/миграция; page home/home_categories + status publish → brief активных публичных курсов)
 - ✅ 🧪 **2.5** Instructors/providers + публичный профиль (`/providers/{instructors,organizations,consultations}`, `/users/{id}/profile`; active+non-banned; consultations пусто до Phase 7; cashback→null)
-- ⬜ **2.6** Reviews & comments (чтение)
+- ✅ 🧪 **2.6** Reviews & comments (чтение): модели `CourseReview`/`Comment`+миграция; в `GET /courses/{slug}` встроены active-отзывы, агрегаты (rate/reviews_count/rate_type) и дерево комментариев
 
 ## Phase 3 — Обучение (enrolled)
 

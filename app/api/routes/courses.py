@@ -3,10 +3,15 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.api.deps import DbSession
+from app.models.comment import Comment
 from app.models.course import CourseType
+from app.repositories import comments as comments_repo
 from app.repositories import courses as courses_repo
+from app.repositories import reviews as reviews_repo
 from app.schemas.common import error_responses
-from app.schemas.course import CourseDetail, CourseRead
+from app.schemas.course import CourseDetail, CourseRateType, CourseRead
+from app.schemas.review import CommentRead, ReviewRead
+from app.schemas.user import UserBrief
 from app.services.course_presenter import to_brief, to_detail
 
 router = APIRouter(prefix="/courses", tags=["courses"])
@@ -49,4 +54,57 @@ async def get_course(slug: str, db: DbSession) -> CourseDetail:
     course = await courses_repo.get_by_slug(db, slug)
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
-    return to_detail(course)
+
+    reviews = await reviews_repo.list_for_course(db, course.id)
+    agg = await reviews_repo.aggregate_for_course(db, course.id)
+    comments = await comments_repo.list_for_course(db, course.id)
+
+    return to_detail(course).model_copy(
+        update={
+            "rate": agg["rate"],
+            "reviews_count": agg["count"],
+            "rate_type": CourseRateType(
+                content_quality=agg["content_quality"],
+                instructor_skills=agg["instructor_skills"],
+                purchase_worth=agg["purchase_worth"],
+                support_quality=agg["support_quality"],
+            ),
+            "reviews": [
+                ReviewRead(
+                    id=r.id,
+                    user=UserBrief.model_validate(r.user),
+                    content_quality=r.content_quality,
+                    instructor_skills=r.instructor_skills,
+                    purchase_worth=r.purchase_worth,
+                    support_quality=r.support_quality,
+                    rates=r.rates,
+                    description=r.description,
+                    created_at=r.created_at,
+                )
+                for r in reviews
+            ],
+            "comments": _comment_tree(comments),
+        }
+    )
+
+
+def _comment_tree(comments: list[Comment]) -> list[CommentRead]:
+    """Group flat comments into top-level entries with one level of replies."""
+    nodes: dict[int, CommentRead] = {}
+    for c in comments:
+        nodes[c.id] = CommentRead(
+            id=c.id,
+            user=UserBrief.model_validate(c.user),
+            comment=c.comment,
+            created_at=c.created_at,
+            replies=[],
+        )
+    roots: list[CommentRead] = []
+    for c in comments:
+        node = nodes[c.id]
+        parent = nodes.get(c.reply_id) if c.reply_id else None
+        if parent is not None:
+            parent.replies.append(node)
+        else:
+            roots.append(node)
+    return roots

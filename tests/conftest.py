@@ -12,6 +12,8 @@ _DATA_TABLES = (
     "verifications",
     "password_resets",
     "featured_courses",
+    "comments",
+    "course_reviews",
     "trend_categories",
     "categories",
     "courses",

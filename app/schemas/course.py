@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.models.course import CourseStatus, CourseType, VideoDemoSource
+from app.schemas.review import CommentRead, ReviewRead
 
 # Parity with legacy Webinar `brief`/`details` accessors. Fields backed by
 # entities from later phases are present (stable FE contract) but stubbed —
@@ -97,8 +98,8 @@ class CourseDetail(CourseRead):
     prerequisites: list[dict] = []  # NOTE(3.1)
     faqs: list[dict] = []  # NOTE(6.x)
     tags: list[dict] = []  # NOTE(6.x)
-    comments: list[dict] = []  # NOTE(2.6)
-    reviews: list[dict] = []  # NOTE(2.6)
+    comments: list[CommentRead] = []
+    reviews: list[ReviewRead] = []
     chapters: list[dict] = []  # NOTE(3.2)
     sessions_count: int = 0  # NOTE(3.2)
     files_count: int = 0  # NOTE(3.2)

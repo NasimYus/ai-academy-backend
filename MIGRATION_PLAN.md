@@ -112,8 +112,11 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] BE: `/providers/{instructors,organizations,consultations}` (active+non-banned, search/sort), `/users/{id}/profile` (+ их курсы); consultations пусто до Phase 7 (meetings); cashback→null
   - [x] FE: `entities/instructor` + `pages/instructors` (/instructors) + `pages/user` (/users/$userId) + nav в Header
   - [x] test: instructors (excl. banned/non-teacher), organizations, consultations empty, profile+courses, 404
-- [ ] **2.6 Reviews & comments (чтение)**
-  - [ ] BE list  [ ] FE `entities/review` на странице курса  [ ] test  [ ] admin (модерация)
+- [x] **2.6 Reviews & comments (чтение)** — паритет легаси (webinar_reviews + comments)
+  - [x] BE: модели `CourseReview`/`Comment` + миграция `b8c9d0e1f2a3`; `GET /courses/{slug}` встраивает active-отзывы, агрегаты (rate/reviews_count/rate_type) и дерево комментариев (reply_id)
+  - [x] FE: рейтинг + секции «Отзывы»/«Комментарии» на странице курса; ссылка на профиль инструктора
+  - [x] test: active-only отзывы + агрегат, дерево комментов, пустой курс
+  - [ ] admin (модерация); запись отзывов/комментов (auth) — отдельно
 
 ---
 
