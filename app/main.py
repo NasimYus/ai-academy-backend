@@ -4,7 +4,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import auth, categories, courses, featured, profile, search
+from app.api.routes import (
+    auth,
+    categories,
+    courses,
+    featured,
+    profile,
+    providers,
+    search,
+)
 from app.core.config import settings
 
 app = FastAPI(
@@ -25,6 +33,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(courses.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
 app.include_router(featured.router, prefix="/api/v1")
+app.include_router(providers.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(profile.router, prefix="/api/v1")
 

@@ -108,8 +108,10 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] FE: `featuredCoursesQueryOptions` + блок «Рекомендуемые» на странице курсов
   - [x] test: published-home only / pending+wrong-page excluded / empty
   - [ ] admin (управление витриной)
-- [ ] **2.5 Instructors / providers + публичный профиль**
-  - [ ] BE `instructors/organizations/{id}/profile`  [ ] FE `entities/instructor` + `pages/instructor`  [ ] test
+- [x] **2.5 Instructors / providers + публичный профиль** — паритет легаси (UserController)
+  - [x] BE: `/providers/{instructors,organizations,consultations}` (active+non-banned, search/sort), `/users/{id}/profile` (+ их курсы); consultations пусто до Phase 7 (meetings); cashback→null
+  - [x] FE: `entities/instructor` + `pages/instructors` (/instructors) + `pages/user` (/users/$userId) + nav в Header
+  - [x] test: instructors (excl. banned/non-teacher), organizations, consultations empty, profile+courses, 404
 - [ ] **2.6 Reviews & comments (чтение)**
   - [ ] BE list  [ ] FE `entities/review` на странице курса  [ ] test  [ ] admin (модерация)
 

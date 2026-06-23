@@ -64,6 +64,14 @@ async def search_by_title(db: AsyncSession, query: str, limit: int = 50) -> list
     return list(result.scalars().all())
 
 
+async def list_by_teacher(db: AsyncSession, teacher_id: int) -> list[Course]:
+    """Active, non-private courses taught by a user (for public profiles)."""
+    result = await db.execute(
+        _catalogue().where(Course.teacher_id == teacher_id).order_by(Course.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
 async def list_featured(db: AsyncSession) -> list[Course]:
     """Legacy FeatureWebinarController@index: home/home_categories, published.
 

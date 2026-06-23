@@ -1,4 +1,6 @@
-from sqlalchemy import or_, select
+from datetime import UTC, datetime
+
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
@@ -8,6 +10,38 @@ from app.models.user import User, UserStatus
 
 async def get_by_id(db: AsyncSession, user_id: int) -> User | None:
     return await db.get(User, user_id)
+
+
+async def list_providers(
+    db: AsyncSession,
+    roles: list[str],
+    *,
+    search: str | None = None,
+    sort: str | None = None,
+) -> list[User]:
+    """Legacy handleProviders: active, non-banned users in the given roles."""
+    now = datetime.now(UTC)
+    stmt = select(User).where(
+        User.status == UserStatus.active,
+        User.role_name.in_(roles),
+        or_(User.ban.is_(False), and_(User.ban_end_at.is_not(None), User.ban_end_at < now)),
+    )
+    if search:
+        stmt = stmt.where(User.full_name.ilike(f"%{search}%"))
+    order = User.created_at.asc() if sort == "oldest" else User.created_at.desc()
+    result = await db.execute(stmt.order_by(order))
+    return list(result.scalars().all())
+
+
+async def get_public_profile(db: AsyncSession, user_id: int) -> User | None:
+    """Legacy UserController@profile: organization/teacher/user by id."""
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.role_name.in_([Role.ORGANIZATION, Role.TEACHER, Role.USER]),
+        )
+    )
+    return result.scalar_one_or_none()
 
 
 async def get_by_email(db: AsyncSession, email: str) -> User | None:
