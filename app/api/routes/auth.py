@@ -29,9 +29,6 @@ from app.schemas.auth import (
 )
 
 
-def _random_password(length: int = 6) -> str:
-    alphabet = string.ascii_letters + string.digits
-    return "".join(secrets.choice(alphabet) for _ in range(length))
 from app.schemas.common import error_responses
 from app.schemas.user import UserRead
 from app.services import verification as verification_svc
@@ -39,10 +36,15 @@ from app.services import verification as verification_svc
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _random_password(length: int = 6) -> str:
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
 @router.post(
     "/register/step/1",
     response_model=RegisterStep1Response,
-    responses=error_responses(status.HTTP_409_CONFLICT, status.HTTP_422_UNPROCESSABLE_ENTITY),
+    responses=error_responses(status.HTTP_409_CONFLICT, status.HTTP_422_UNPROCESSABLE_CONTENT),
 )
 async def register_step_one(payload: RegisterStep1, db: DbSession) -> RegisterStep1Response:
     # Determine the identifier type from what was sent.
@@ -52,7 +54,7 @@ async def register_step_one(payload: RegisterStep1, db: DbSession) -> RegisterSt
         field = "email"
     else:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="email or mobile is required"
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="email or mobile is required"
         )
 
     if settings.register_method != field:
@@ -60,13 +62,13 @@ async def register_step_one(payload: RegisterStep1, db: DbSession) -> RegisterSt
 
     if payload.password != payload.password_confirmation:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="passwords do not match"
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="passwords do not match"
         )
 
     if field == "mobile":
         if not payload.country_code:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="country_code is required"
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="country_code is required"
             )
         value = payload.country_code.lstrip("+") + payload.mobile.lstrip("0")
         verification_value = f"+{value}"
@@ -113,7 +115,7 @@ async def register_step_one(payload: RegisterStep1, db: DbSession) -> RegisterSt
 @router.post(
     "/register/step/2",
     response_model=VerificationResult,
-    responses=error_responses(status.HTTP_404_NOT_FOUND, status.HTTP_422_UNPROCESSABLE_ENTITY),
+    responses=error_responses(status.HTTP_404_NOT_FOUND, status.HTTP_422_UNPROCESSABLE_CONTENT),
 )
 async def register_step_two(payload: RegisterStep2, db: DbSession) -> VerificationResult:
     user = await users_repo.get_by_id(db, payload.user_id)
@@ -122,7 +124,7 @@ async def register_step_two(payload: RegisterStep2, db: DbSession) -> Verificati
     value = user.email or user.mobile
     if value is None or not await verification_svc.confirm_code(db, value=value, code=payload.code):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid or expired code"
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid or expired code"
         )
     return VerificationResult()
 
@@ -146,12 +148,12 @@ async def register_step_three(payload: RegisterStep3, db: DbSession) -> AuthToke
 @router.post(
     "/verification",
     response_model=VerificationResult,
-    responses=error_responses(status.HTTP_422_UNPROCESSABLE_ENTITY),
+    responses=error_responses(status.HTTP_422_UNPROCESSABLE_CONTENT),
 )
 async def verification(payload: VerificationConfirm, db: DbSession) -> VerificationResult:
     if not await verification_svc.confirm_code(db, value=payload.username, code=payload.code):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid or expired code"
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid or expired code"
         )
     return VerificationResult()
 
@@ -159,13 +161,13 @@ async def verification(payload: VerificationConfirm, db: DbSession) -> Verificat
 @router.post(
     "/forget-password",
     response_model=ForgotPasswordResult,
-    responses=error_responses(status.HTTP_404_NOT_FOUND, status.HTTP_422_UNPROCESSABLE_ENTITY),
+    responses=error_responses(status.HTTP_404_NOT_FOUND, status.HTTP_422_UNPROCESSABLE_CONTENT),
 )
 async def forget_password(payload: ForgotPasswordRequest, db: DbSession) -> ForgotPasswordResult:
     if payload.type == "mobile":
         if not payload.mobile or not payload.country_code:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="mobile and country_code are required",
             )
         mobile = payload.country_code.lstrip("+") + payload.mobile.lstrip("0")
@@ -183,7 +185,7 @@ async def forget_password(payload: ForgotPasswordRequest, db: DbSession) -> Forg
     # email flow
     if not payload.email:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="email is required"
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="email is required"
         )
     user = await users_repo.get_by_email(db, payload.email)
     if user is None:
@@ -198,14 +200,14 @@ async def forget_password(payload: ForgotPasswordRequest, db: DbSession) -> Forg
 @router.post(
     "/reset-password/{token}",
     response_model=ResetPasswordResult,
-    responses=error_responses(status.HTTP_422_UNPROCESSABLE_ENTITY),
+    responses=error_responses(status.HTTP_422_UNPROCESSABLE_CONTENT),
 )
 async def reset_password(
     token: str, payload: ResetPasswordRequest, db: DbSession
 ) -> ResetPasswordResult:
     if payload.password != payload.password_confirmation:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="passwords do not match"
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="passwords do not match"
         )
 
     request_row = await password_resets_repo.find(db, email=payload.email, token=token)

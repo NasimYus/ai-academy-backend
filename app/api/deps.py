@@ -35,11 +35,32 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 def require_role(*role_names: str):
+    """Allow only the exact given role names."""
+
     async def checker(user: CurrentUser) -> User:
         if user.role_name not in role_names:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
             )
+        return user
+
+    return checker
+
+
+# Hierarchical access map, mirrors legacy Api\LevelAccess middleware.
+LEVEL_ACCESS: dict[str, set[str]] = {
+    "user": {"user", "teacher", "organization"},
+    "teacher": {"organization", "teacher"},
+    "organization": {"organization"},
+}
+
+
+def require_level(level: str):
+    """Allow roles permitted at the given access level (legacy level-access)."""
+
+    async def checker(user: CurrentUser) -> User:
+        if user.role_name not in LEVEL_ACCESS.get(level, set()):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
         return user
 
     return checker

@@ -70,8 +70,11 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] FE: `features/profile` (ProfileForm/PasswordForm/AvatarForm) + `pages/profile` + guarded route + ссылка в Header
   - [x] test: get/update(bitmask,newsletter)/password(+wrong)/login-new-pwd/image-upload
   - [ ] admin (users)
-- [ ] **1.5 Роли и гварды доступа** (student/teacher/admin → FastAPI-зависимости; на фронте — route guards)
-  - [ ] BE `require_role`  [ ] FE guard-обёртки  [ ] test
+- [x] **1.5 Роли и гварды доступа** — паритет легаси (Api\LevelAccess)
+  - [x] BE: `require_role(*names)` + `require_level(level)` (иерархия user⊃teacher⊃organization), `LEVEL_ACCESS`-карта
+  - [x] FE: `entities/session` guards `requireAuth`/`requireRole`; роуты courses/profile через `requireAuth`
+  - [x] test: unit-проверка allow/deny по ролям/уровням
+  - _requireRole пока не навешан на страницы (нет role-gated экранов до Phase 6) — инфраструктура готова_
 - [ ] **1.6 OAuth (Google/Facebook)** — _опционально, можно отложить_
   - [ ] BE socialite-аналог  [ ] FE кнопки входа  [ ] test
 
