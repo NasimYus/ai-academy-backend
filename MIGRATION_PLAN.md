@@ -92,8 +92,12 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] FE: `entities/category` (queryOptions+типы), `CategoryNav` на странице курсов
   - [x] test: seed+smoke (2 категории, подкатегории, trend color)
   - _title i18n → F.4; webinars_count=0 до 2.2 (Course.category_id); admin позже_
-- [ ] **2.2 Course detail** (полные метаданные: инструктор, цена, статус, бейджи, что внутри)
-  - [ ] BE расширить `Course` + `GET /courses/{slug}`  [ ] FE `pages/course`  [ ] test  [ ] admin
+- [x] **2.2 Course detail** (полные метаданные: инструктор, цена, статус, бейджи, что внутри) — паритет легаси (WebinarController@show)
+  - [x] BE: `Course` расширен под `webinars`-паритет (тип/статус active/pending/is_draft/inactive, category_id, teacher, медиа, флаги; epoch→timestamptz); миграция `f6a7b8c9d0e1`; `GET /courses/{slug}` → `CourseDetail` (= legacy brief+details, поздне-фазовые секции — стабы `NOTE(Phase N)`); list отдаёт `brief`; `webinars_count` оживлён в `/categories`
+  - [x] API: типы перегенерированы (`CourseRead`/`CourseDetail`/`CourseTeacher`)  [x] FE: `entities/course` (brief+detail query, обновлён `CourseCard`-ссылка) + `pages/course` + публичный роут `/course/$slug`
+  - [x] test: list(active/draft/private)/detail/404/private-hidden + categories webinars_count; FE tsc/lint/steiger/vitest/build зелёные
+  - [ ] admin (курсы)
+  - _greenlet-фикс из HANDOFF §7.1 закрыт превентивно: relationship'ы `lazy="raise"` + `selectinload(teacher,category)` в repo_
 - [ ] **2.3 Search & filters** (категория, цена, уровень, тип)
   - [ ] BE `GET /search` + query-параметры  [ ] FE `widgets/course-filters` + `pages/catalog`  [ ] test
 - [ ] **2.4 Featured courses**

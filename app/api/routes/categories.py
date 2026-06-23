@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.deps import DbSession
 from app.repositories import categories as categories_repo
+from app.repositories import courses as courses_repo
 from app.schemas.category import (
     CategoryList,
     CategoryRead,
@@ -18,22 +19,29 @@ async def list_categories(db: DbSession) -> CategoryList:
     tops = await categories_repo.list_top_level(db)
     children = await categories_repo.children_by_parent(db)
     colors = await categories_repo.color_by_category(db)
+    counts = await courses_repo.counts_by_category(db)
 
-    # NOTE(2.2): webinars_count stays 0 until Course gains a category_id link.
-    categories = [
-        CategoryRead(
-            id=top.id,
-            title=top.title,
-            color=colors.get(top.id),
-            icon=top.icon,
-            sub_categories=[
-                SubCategoryRead(id=sub.id, title=sub.title, icon=sub.icon, webinars_count=0)
-                for sub in children.get(top.id, [])
-            ],
-            webinars_count=0,
+    categories = []
+    for top in tops:
+        subs = children.get(top.id, [])
+        sub_reads = [
+            SubCategoryRead(
+                id=sub.id, title=sub.title, icon=sub.icon, webinars_count=counts.get(sub.id, 0)
+            )
+            for sub in subs
+        ]
+        # Legacy: top count = sum of sub counts when subs exist, else own count.
+        top_count = sum(s.webinars_count for s in sub_reads) if subs else counts.get(top.id, 0)
+        categories.append(
+            CategoryRead(
+                id=top.id,
+                title=top.title,
+                color=colors.get(top.id),
+                icon=top.icon,
+                sub_categories=sub_reads,
+                webinars_count=top_count,
+            )
         )
-        for top in tops
-    ]
     return CategoryList(count=len(categories), categories=categories)
 
 

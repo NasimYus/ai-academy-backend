@@ -29,7 +29,7 @@
 ## Phase 2 — Каталог (public)
 
 - ✅ 🧪 **2.1** Categories + trend (`/categories`, `/trend-categories`; модели `Category`/`TrendCategory`)
-- ⬜ **2.2** Course detail: расширить `Course` (category_id, инструктор, метаданные) + `GET /courses/{slug}`; оживить `webinars_count`
+- ✅ 🧪 **2.2** Course detail: `Course` расширен под `webinars`-паритет (миграция `f6a7b8c9d0e1`), `GET /courses/{slug}` → `CourseDetail` (legacy brief+details; поздние секции — стабы), list → `brief`, `webinars_count` оживлён. Relationship'ы `lazy="raise"` + `selectinload` (greenlet-safe)
 - ⬜ **2.3** Search & filters (`/search` + query-параметры)
 - ⬜ **2.4** Featured courses
 - ⬜ **2.5** Instructors/providers + публичный профиль
