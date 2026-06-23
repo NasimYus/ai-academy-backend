@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     login_device_limit: bool = False
     number_of_allowed_devices: int = 1
 
+    # --- file storage (F.1) ---
+    media_root: str = "media"
+    media_url: str = "/media"
+
     # Comma-separated in env; use `cors_origins` (the parsed list) in code.
     cors_origins_raw: str = "http://localhost:3000,http://localhost:5173"
 

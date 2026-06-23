@@ -11,6 +11,9 @@ venv/
 .env
 .env.local
 
+# Uploaded media (F.1 local storage)
+media/
+
 # OS / editors
 .DS_Store
 .idea/

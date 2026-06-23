@@ -64,8 +64,12 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] API типы перегенерированы  [x] FE: `features/auth/reset-password` (forgot+reset формы), `pages/forgot-password` + `pages/reset-password` + routes, ссылка со входа
   - [x] test: forgot→reset→login, bad-token (benign), unknown-email 404, mismatch 422
   - _mobile-flow UI отложен (register_method=email); API-паритет есть_
-- [ ] **1.4 Профиль: get/update, смена пароля, загрузка аватара**
-  - [ ] BE `profile-setting` endpoints  [ ] FE `entities/user` + `pages/profile`  [ ] test  [ ] admin (users)
+- [x] **1.4 Профиль: get/update, смена пароля, загрузка изображений** — паритет легаси
+  - [x] BE: `/panel/profile-setting` GET/PUT, `/password` (verify+новый токен), `/images` (avatar/identity/certificate); email/mobile uniqueness; level_of_training→битмаска; location→"lat,lng"
+  - [x] BE-заглушки: Newsletter+reward, UserMeta (gender/age), Zoom API (Phase 5)
+  - [x] FE: `features/profile` (ProfileForm/PasswordForm/AvatarForm) + `pages/profile` + guarded route + ссылка в Header
+  - [x] test: get/update(bitmask,newsletter)/password(+wrong)/login-new-pwd/image-upload
+  - [ ] admin (users)
 - [ ] **1.5 Роли и гварды доступа** (student/teacher/admin → FastAPI-зависимости; на фронте — route guards)
   - [ ] BE `require_role`  [ ] FE guard-обёртки  [ ] test
 - [ ] **1.6 OAuth (Google/Facebook)** — _опционально, можно отложить_
@@ -134,7 +138,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 
 ## Сквозные задачи (foundation — подключать по мере необходимости)
 
-- [ ] **F.1 Файловое хранилище** (S3-совместимое) + upload-эндпоинты (нужно к 1.4 / 3.2)
+- [x] **F.1 Файловое хранилище** — локальное disk-хранилище (`app/services/storage.py`),
+      статика на `/media`; S3-совместимый бэкенд можно подменить за тем же интерфейсом позже
 - [ ] **F.2 Фоновые задачи** (arq/Celery) — email, FCM, генерация PDF (нужно к 1.2 / 3.6)
 - [ ] **F.3 Email-отправка** (verification, reset, чеки)
 - [ ] **F.4 i18n контента** — воспроизвести translatable (мультиязык) как в легаси

@@ -1,7 +1,10 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import auth, courses
+from app.api.routes import auth, courses, profile
 from app.core.config import settings
 
 app = FastAPI(
@@ -20,6 +23,11 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(courses.router, prefix="/api/v1")
+app.include_router(profile.router, prefix="/api/v1")
+
+# Serve uploaded media from local storage (F.1).
+Path(settings.media_root).mkdir(parents=True, exist_ok=True)
+app.mount(settings.media_url, StaticFiles(directory=settings.media_root), name="media")
 
 
 @app.get("/health", tags=["health"])
