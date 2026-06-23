@@ -11,6 +11,7 @@ from app.models.content import (
 from app.models.course import Course, CourseStatus, CourseType, VideoDemoSource
 from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
+from app.models.learning import CourseLearning
 from app.models.password_reset import PasswordReset
 from app.models.review import CourseReview, ReviewStatus
 from app.models.role import Role
@@ -44,6 +45,7 @@ __all__ = [
     "File",
     "TextLesson",
     "CourseSession",
+    "CourseLearning",
     "Verification",
     "PasswordReset",
 ]

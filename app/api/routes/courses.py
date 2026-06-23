@@ -1,14 +1,16 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import BaseModel
 
-from app.api.deps import DbSession, OptionalUser
+from app.api.deps import CurrentUser, DbSession, OptionalUser
 from app.models.comment import Comment
 from app.models.content import Accessibility
 from app.models.course import CourseType
 from app.repositories import comments as comments_repo
 from app.repositories import content as content_repo
 from app.repositories import courses as courses_repo
+from app.repositories import learning as learning_repo
 from app.repositories import reviews as reviews_repo
 from app.schemas.common import error_responses
 from app.schemas.content import ChapterRead, ContentItem, CourseContent
@@ -117,7 +119,7 @@ def _comment_tree(comments: list[Comment]) -> list[CommentRead]:
     return roots
 
 
-def _content_item(obj, item_type: str, has_access: bool) -> ContentItem:
+def _content_item(obj, item_type: str, has_access: bool, completed: bool = False) -> ContentItem:
     accessible = obj.accessibility == Accessibility.free or has_access
     item = ContentItem(
         id=obj.id,
@@ -126,6 +128,7 @@ def _content_item(obj, item_type: str, has_access: bool) -> ContentItem:
         accessibility=obj.accessibility.value,
         order=obj.order,
         locked=not accessible,
+        completed=completed,
     )
     if item_type == "file":
         item.file_type = obj.file_type
@@ -159,6 +162,11 @@ async def get_course_content(slug: str, db: DbSession, current_user: OptionalUse
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
 
     has_access = await access.has_course_access(db, current_user, course)
+    learned: set[tuple[str, int]] = (
+        await learning_repo.learned_keys(db, current_user.id, course.id)
+        if current_user is not None
+        else set()
+    )
 
     typed = (
         [(f, "file") for f in await content_repo.files_for_course(db, course.id)]
@@ -170,10 +178,14 @@ async def get_course_content(slug: str, db: DbSession, current_user: OptionalUse
         selected = sorted(
             (o for o in typed if o[0].chapter_id == chapter_id), key=lambda o: o[0].order
         )
-        return [_content_item(obj, item_type, has_access) for obj, item_type in selected]
+        return [
+            _content_item(obj, item_type, has_access, (item_type, obj.id) in learned)
+            for obj, item_type in selected
+        ]
 
     chapters = await content_repo.chapters_for_course(db, course.id)
     return CourseContent(
+        course_id=course.id,
         chapters=[
             ChapterRead(id=c.id, title=c.title, order=c.order, items=items_for(c.id))
             for c in chapters
@@ -181,3 +193,40 @@ async def get_course_content(slug: str, db: DbSession, current_user: OptionalUse
         items=items_for(None),
         has_access=has_access,
     )
+
+
+class LearningToggle(BaseModel):
+    item_type: Literal["file", "text_lesson", "session"]
+    item_id: int
+    learned: bool
+
+
+@router.post(
+    "/{course_id}/learning",
+    responses=error_responses(
+        status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND
+    ),
+)
+async def toggle_learning(
+    course_id: int, payload: LearningToggle, current_user: CurrentUser, db: DbSession
+) -> dict[str, bool | str]:
+    """Legacy WebinarController@learningStatus: mark/unmark a content item learned."""
+    course = await courses_repo.get_by_id(db, course_id)
+    if course is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    if not await access.has_course_access(db, current_user, course):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_purchased")
+    if not await content_repo.item_belongs_to_course(
+        db, payload.item_type, payload.item_id, course.id
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    await learning_repo.toggle(
+        db,
+        user_id=current_user.id,
+        course_id=course.id,
+        item_type=payload.item_type,
+        item_id=payload.item_id,
+        learned=payload.learned,
+    )
+    return {"status": "ok", "learned": payload.learned}

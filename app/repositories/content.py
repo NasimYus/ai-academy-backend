@@ -27,6 +27,21 @@ async def text_lessons_for_course(db: AsyncSession, course_id: int) -> list[Text
     return list(result.scalars().all())
 
 
+_MODEL_BY_TYPE = {"file": File, "text_lesson": TextLesson, "session": CourseSession}
+
+
+async def item_belongs_to_course(
+    db: AsyncSession, item_type: str, item_id: int, course_id: int
+) -> bool:
+    model = _MODEL_BY_TYPE.get(item_type)
+    if model is None:
+        return False
+    result = await db.execute(
+        select(model.id).where(model.id == item_id, model.course_id == course_id)
+    )
+    return result.first() is not None
+
+
 async def sessions_for_course(db: AsyncSession, course_id: int) -> list[CourseSession]:
     result = await db.execute(
         select(CourseSession)

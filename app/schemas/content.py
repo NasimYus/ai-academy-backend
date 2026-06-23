@@ -13,6 +13,7 @@ class ContentItem(BaseModel):
     accessibility: str
     order: int
     locked: bool
+    completed: bool = False
 
     # file
     file: str | None = None
@@ -38,6 +39,7 @@ class ChapterRead(BaseModel):
 
 
 class CourseContent(BaseModel):
+    course_id: int
     chapters: list[ChapterRead] = []
     items: list[ContentItem] = []  # top-level (no chapter)
     has_access: bool = False

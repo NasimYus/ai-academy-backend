@@ -132,8 +132,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] FE: `pages/learn` (/learn/$slug) + `courseContentQueryOptions`; ссылка «Перейти к обучению»
   - [x] test: anon (free/ paid-locked+preview), enrolled (unlocked), 404
   - [ ] admin (CRUD контента) — Phase 6
-- [ ] **3.3 Прогресс обучения** (learning status toggle)
-  - [ ] BE  [ ] FE отметки пройдено  [ ] test
+- [x] **3.3 Прогресс обучения** (learning status toggle) — паритет легаси (WebinarController@learningStatus)
+  - [x] BE `CourseLearning`+миграция, `POST /courses/{id}/learning`, `completed` в content  [x] FE отметки пройдено (`features/lesson-progress` + чекбоксы)  [x] test (toggle/unmark/access/404)
 - [ ] **3.4 Quizzes: прохождение + результаты**
   - [ ] BE `Quiz`, `Question`, `Result` + start/store-result  [ ] FE `features/take-quiz`  [ ] test  [ ] admin
 - [ ] **3.5 Assignments: список/сдача + сообщения**

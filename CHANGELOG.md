@@ -39,7 +39,7 @@
 
 - ✅ 🧪 **3.1** Enrollment + проверка доступа: `Enrollment` модель/миграция; `POST /panel/courses/{id}/free` (free-enroll); `access.has_course_access` (owner|enrolled; paid→Phase 4); optional-auth → `auth`/`auth_has_bought` в детали курса
 - ✅ 🧪 **3.2** Chapters + lesson items: модели `Chapter`/`File`/`TextLesson`/`CourseSession`+миграция; `GET /courses/{slug}/content` (главы+items, гейтинг по accessibility/доступу — locked прячет file/content/link)
-- ⬜ **3.3** Прогресс обучения
+- ✅ 🧪 **3.3** Прогресс обучения: модель/миграция `CourseLearning` (полиморфно по file/text_lesson/session, denorm `course_id`); `POST /courses/{id}/learning` (toggle, требует доступа → 403 `not_purchased`, валидирует принадлежность item курсу); флаг `completed` в `/content` для авторизованного; `course_id` в ответе content
 - ⬜ **3.4** Quizzes (прохождение + результаты)
 - ⬜ **3.5** Assignments (сдача + сообщения)
 - ⬜ **3.6** Certificates (+ генерация PDF)
