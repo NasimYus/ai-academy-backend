@@ -75,8 +75,11 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] FE: `entities/session` guards `requireAuth`/`requireRole`; роуты courses/profile через `requireAuth`
   - [x] test: unit-проверка allow/deny по ролям/уровням
   - _requireRole пока не навешан на страницы (нет role-gated экранов до Phase 6) — инфраструктура готова_
-- [ ] **1.6 OAuth (Google/Facebook)** — _опционально, можно отложить_
-  - [ ] BE socialite-аналог  [ ] FE кнопки входа  [ ] test
+- [x] **1.6 OAuth (Google/Facebook)** — паритет легаси (SocialiteController)
+  - [x] BE: `POST /auth/{google,facebook}/callback` (trust posted {email,name,id}); find by provider_id|email → create(verified, password=null) или login+token; новый аккаунт без токена (legacy-квирк)
+  - [x] FE: `features/auth/oauth` (api+hook+`OAuthButtons`, env-gated `VITE_GOOGLE_CLIENT_ID`/`VITE_FACEBOOK_APP_ID`) на login/register
+  - [x] test: google new→registered / repeat→login+token / cross-provider by email / me
+  - _активация требует provider SDK + client_id; верификация provider-токена на бэке — TODO (hardening)_
 
 ---
 

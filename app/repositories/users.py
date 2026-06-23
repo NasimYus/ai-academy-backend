@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
@@ -58,6 +58,43 @@ async def create(
         verified=verified,
         affiliate=affiliate,
     )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def get_by_provider_or_email(
+    db: AsyncSession, *, provider_field: str, provider_id: str, email: str
+) -> User | None:
+    """Find a user by OAuth provider id (google_id/facebook_id) or email."""
+    column = getattr(User, provider_field)
+    result = await db.execute(
+        select(User).where(or_(column == provider_id, User.email == email))
+    )
+    return result.scalars().first()
+
+
+async def create_oauth(
+    db: AsyncSession,
+    *,
+    email: str,
+    full_name: str,
+    provider_field: str,
+    provider_id: str,
+    role_name: str = Role.USER,
+) -> User:
+    """Create a verified, password-less account from an OAuth profile."""
+    user = User(
+        email=email,
+        full_name=full_name,
+        password=None,
+        role_name=role_name,
+        role_id=await _role_id(db, role_name),
+        status=UserStatus.active,
+        verified=True,
+    )
+    setattr(user, provider_field, provider_id)
     db.add(user)
     await db.commit()
     await db.refresh(user)

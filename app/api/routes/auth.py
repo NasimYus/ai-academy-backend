@@ -18,6 +18,8 @@ from app.schemas.auth import (
     LoginRequest,
     LoginResponse,
     LogoutResult,
+    OAuthCallback,
+    OAuthResult,
     RegisterStep1,
     RegisterStep1Response,
     RegisterStep2,
@@ -221,6 +223,47 @@ async def reset_password(
     await password_resets_repo.delete_by_email(db, payload.email)
     await db.commit()
     return ResetPasswordResult(status="reset")
+
+
+async def _oauth_callback(db: DbSession, provider_field: str, payload: OAuthCallback) -> OAuthResult:
+    # NOTE: like legacy, the posted profile is trusted as-is. Verifying the
+    # provider token server-side is a hardening TODO.
+    user = await users_repo.get_by_provider_or_email(
+        db, provider_field=provider_field, provider_id=payload.id, email=payload.email
+    )
+    registered = user is not None
+
+    if user is None:
+        user = await users_repo.create_oauth(
+            db,
+            email=payload.email,
+            full_name=payload.name,
+            provider_field=provider_field,
+            provider_id=payload.id,
+        )
+    else:
+        setattr(user, provider_field, payload.id)
+        await db.commit()
+
+    if registered:
+        return OAuthResult(
+            status="login",
+            user_id=user.id,
+            already_registered=True,
+            token=create_token(str(user.id)),
+        )
+    # Legacy returns no token for a freshly created account.
+    return OAuthResult(status="registered", user_id=user.id, already_registered=False)
+
+
+@router.post("/google/callback", response_model=OAuthResult)
+async def google_callback(payload: OAuthCallback, db: DbSession) -> OAuthResult:
+    return await _oauth_callback(db, "google_id", payload)
+
+
+@router.post("/facebook/callback", response_model=OAuthResult)
+async def facebook_callback(payload: OAuthCallback, db: DbSession) -> OAuthResult:
+    return await _oauth_callback(db, "facebook_id", payload)
 
 
 @router.post(

@@ -92,3 +92,20 @@ class ResetPasswordRequest(BaseModel):
 
 class ResetPasswordResult(BaseModel):
     status: str  # "reset" | "no_request"
+
+
+# --- OAuth (Google / Facebook), legacy parity ---
+
+
+class OAuthCallback(BaseModel):
+    # The SPA performs the provider handshake and posts the resulting profile.
+    email: EmailStr
+    name: str
+    id: str
+
+
+class OAuthResult(BaseModel):
+    status: str  # "login" | "registered"
+    user_id: int
+    already_registered: bool
+    token: str | None = None
