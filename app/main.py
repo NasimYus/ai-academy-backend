@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import auth, courses, profile
+from app.api.routes import auth, categories, courses, profile
 from app.core.config import settings
 
 app = FastAPI(
@@ -23,6 +23,7 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(courses.router, prefix="/api/v1")
+app.include_router(categories.router, prefix="/api/v1")
 app.include_router(profile.router, prefix="/api/v1")
 
 # Serve uploaded media from local storage (F.1).

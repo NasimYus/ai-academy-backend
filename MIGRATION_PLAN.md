@@ -85,8 +85,11 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 
 ## Phase 2 — Каталог (public)
 
-- [ ] **2.1 Categories (+ trend categories)**
-  - [ ] BE model/migration/endpoints  [ ] FE `entities/category` + фильтр  [ ] test  [ ] admin
+- [x] **2.1 Categories (+ trend categories)** — паритет легаси (CategoriesController)
+  - [x] BE: `Category`+`TrendCategory` модели/миграция; `GET /categories` (top-level+подкатегории+color), `GET /trend-categories`
+  - [x] FE: `entities/category` (queryOptions+типы), `CategoryNav` на странице курсов
+  - [x] test: seed+smoke (2 категории, подкатегории, trend color)
+  - _title i18n → F.4; webinars_count=0 до 2.2 (Course.category_id); admin позже_
 - [ ] **2.2 Course detail** (полные метаданные: инструктор, цена, статус, бейджи, что внутри)
   - [ ] BE расширить `Course` + `GET /courses/{slug}`  [ ] FE `pages/course`  [ ] test  [ ] admin
 - [ ] **2.3 Search & filters** (категория, цена, уровень, тип)

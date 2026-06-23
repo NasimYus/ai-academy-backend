@@ -1,3 +1,4 @@
+from app.models.category import Category, TrendCategory
 from app.models.course import Course
 from app.models.password_reset import PasswordReset
 from app.models.role import Role
@@ -11,6 +12,8 @@ __all__ = [
     "ThemeColorMode",
     "Role",
     "Course",
+    "Category",
+    "TrendCategory",
     "Verification",
     "PasswordReset",
 ]
