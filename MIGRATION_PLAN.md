@@ -193,7 +193,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 ## Phase 5 — Вовлечение
 
 - [x] **5.1 Favorites** (wishlist) — паритет легаси (FavoritesController): `Favorite`+миграция (`f4a5b6c7d8e9`), `GET /favorites`, `POST /favorites/toggle/{course_id}`, `DELETE /favorites/{id}` (owner-scoped); FE `entities/favorite`+`features/favorite-toggle` (FavoriteButton на детали курса) + `pages/favorites` (/favorites) + ссылка в Header. test ✅. NOTE: bundle-избранное — store-фаза
-- [ ] **5.2 Follow** (подписка на инструкторов) · [ ] **5.3 Notifications** (+FCM) · [ ] **5.4 Support-тикеты** · [ ] **5.5 Blog** · [ ] **5.6 Newsletter** · [ ] **5.7 Rewards/баллы**
+- [x] **5.2 Follow** (подписка на пользователей) — паритет легаси (UsersController@followToggle): `Follow`+миграция (`a5b6c7d8e9f0`), `POST /users/{id}/follow` {status}, `GET /panel/following`; `followers_count`/`is_following` в публичном профиле; FE `features/follow-user` (FollowButton на `pages/user`). test ✅
+- [ ] **5.3 Notifications** (+FCM) · [ ] **5.4 Support-тикеты** · [ ] **5.5 Blog** · [ ] **5.6 Newsletter** · [ ] **5.7 Rewards/баллы**
 
 ## Backlog (Phases 6–7 — детализируем после MVP)
 

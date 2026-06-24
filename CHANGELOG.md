@@ -59,6 +59,7 @@
 ## Phase 5 — Вовлечение
 
 - ✅ 🧪 **5.1** Favorites: модель/миграция `Favorite` (uniq user+course); `GET /favorites`, `POST /favorites/toggle/{course_id}` (favored/unfavored), `DELETE /favorites/{id}` (owner-scoped). NOTE: bundle-избранное — store-фаза
+- ✅ 🧪 **5.2** Follow: модель/миграция `Follow` (follower→user, uniq); `POST /users/{id}/follow` {status}, `GET /panel/following`; `followers_count`/`is_following` в публичном профиле (optional-auth)
 
 ## Сквозные задачи (foundation)
 

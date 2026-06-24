@@ -31,6 +31,7 @@ from app.models.discount import (
 from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.favorite import Favorite
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
+from app.models.follow import Follow, FollowStatus
 from app.models.forum import CourseForum, CourseForumAnswer
 from app.models.learning import CourseLearning
 from app.models.noticeboard import CourseNoticeboard, NoticeboardColor
@@ -118,6 +119,8 @@ __all__ = [
     "CourseTranslation",
     "Currency",
     "Favorite",
+    "Follow",
+    "FollowStatus",
     "Verification",
     "PasswordReset",
 ]

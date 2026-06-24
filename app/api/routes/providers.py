@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.api.deps import DbSession
+from app.api.deps import DbSession, OptionalUser
 from app.models.role import Role
 from app.repositories import courses as courses_repo
+from app.repositories import follows as follows_repo
 from app.repositories import users as users_repo
 from app.schemas.common import error_responses
 from app.schemas.provider import ProviderList, PublicProfile
@@ -44,12 +45,17 @@ async def consultations(db: DbSession) -> ProviderList:
     response_model=PublicProfile,
     responses=error_responses(status.HTTP_404_NOT_FOUND),
 )
-async def public_profile(user_id: int, db: DbSession) -> PublicProfile:
+async def public_profile(user_id: int, db: DbSession, current_user: OptionalUser) -> PublicProfile:
     user = await users_repo.get_public_profile(db, user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     courses = await courses_repo.list_by_teacher(db, user.id)
     briefs = [to_brief(c) for c in courses]
+    is_following = False
+    if current_user is not None:
+        is_following = (
+            await follows_repo.get(db, follower_id=current_user.id, user_id=user.id)
+        ) is not None
     return PublicProfile(
         id=user.id,
         full_name=user.full_name,
@@ -61,5 +67,7 @@ async def public_profile(user_id: int, db: DbSession) -> PublicProfile:
         about=user.about,
         created_at=user.created_at,
         courses_count=len(briefs),
+        followers_count=await follows_repo.followers_count(db, user.id),
+        is_following=is_following,
         courses=briefs,
     )

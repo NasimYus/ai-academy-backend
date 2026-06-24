@@ -26,5 +26,7 @@ class PublicProfile(BaseModel):
     about: str | None
     created_at: datetime
     courses_count: int = 0
+    followers_count: int = 0
+    is_following: bool = False  # whether the requesting user follows this profile
     courses: list[CourseRead] = []
     # NOTE(Phase): cashback_rules, meeting/consultation, rates, badges deferred.
