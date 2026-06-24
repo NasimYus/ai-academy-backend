@@ -35,6 +35,12 @@ from app.models.follow import Follow, FollowStatus
 from app.models.forum import CourseForum, CourseForumAnswer
 from app.models.learning import CourseLearning
 from app.models.noticeboard import CourseNoticeboard, NoticeboardColor
+from app.models.notification import (
+    Notification,
+    NotificationSender,
+    NotificationStatus,
+    NotificationType,
+)
 from app.models.order import Order, OrderItem, OrderStatus, PaymentMethod
 from app.models.password_reset import PasswordReset
 from app.models.payment import PaymentChannel, PaymentChannelStatus
@@ -99,6 +105,10 @@ __all__ = [
     "NoteTargetType",
     "CourseNoticeboard",
     "NoticeboardColor",
+    "Notification",
+    "NotificationStatus",
+    "NotificationType",
+    "NotificationSender",
     "CourseForum",
     "CourseForumAnswer",
     "CartItem",

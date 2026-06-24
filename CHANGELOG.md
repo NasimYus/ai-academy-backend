@@ -60,6 +60,7 @@
 
 - ✅ 🧪 **5.1** Favorites: модель/миграция `Favorite` (uniq user+course); `GET /favorites`, `POST /favorites/toggle/{course_id}` (favored/unfavored), `DELETE /favorites/{id}` (owner-scoped). NOTE: bundle-избранное — store-фаза
 - ✅ 🧪 **5.2** Follow: модель/миграция `Follow` (follower→user, uniq); `POST /users/{id}/follow` {status}, `GET /panel/following`; `followers_count`/`is_following` в публичном профиле (optional-auth)
+- ✅ 🧪 **5.3** Notifications: модели/миграция `Notification`+`NotificationStatus`; `GET /notifications?status=all|read|unread` → `{count, notifications}`, `POST /notifications/{id}/seen` (seen/already_seen). Аудитория по `type` (single→user_id, all_users→broadcast не-админам, role-bucket students/instructors/organizations); read-статус per-user. NOTE: `group`/`course_students`/FCM-push отложены (user-groups + firebase)
 
 ## Сквозные задачи (foundation)
 

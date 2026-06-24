@@ -18,6 +18,7 @@ from app.api.routes import (
     follows,
     forums,
     noticeboards,
+    notifications,
     orders,
     payments,
     personal_notes,
@@ -58,6 +59,7 @@ app.include_router(assignments.router, prefix="/api/v1")
 app.include_router(certificates.router, prefix="/api/v1")
 app.include_router(personal_notes.router, prefix="/api/v1")
 app.include_router(noticeboards.router, prefix="/api/v1")
+app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(forums.router, prefix="/api/v1")
 app.include_router(cart.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")
