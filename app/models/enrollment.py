@@ -15,6 +15,7 @@ class EnrollmentSource(str, enum.Enum):
     subscribe = "subscribe"
     gift = "gift"
     bundle = "bundle"
+    reward = "reward"  # redeemed with points (Phase 5.7)
 
 
 class Enrollment(Base):

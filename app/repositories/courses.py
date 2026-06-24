@@ -62,6 +62,12 @@ async def list_courses(
     return list(result.scalars().all())
 
 
+async def with_reward_points(db: AsyncSession) -> list[Course]:
+    """Active, non-private courses buyable with points (legacy RewardsController@courses)."""
+    result = await db.execute(_catalogue().where(Course.points.is_not(None)))
+    return list(result.scalars().all())
+
+
 async def search_by_title(db: AsyncSession, query: str, limit: int = 50) -> list[Course]:
     """Legacy SearchController: active, non-private, title LIKE %query%."""
     result = await db.execute(_catalogue().where(Course.title.ilike(f"%{query}%")).limit(limit))

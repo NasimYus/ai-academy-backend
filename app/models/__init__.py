@@ -57,6 +57,7 @@ from app.models.quiz import (
     ResultStatus,
 )
 from app.models.review import CourseReview, ReviewStatus
+from app.models.reward import RewardAccounting, RewardStatus
 from app.models.role import Role
 from app.models.support import (
     Support,
@@ -114,6 +115,8 @@ __all__ = [
     "CourseNoticeboard",
     "NoticeboardColor",
     "Newsletter",
+    "RewardAccounting",
+    "RewardStatus",
     "Notification",
     "NotificationStatus",
     "NotificationType",

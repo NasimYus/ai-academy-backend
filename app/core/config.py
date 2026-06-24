@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     login_device_limit: bool = False
     number_of_allowed_devices: int = 1
 
+    # --- rewards / points (Phase 5.7, legacy getRewardsSettings) ---
+    # Master gate: when false the rewards subsystem is a no-op (legacy clean DB).
+    rewards_status: bool = False
+    rewards_exchangeable: bool = False
+    rewards_exchangeable_unit: int = 1  # points per 1 wallet unit (avoid div-by-zero)
+
     # --- file storage (F.1) ---
     media_root: str = "media"
     media_url: str = "/media"
