@@ -155,8 +155,9 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 
 ## Phase 4 — Коммерция
 
-- [ ] **4.1 Cart** (add / list / remove)
-  - [ ] BE `Cart`  [ ] FE `entities/cart` + `pages/cart`  [ ] test
+- [x] **4.1 Cart** (add / list / remove) — паритет легаси (CartController/AddCartController, webinar-ветка)
+  - [x] BE `CartItem`+миграция (`f8a9b0c1d2e3`); `GET/POST /cart`, `DELETE /cart/{id}` (owner-scoped); add гейтит already_in_cart/already_purchased/404; amounts (sub_total/total) — tax/discount в 4.2/4.3  [x] FE `entities/cart` + `features/cart` (AddToCartButton, remove) + `pages/cart` (/cart) + ссылка в Header  [x] test (BE: add/list/remove, dup, owned, 404, scope)
+  - NOTE: bundle/product/ticket/special_offer/reserve_meeting в корзине — store/meetings фазы
 - [ ] **4.2 Coupons / discounts** (валидация)
   - [ ] BE `Discount` + validate  [ ] FE применение купона  [ ] test  [ ] admin
 - [ ] **4.3 Checkout + Orders + OrderItems**

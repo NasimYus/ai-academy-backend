@@ -5,6 +5,7 @@ from app.models.assignment import (
     AssignmentHistoryStatus,
     AssignmentStatus,
 )
+from app.models.cart import CartItem
 from app.models.category import Category, TrendCategory
 from app.models.certificate import Certificate
 from app.models.comment import Comment, CommentStatus
@@ -85,6 +86,7 @@ __all__ = [
     "NoticeboardColor",
     "CourseForum",
     "CourseForumAnswer",
+    "CartItem",
     "Verification",
     "PasswordReset",
 ]
