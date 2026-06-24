@@ -147,8 +147,9 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 - [x] **3.8 Noticeboards** — паритет легаси (CourseNoticeboardController@index)
   - [x] BE `CourseNoticeboard`+миграция (`d6e7f8a9b0c1`), `GET /courses/{id}/noticeboards` (color→icon, creator brief)  [x] FE `entities/noticeboard` + секция объявлений в `pages/learn`  [x] test (BE: list newest-first/icon/creator, auth, 404)  [ ] admin (CRUD) — Phase 6
   - NOTE: `course_noticeboard_status` (seen-трекинг) не используется API (seen закомментирован в легаси) — опущено
-- [ ] **3.9 Forums (Q&A: threads, answers, pin, resolve)**
-  - [ ] BE  [ ] FE `pages/course-forum`  [ ] test
+- [x] **3.9 Forums (Q&A: threads, answers, pin, resolve)** — паритет легаси (CourseForum/CourseForumAnswerController + policies)
+  - [x] BE `CourseForum`/`CourseForumAnswer`+миграция (`e7f8a9b0c1d2`); threads CRUD+pin, answers CRUD+pin+resolve; access-gate(view)→403, author/owner-гварды→403; `can`-флаги + агрегаты (questions/resolved/open/comments/active_users)  [x] FE `entities/forum` + `features/course-forum` (NewThreadForm/ThreadCard) + `pages/course-forum` (/course-forum/$courseId)  [x] test (BE: create/list+counts, pin owner-only, resolve author|owner, update author-only, access-gate)
+  - NOTE: уведомления (sendNotification) отложены; attachment через storage(F.1)
 
 ---
 

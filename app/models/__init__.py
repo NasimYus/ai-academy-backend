@@ -19,6 +19,7 @@ from app.models.content import (
 from app.models.course import Course, CourseStatus, CourseType, VideoDemoSource
 from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
+from app.models.forum import CourseForum, CourseForumAnswer
 from app.models.learning import CourseLearning
 from app.models.noticeboard import CourseNoticeboard, NoticeboardColor
 from app.models.password_reset import PasswordReset
@@ -82,6 +83,8 @@ __all__ = [
     "NoteTargetType",
     "CourseNoticeboard",
     "NoticeboardColor",
+    "CourseForum",
+    "CourseForumAnswer",
     "Verification",
     "PasswordReset",
 ]

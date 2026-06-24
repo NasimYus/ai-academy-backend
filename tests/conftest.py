@@ -11,6 +11,8 @@ from app.models.role import Role
 _DATA_TABLES = (
     "verifications",
     "password_resets",
+    "course_forum_answers",
+    "course_forums",
     "course_noticeboards",
     "course_personal_notes",
     "certificates",
