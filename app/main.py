@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import (
     assignments,
     auth,
+    blog,
     cart,
     categories,
     certificates,
@@ -62,6 +63,7 @@ app.include_router(personal_notes.router, prefix="/api/v1")
 app.include_router(noticeboards.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(support.router, prefix="/api/v1")
+app.include_router(blog.router, prefix="/api/v1")
 app.include_router(forums.router, prefix="/api/v1")
 app.include_router(cart.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")

@@ -15,13 +15,20 @@ class CommentStatus(str, enum.Enum):
 
 
 class Comment(Base):
-    """Course comment, parity of legacy `comments` (item_id = course id)."""
+    """Comment, parity of legacy polymorphic `comments` table.
+
+    Targets a course (`course_id`, legacy webinar_id) or a blog (`blog_id`);
+    exactly one is set. `reply_id` threads one level of replies.
+    """
 
     __tablename__ = "comments"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    course_id: Mapped[int] = mapped_column(
-        ForeignKey("courses.id", ondelete="CASCADE"), index=True, nullable=False
+    course_id: Mapped[int | None] = mapped_column(
+        ForeignKey("courses.id", ondelete="CASCADE"), index=True
+    )
+    blog_id: Mapped[int | None] = mapped_column(
+        ForeignKey("blog.id", ondelete="CASCADE"), index=True
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     reply_id: Mapped[int | None] = mapped_column(

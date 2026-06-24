@@ -5,6 +5,7 @@ from app.models.assignment import (
     AssignmentHistoryStatus,
     AssignmentStatus,
 )
+from app.models.blog import Blog, BlogCategory, BlogStatus
 from app.models.cart import CartItem
 from app.models.category import Category, TrendCategory
 from app.models.certificate import Certificate
@@ -119,6 +120,9 @@ __all__ = [
     "SupportConversation",
     "SupportDepartment",
     "SupportStatus",
+    "Blog",
+    "BlogCategory",
+    "BlogStatus",
     "CourseForum",
     "CourseForumAnswer",
     "CartItem",
