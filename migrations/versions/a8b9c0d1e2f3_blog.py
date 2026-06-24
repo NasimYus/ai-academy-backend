@@ -1,7 +1,7 @@
 """blog + blog categories, blog comments on shared table (Phase 5.5)
 
 Revision ID: a8b9c0d1e2f3
-Revises: a7b8c9d0e1f2
+Revises: a7b8c9d0e1f3
 Create Date: 2026-06-24
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "a8b9c0d1e2f3"
-down_revision: str | None = "a7b8c9d0e1f2"
+down_revision: str | None = "a7b8c9d0e1f3"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

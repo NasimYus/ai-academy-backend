@@ -61,9 +61,7 @@ async def test_seen_unknown_or_foreign_404(client: AsyncClient):
     _, other_id = await register_verified_user(client, email="other@aiacademy.tj")
     headers = {"Authorization": f"Bearer {token}"}
     # not visible to this user (personal to someone else)
-    foreign = await _seed(
-        user_id=other_id, title="F", message="f", type=NotificationType.single
-    )
+    foreign = await _seed(user_id=other_id, title="F", message="f", type=NotificationType.single)
     assert (
         await client.post(f"/api/v1/notifications/{foreign}/seen", headers=headers)
     ).status_code == 404

@@ -35,6 +35,7 @@ from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedSta
 from app.models.follow import Follow, FollowStatus
 from app.models.forum import CourseForum, CourseForumAnswer
 from app.models.learning import CourseLearning
+from app.models.newsletter import Newsletter
 from app.models.noticeboard import CourseNoticeboard, NoticeboardColor
 from app.models.notification import (
     Notification,
@@ -112,6 +113,7 @@ __all__ = [
     "NoteTargetType",
     "CourseNoticeboard",
     "NoticeboardColor",
+    "Newsletter",
     "Notification",
     "NotificationStatus",
     "NotificationType",

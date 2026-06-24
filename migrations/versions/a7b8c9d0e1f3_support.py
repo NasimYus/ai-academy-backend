@@ -1,6 +1,6 @@
 """support tickets (Phase 5.4)
 
-Revision ID: a7b8c9d0e1f2
+Revision ID: a7b8c9d0e1f3
 Revises: a6b7c8d9e0f1
 Create Date: 2026-06-24
 
@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "a7b8c9d0e1f2"
+revision: str = "a7b8c9d0e1f3"
 down_revision: str | None = "a6b7c8d9e0f1"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
