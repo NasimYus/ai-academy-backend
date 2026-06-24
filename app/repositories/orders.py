@@ -5,6 +5,22 @@ from sqlalchemy.orm import selectinload
 from app.models.order import Order, OrderItem, OrderStatus
 
 
+async def paid_items_for_user(db: AsyncSession, user_id: int) -> list[OrderItem]:
+    """Purchased course line-items from the user's paid orders (newest first)."""
+    result = await db.execute(
+        select(OrderItem)
+        .join(Order, Order.id == OrderItem.order_id)
+        .where(
+            Order.user_id == user_id,
+            Order.status == OrderStatus.paid,
+            OrderItem.course_id.is_not(None),
+        )
+        .options(selectinload(OrderItem.course))
+        .order_by(OrderItem.id.desc())
+    )
+    return list(result.scalars().all())
+
+
 async def get_by_id(db: AsyncSession, order_id: int) -> Order | None:
     return await db.get(Order, order_id)
 

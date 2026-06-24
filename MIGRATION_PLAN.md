@@ -169,8 +169,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - NOTE: реальные шлюзы (Stripe/Paypal/локальные TJ) — per-deployment с креды; webhook-подпись — позже; выдача доступа (paid→enrollment) → 4.5
 - [x] **4.5 Покупка → enrollment** (после успешной оплаты выдать доступ) — паритет легаси (setPaymentAccounting → Sale)
   - [x] BE `payments.complete` на paid создаёт `Enrollment(source=purchase)` на каждый курс заказа (идемпотентно) → `has_course_access`; `GET /panel/my-courses`  [x] FE `pages/my-courses` (/my-courses) + ссылка в Header + переход «Мои курсы» из payment-callback  [x] test (paid→доступ+my-courses, fail→нет доступа, empty/auth)
-- [ ] **4.6 Purchases (мои курсы)**
-  - [ ] BE  [ ] FE `pages/my-courses`  [ ] test
+- [x] **4.6 Purchases (история покупок)** — паритет легаси (WebinarsController@indexPurchases)
+  - [x] BE `GET /panel/purchases` (оплаченные order-items по курсам: курс+сумма+order+дата)  [x] FE `pages/purchases` (/purchases) + ссылка с «Мои заказы»  [x] test (только paid/empty/auth)
 
 > **🎯 Конец MVP.** Сквозной сценарий: регистрация → каталог → курс → оплата →
 > обучение → сертификат. Инструктор-контент до Phase 6 заводим через

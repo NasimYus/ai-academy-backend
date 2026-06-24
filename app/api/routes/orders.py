@@ -7,7 +7,7 @@ from app.models.discount import Discount
 from app.repositories import cart as cart_repo
 from app.repositories import orders as orders_repo
 from app.schemas.common import error_responses
-from app.schemas.order import CheckoutRequest, OrderRead
+from app.schemas.order import CheckoutRequest, OrderRead, PurchaseRead
 from app.services import discounts as discount_service
 from app.services.order_presenter import order_read as _order_read
 
@@ -81,6 +81,28 @@ async def list_orders(current_user: CurrentUser, db: DbSession) -> list[OrderRea
     """The user's orders, newest first."""
     orders = await orders_repo.list_for_user(db, current_user.id)
     return [_order_read(o) for o in orders]
+
+
+@router.get(
+    "/panel/purchases",
+    response_model=list[PurchaseRead],
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED),
+)
+async def list_purchases(current_user: CurrentUser, db: DbSession) -> list[PurchaseRead]:
+    """Buyer purchase history — paid course line-items (legacy indexPurchases)."""
+    items = await orders_repo.paid_items_for_user(db, current_user.id)
+    return [
+        PurchaseRead(
+            order_id=i.order_id,
+            course_id=i.course_id,
+            title=i.course.title if i.course else None,
+            slug=i.course.slug if i.course else None,
+            thumbnail=i.course.thumbnail if i.course else None,
+            amount=float(i.total_amount),
+            created_at=i.created_at,
+        )
+        for i in items
+    ]
 
 
 @router.get(
