@@ -11,6 +11,7 @@ from app.models.role import Role
 _DATA_TABLES = (
     "verifications",
     "password_resets",
+    "favorites",
     "currencies",
     "course_translations",
     "category_translations",

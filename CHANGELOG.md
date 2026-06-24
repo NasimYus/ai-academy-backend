@@ -56,6 +56,10 @@
 - ✅ 🧪 **4.5** Покупка→enrollment: `payments.complete` на `paid` выдаёт `Enrollment(source=purchase)` на каждый курс заказа (идемпотентно) → доступ через `has_course_access`; `GET /panel/my-courses`. NOTE: charge-account/subscribe/promotion accounting — позже
 - ✅ 🧪 **4.6** Purchases: `GET /panel/purchases` (история — оплаченные order-items по курсам: курс/сумма/заказ/дата). Только из paid-заказов
 
+## Phase 5 — Вовлечение
+
+- ✅ 🧪 **5.1** Favorites: модель/миграция `Favorite` (uniq user+course); `GET /favorites`, `POST /favorites/toggle/{course_id}` (favored/unfavored), `DELETE /favorites/{id}` (owner-scoped). NOTE: bundle-избранное — store-фаза
+
 ## Сквозные задачи (foundation)
 
 - ✅ **F.1** Файловое хранилище (локальный диск, `/media`; S3 — позже)

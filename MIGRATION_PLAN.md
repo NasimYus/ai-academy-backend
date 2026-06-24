@@ -190,9 +190,13 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 
 ---
 
-## Backlog (Phases 5–7 — детализируем после MVP)
+## Phase 5 — Вовлечение
 
-- **Phase 5 — Вовлечение**: favorites, follow, notifications (+FCM), support-тикеты, blog, newsletter, rewards/баллы.
+- [x] **5.1 Favorites** (wishlist) — паритет легаси (FavoritesController): `Favorite`+миграция (`f4a5b6c7d8e9`), `GET /favorites`, `POST /favorites/toggle/{course_id}`, `DELETE /favorites/{id}` (owner-scoped); FE `entities/favorite`+`features/favorite-toggle` (FavoriteButton на детали курса) + `pages/favorites` (/favorites) + ссылка в Header. test ✅. NOTE: bundle-избранное — store-фаза
+- [ ] **5.2 Follow** (подписка на инструкторов) · [ ] **5.3 Notifications** (+FCM) · [ ] **5.4 Support-тикеты** · [ ] **5.5 Blog** · [ ] **5.6 Newsletter** · [ ] **5.7 Rewards/баллы**
+
+## Backlog (Phases 6–7 — детализируем после MVP)
+
 - **Phase 6 — Инструктор**: create/edit course (storeAll), chapters/lessons CRUD, quizzes CRUD, assignment grading, bundles, store/products, statistics, registration-packages.
 - **Phase 7 — Live & advanced**: meetings/reservations (консультации), live-сессии (Agora/Zoom/BBB), subscriptions, bundle purchase, gifts.
 - **Admin**: наращиваем постепенно — на каждой фазе добавляем CRUD для её сущностей (отмечено `admin` в чекбоксах выше).

@@ -13,6 +13,7 @@ from app.api.routes import (
     courses,
     currencies,
     enrollment,
+    favorites,
     featured,
     forums,
     noticeboards,
@@ -47,6 +48,7 @@ app.include_router(currencies.router, prefix="/api/v1")
 app.include_router(featured.router, prefix="/api/v1")
 app.include_router(providers.router, prefix="/api/v1")
 app.include_router(enrollment.router, prefix="/api/v1")
+app.include_router(favorites.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(profile.router, prefix="/api/v1")
 app.include_router(quizzes.router, prefix="/api/v1")

@@ -29,6 +29,7 @@ from app.models.discount import (
     DiscountUserType,
 )
 from app.models.enrollment import Enrollment, EnrollmentSource
+from app.models.favorite import Favorite
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
 from app.models.forum import CourseForum, CourseForumAnswer
 from app.models.learning import CourseLearning
@@ -116,6 +117,7 @@ __all__ = [
     "CategoryTranslation",
     "CourseTranslation",
     "Currency",
+    "Favorite",
     "Verification",
     "PasswordReset",
 ]
