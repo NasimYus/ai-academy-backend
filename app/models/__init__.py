@@ -18,6 +18,7 @@ from app.models.content import (
     TextLesson,
 )
 from app.models.course import Course, CourseStatus, CourseType, VideoDemoSource
+from app.models.currency import Currency
 from app.models.discount import (
     Discount,
     DiscountCategory,
@@ -114,6 +115,7 @@ __all__ = [
     "PaymentChannelStatus",
     "CategoryTranslation",
     "CourseTranslation",
+    "Currency",
     "Verification",
     "PasswordReset",
 ]

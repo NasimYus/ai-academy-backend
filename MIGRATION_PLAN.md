@@ -185,7 +185,7 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 - [x] **F.2 Фоновые задачи** — абстракция очереди `tasks.enqueue` с бэкендами `inline`(dev/тесты) / `asyncio`(in-process fire-and-forget); email-отправка идёт через очередь (не блокирует запрос). NOTE: durable arq/Celery+Redis (ретраи/персистентность) — за тем же интерфейсом, per-deploy
 - [x] **F.3 Email-отправка** (verification, reset, чеки) — сервис `email` с бэкендами `console`(dev/тесты, in-memory outbox) / `smtp`(aiosmtplib); подключено: код верификации, ссылка сброса пароля, чек об оплате. SMS (mobile) — всё ещё заглушка (нет провайдера). Отправка синхронная — очередь = F.2
 - [x] **F.4 i18n контента** — translatable как в легаси: `category_translations`/`course_translations` (`d2e3f4a5b6c7`), locale-зависимость (`?locale=`/Accept-Language→`Locale`), хелпер `i18n.localize` (fallback locale→default→базовая колонка); применено к категориям (title) и курсам list/detail (title/description/seo). NOTE: остальные translatable-модели (quizzes/…) — тем же паттерном инкрементально
-- [ ] **F.5 Мультивалюта** — воспроизвести `MultiCurrency` как в легаси
+- [x] **F.5 Мультивалюта** — `currencies`+миграция (`e3f4a5b6c7d8`), `GET /currencies`, зависимость выбора валюты (`?currency=`→`CurrencyCtx`, fallback default), сервис `currency` (convert по exchange_rate + format по position/separator/decimals/sign); цены курса (list/detail) конвертируются + `currency`-код в ответе. NOTE: серверные суммы корзины/заказов — в базовой валюте (конвертация презентационная); user.currency-привязка — позже
 - [ ] **F.6 i18n UI** на фронте (если нужен таджикский/русский/английский переключатель)
 
 ---

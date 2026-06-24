@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 
-from app.api.deps import CurrentUser, DbSession, Locale, OptionalUser
+from app.api.deps import CurrencyCtx, CurrentUser, DbSession, Locale, OptionalUser
 from app.core.config import settings
 from app.models.comment import Comment
 from app.models.content import Accessibility
@@ -28,6 +28,7 @@ router = APIRouter(prefix="/courses", tags=["courses"])
 async def list_courses(
     db: DbSession,
     locale: Locale,
+    currency: CurrencyCtx,
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     cat: int | None = Query(None, description="category id"),
@@ -50,7 +51,7 @@ async def list_courses(
         limit=limit,
         offset=offset,
     )
-    return [to_brief(c, locale, settings.default_locale) for c in courses]
+    return [to_brief(c, locale, settings.default_locale, currency) for c in courses]
 
 
 @router.get(
@@ -59,7 +60,7 @@ async def list_courses(
     responses=error_responses(status.HTTP_404_NOT_FOUND),
 )
 async def get_course(
-    slug: str, db: DbSession, current_user: OptionalUser, locale: Locale
+    slug: str, db: DbSession, current_user: OptionalUser, locale: Locale, currency: CurrencyCtx
 ) -> CourseDetail:
     course = await courses_repo.get_by_slug(db, slug)
     if course is None:
@@ -70,7 +71,7 @@ async def get_course(
     comments = await comments_repo.list_for_course(db, course.id)
     has_access = await access.has_course_access(db, current_user, course)
 
-    return to_detail(course, locale, settings.default_locale).model_copy(
+    return to_detail(course, locale, settings.default_locale, currency).model_copy(
         update={
             "auth": current_user is not None,
             "auth_has_bought": has_access,

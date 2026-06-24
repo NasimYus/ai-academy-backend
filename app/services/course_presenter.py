@@ -6,11 +6,13 @@ the repository (they are `lazy="raise"`).
 
 from app.models.course import Course
 from app.schemas.course import CourseDetail, CourseRead, CourseTeacher
+from app.services import currency as currency_svc
 from app.services import i18n
+from app.services.currency import CurrencyItem
 
 
 def price_string(price: float) -> str | None:
-    # Legacy handlePrice(): formatted only when price > 0 (currency/i18n → F.5).
+    # Legacy handlePrice(): formatted only when price > 0.
     return f"{price:,.0f}" if price and price > 0 else None
 
 
@@ -30,11 +32,24 @@ def teacher_brief(course: Course) -> CourseTeacher | None:
     )
 
 
-def to_brief(course: Course, locale: str | None = None, default_locale: str = "en") -> CourseRead:
-    price = float(course.price)
+def to_brief(
+    course: Course,
+    locale: str | None = None,
+    default_locale: str = "en",
+    currency: CurrencyItem | None = None,
+) -> CourseRead:
+    base = float(course.price)
     title = course.title
     if locale:
         title = i18n.localize(course, locale, default_locale, "title")["title"]
+    if currency is not None:
+        price = currency_svc.convert(base, currency)
+        pstr = currency_svc.fmt(base, currency)
+        currency_code = currency.code
+    else:
+        price = base
+        pstr = price_string(base)
+        currency_code = None
     return CourseRead(
         id=course.id,
         title=title,
@@ -44,7 +59,8 @@ def to_brief(course: Course, locale: str | None = None, default_locale: str = "e
         image=course.thumbnail,
         image_cover=course.image_cover,
         price=price,
-        price_string=price_string(price),
+        price_string=pstr,
+        currency=currency_code,
         best_ticket_price=price,  # NOTE(4.2) no tickets/special-offers yet
         duration=course.duration,
         access_days=course.access_days,
@@ -61,9 +77,13 @@ def to_brief(course: Course, locale: str | None = None, default_locale: str = "e
 
 
 def to_detail(
-    course: Course, locale: str | None = None, default_locale: str = "en"
+    course: Course,
+    locale: str | None = None,
+    default_locale: str = "en",
+    currency: CurrencyItem | None = None,
 ) -> CourseDetail:
-    price = float(course.price)
+    base = float(course.price)
+    price = currency_svc.convert(base, currency) if currency is not None else base
     description = course.description
     seo_description = course.seo_description
     if locale:
@@ -71,7 +91,7 @@ def to_detail(
         description = loc["description"]
         seo_description = loc["seo_description"]
     return CourseDetail(
-        **to_brief(course, locale, default_locale).model_dump(),
+        **to_brief(course, locale, default_locale, currency).model_dump(),
         description=description,
         seo_description=seo_description,
         video_demo=course.video_demo,

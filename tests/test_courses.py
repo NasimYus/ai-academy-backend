@@ -54,7 +54,9 @@ async def test_list_courses_brief(client: AsyncClient):
     course = body[0]
     assert course["category"] == "Programming"
     assert course["price"] == 100.0
-    assert course["price_string"] == "100"
+    # default currency (USD) is applied to display formatting (F.5)
+    assert course["price_string"] == "$100"
+    assert course["currency"] == "USD"
     assert course["teacher"]["id"] == teacher_id
     assert course["teacher"]["full_name"] == "Test User"
     # brief stays brief — no detail-only keys

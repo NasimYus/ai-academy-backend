@@ -62,7 +62,7 @@
 - ✅ 🧪 **F.2** Фоновые задачи: `tasks.enqueue` (бэкенды `inline`/`asyncio`); email теперь через очередь. NOTE: durable arq/Celery+Redis — за тем же интерфейсом, per-deploy
 - ✅ 🧪 **F.3** Email-отправка: сервис `email` (бэкенды `console`/`smtp` через aiosmtplib, in-memory outbox для тестов); шлёт код верификации, ссылку сброса пароля, чек об оплате. SMS — заглушка (нет провайдера); очередь — F.2
 - ✅ 🧪 **F.4** i18n контента: `category_translations`/`course_translations`+миграция; `Locale`-зависимость (`?locale=`/Accept-Language), `i18n.localize` (fallback locale→default→база); применено к категориям и курсам (list/detail). NOTE: прочие translatable — инкрементально тем же паттерном
-- ⬜ **F.5** Мультивалюта (`MultiCurrency`)
+- ✅ 🧪 **F.5** Мультивалюта: `currencies`+миграция; `GET /currencies`, `CurrencyCtx` (`?currency=`, fallback default), сервис convert/format (exchange_rate, sign/position/decimals); цены курса конвертируются + `currency` в ответе. NOTE: суммы корзины/заказов — в базовой валюте
 
 ## Backlog (после MVP)
 

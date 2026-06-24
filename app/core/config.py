@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     # --- i18n content (F.4) ---
     default_locale: str = "en"
 
+    # --- multi-currency (F.5) ---
+    # Currency that stored prices are denominated in (exchange_rate base).
+    default_currency: str = "USD"
+
     # --- background tasks (F.2) ---
     # "inline" runs work synchronously (dev/tests); "asyncio" fire-and-forgets it.
     task_backend: str = "inline"

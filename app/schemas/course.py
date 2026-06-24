@@ -45,6 +45,7 @@ class CourseRead(BaseModel):
 
     price: float
     price_string: str | None = None
+    currency: str | None = None  # display currency code (F.5); null = default
     best_ticket_price: float | None = None  # NOTE(4.2) tickets/discounts → = price
     discount_percent: int = 0  # NOTE(4.2)
 

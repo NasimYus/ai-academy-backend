@@ -63,6 +63,20 @@ def get_locale(
 Locale = Annotated[str, Depends(get_locale)]
 
 
+async def get_currency(db: DbSession, currency: Annotated[str | None, Query()] = None):
+    """Resolve the display currency: ?currency= if active, else the default."""
+    from app.services.currency import CurrencyItem, resolve
+
+    item: CurrencyItem = await resolve(db, currency)
+    return item
+
+
+CurrencyCtx = Annotated["CurrencyItem", Depends(get_currency)]
+
+# Late import for the annotation only (avoids a top-level cycle).
+from app.services.currency import CurrencyItem  # noqa: E402
+
+
 def require_role(*role_names: str):
     """Allow only the exact given role names."""
 
