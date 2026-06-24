@@ -18,6 +18,7 @@ from app.api.routes import (
     featured,
     follows,
     forums,
+    instructor,
     newsletter,
     noticeboards,
     notifications,
@@ -66,6 +67,7 @@ app.include_router(noticeboards.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(newsletter.router, prefix="/api/v1")
 app.include_router(rewards.router, prefix="/api/v1")
+app.include_router(instructor.router, prefix="/api/v1")
 app.include_router(support.router, prefix="/api/v1")
 app.include_router(blog.router, prefix="/api/v1")
 app.include_router(forums.router, prefix="/api/v1")

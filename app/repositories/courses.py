@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, datetime
 
 from sqlalchemy import func, select
@@ -133,3 +134,65 @@ async def counts_by_category(db: AsyncSession) -> dict[int, int]:
         .group_by(Course.category_id)
     )
     return {category_id: count for category_id, count in result.all()}
+
+
+# --- instructor mutations (Phase 6.1) ---
+
+
+def _slugify(title: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    return slug or "course"
+
+
+async def unique_slug(db: AsyncSession, title: str) -> str:
+    """A URL slug from the title, made unique with a numeric suffix."""
+    base = _slugify(title)
+    candidate = base
+    i = 2
+    while (await db.execute(select(Course.id).where(Course.slug == candidate))).first():
+        candidate = f"{base}-{i}"
+        i += 1
+    return candidate
+
+
+async def create_course(db: AsyncSession, course: Course) -> Course:
+    db.add(course)
+    await db.commit()
+    await db.refresh(course, attribute_names=["teacher", "category"])
+    return course
+
+
+async def update_course(db: AsyncSession, course: Course, changes: dict) -> Course:
+    for key, value in changes.items():
+        setattr(course, key, value)
+    await db.commit()
+    await db.refresh(course, attribute_names=["teacher", "category"])
+    return course
+
+
+async def delete_course(db: AsyncSession, course: Course) -> None:
+    await db.delete(course)
+    await db.commit()
+
+
+async def list_by_creator(db: AsyncSession, user_id: int) -> list[Course]:
+    """Courses the user owns as creator or teacher (legacy classes list)."""
+    result = await db.execute(
+        select(Course)
+        .where((Course.creator_id == user_id) | (Course.teacher_id == user_id))
+        .options(selectinload(Course.teacher), selectinload(Course.category))
+        .order_by(Course.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_owned(db: AsyncSession, course_id: int, user_id: int) -> Course | None:
+    result = await db.execute(
+        select(Course)
+        .where(
+            Course.id == course_id,
+            (Course.creator_id == user_id) | (Course.teacher_id == user_id),
+        )
+        .options(selectinload(Course.teacher), selectinload(Course.category))
+    )
+    return result.scalar_one_or_none()

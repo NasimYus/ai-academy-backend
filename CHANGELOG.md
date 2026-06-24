@@ -65,6 +65,11 @@
 - ✅ 🧪 **5.5** Blog: модели/миграция `Blog`+`BlogCategory`; общая `comments` расширена `blog_id` (course_id→nullable); `GET /blogs?cat=&limit=&offset=` → `{count, blogs}` (publish), `GET /blogs/categories`, `GET /blogs/{id}` → `{blog}` (комменты-деревом), `POST /blogs/{id}/comments` (коммент/реплай, gate enable_comment); description обрезается до 160. NOTE: title/контент + категории inline (легаси — translations); badges/visit_count/related-posts/rewards/модерация отложены
 - ✅ 🧪 **5.6** Newsletter: модель/миграция `Newsletter` (`b9c0d1e2f3a4`, email unique); `POST /newsletter` (optional-auth; дубль email → 422 `already_subscribed`; если авторизован и email == свой → `user.newsletter=true` + link `user_id`). NOTE: NewsletterHistory (рассылка) — admin/Phase 6
 - ✅ 🧪 **5.7** Rewards/баллы: модель/миграция `RewardAccounting` (`c0d1e2f3a4b5`, ledger addiction/deduction) + `reward` в enum `enrollment_source`; settings-гейт `rewards_status` (default OFF → no-op как в легаси). `GET /rewards` (гейт→404; points available/total/spent + история + leaderboard + exchangeable), `GET /rewards/reward-courses` (ungated — active+points→brief), `POST /rewards/webinar/{id}/apply` (redeem: no_points/free/already_purchased/no_enough_points→422, иначе `Enrollment(source=reward)` + deduction), `POST /rewards/exchange` (гейт→403; deduction, кредит кошелька → NOTE). Отложено: earning-правила (`Reward`-таблица, авто-начисление по событиям) и wallet/Accounting — гейт-заглушки/Phase 6
+
+## Phase 6 — Инструктор
+
+- ✅ 🧪 **6.1** Course CRUD (инструктор): `POST /panel/webinar` (create, паритет `storeAll`: required type/title/thumbnail/image_cover/description/category_id; status `pending` если `rules` принят и не `draft`, иначе `is_draft`; slug автоген уникальный; webinar→`start_date` обязателен), `GET /panel/classes` (свои курсы), `GET /panel/webinar/{id}/edit`, `PUT /panel/webinar/{id}`, `DELETE /panel/webinar/{id}`; гейт `require_level("teacher")` (teacher|organization → иначе 403) + ownership (creator|teacher → 404 чужие). Отложено: tags/filters/partner-instructors (отдельные подсистемы), org→teacher_id назначение
+
 ## Сквозные задачи (foundation)
 
 - ✅ **F.1** Файловое хранилище (локальный диск, `/media`; S3 — позже)

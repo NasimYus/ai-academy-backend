@@ -1,0 +1,136 @@
+from httpx import AsyncClient
+
+from app.core.database import AsyncSessionLocal
+from app.models.category import Category
+from app.models.role import Role
+from app.models.user import User
+from tests.conftest import register_verified_user
+
+
+async def _teacher(client: AsyncClient, email: str = "teacher@aiacademy.tj") -> tuple[str, int]:
+    token, uid = await register_verified_user(client, email=email)
+    async with AsyncSessionLocal() as db:
+        user = await db.get(User, uid)
+        user.role_name = Role.TEACHER
+        user.role_id = 4
+        await db.commit()
+    return token, uid
+
+
+async def _category(title: str = "Programming") -> int:
+    async with AsyncSessionLocal() as db:
+        cat = Category(title=title, slug=title.lower(), order=1)
+        db.add(cat)
+        await db.commit()
+        return cat.id
+
+
+def _auth(token: str) -> dict:
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _payload(category_id: int, **over) -> dict:
+    base = {
+        "type": "course",
+        "title": "Intro to Python",
+        "thumbnail": "/media/t.png",
+        "image_cover": "/media/c.png",
+        "description": "Learn Python",
+        "category_id": category_id,
+        "duration": 120,
+        "price": 100,
+        "rules": True,
+    }
+    base.update(over)
+    return base
+
+
+async def test_create_course_pending(client: AsyncClient):
+    token, uid = await _teacher(client)
+    cat = await _category()
+    r = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    assert r.status_code == 201
+    body = r.json()
+    assert body["status"] == "pending"
+    assert body["slug"] == "intro-to-python"
+    assert body["description"] == "Learn Python"
+
+
+async def test_create_as_draft_when_rules_not_accepted(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    r = await client.post(
+        "/api/v1/panel/webinar", json=_payload(cat, rules=False), headers=_auth(token)
+    )
+    assert r.status_code == 201
+    assert r.json()["status"] == "is_draft"
+
+
+async def test_create_requires_teacher(client: AsyncClient):
+    token, _ = await register_verified_user(client, email="plain@aiacademy.tj")  # role 'user'
+    cat = await _category()
+    r = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    assert r.status_code == 403
+
+
+async def test_create_unknown_category(client: AsyncClient):
+    token, _ = await _teacher(client)
+    r = await client.post("/api/v1/panel/webinar", json=_payload(999), headers=_auth(token))
+    assert r.status_code == 422
+    assert r.json()["detail"] == "category_not_found"
+
+
+async def test_webinar_requires_start_date(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    r = await client.post(
+        "/api/v1/panel/webinar", json=_payload(cat, type="webinar"), headers=_auth(token)
+    )
+    assert r.status_code == 422
+    assert r.json()["detail"] == "start_date_required"
+
+
+async def test_list_edit_update_delete(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    created = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    course_id = created.json()["id"]
+
+    # listed in my classes
+    listed = await client.get("/api/v1/panel/classes", headers=_auth(token))
+    assert listed.status_code == 200
+    assert course_id in [c["id"] for c in listed.json()]
+
+    # edit (owner)
+    edit = await client.get(f"/api/v1/panel/webinar/{course_id}/edit", headers=_auth(token))
+    assert edit.status_code == 200
+
+    # update title + price
+    upd = await client.put(
+        f"/api/v1/panel/webinar/{course_id}",
+        json={"title": "Renamed", "price": 250},
+        headers=_auth(token),
+    )
+    assert upd.status_code == 200
+    assert upd.json()["title"] == "Renamed"
+    assert upd.json()["price"] == 250.0
+    assert upd.json()["slug"] == "intro-to-python"  # slug stays
+
+    # delete
+    deleted = await client.delete(f"/api/v1/panel/webinar/{course_id}", headers=_auth(token))
+    assert deleted.status_code == 204
+    gone = await client.get(f"/api/v1/panel/webinar/{course_id}/edit", headers=_auth(token))
+    assert gone.status_code == 404
+
+
+async def test_cannot_edit_others_course(client: AsyncClient):
+    owner_token, _ = await _teacher(client, email="owner@aiacademy.tj")
+    cat = await _category()
+    created = await client.post(
+        "/api/v1/panel/webinar", json=_payload(cat), headers=_auth(owner_token)
+    )
+    course_id = created.json()["id"]
+
+    other_token, _ = await _teacher(client, email="other@aiacademy.tj")
+    r = await client.get(f"/api/v1/panel/webinar/{course_id}/edit", headers=_auth(other_token))
+    assert r.status_code == 404
