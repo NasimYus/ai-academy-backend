@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.models.user import User, UserStatus
 from app.models.verification import Verification
+from app.services import email
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$", re.IGNORECASE)
 
@@ -73,7 +74,7 @@ async def check_confirmed(
 
     await db.commit()
     await db.refresh(verification)
-    _deliver(verification, field)
+    await _deliver(verification, field)
 
     return {"status": "send", "code": verification.code if settings.debug else None}
 
@@ -118,8 +119,16 @@ async def confirm_code(db: AsyncSession, *, value: str, code: str) -> bool:
     return True
 
 
-def _deliver(verification: Verification, field: str) -> None:
-    """Send the code. Real SMS/email delivery is deferred (F.2/F.3)."""
-    if settings.environment == "production":
-        # TODO(F.3): send via SMS provider / email notification.
-        pass
+async def _deliver(verification: Verification, field: str) -> None:
+    """Deliver the verification code. Email is sent via the email service (F.3);
+    SMS delivery is still deferred (no provider yet)."""
+    if field != "email":
+        return  # TODO(F.3): SMS provider for mobile verification
+    await email.send_email(
+        to=verification.email,
+        subject="Код подтверждения — AI Academy",
+        body=(
+            f"Ваш код подтверждения: {verification.code}\n\n"
+            "Код действует ограниченное время. Если вы не запрашивали его, проигнорируйте письмо."
+        ),
+    )

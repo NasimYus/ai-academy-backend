@@ -31,6 +31,7 @@ from app.schemas.auth import (
 )
 from app.schemas.common import error_responses
 from app.schemas.user import UserRead
+from app.services import email
 from app.services import verification as verification_svc
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -193,7 +194,17 @@ async def forget_password(payload: ForgotPasswordRequest, db: DbSession) -> Forg
 
     token = secrets.token_urlsafe(45)  # ~60 chars, like legacy Str::random(60)
     await password_resets_repo.create(db, email=payload.email, token=token)
-    # Email delivery is deferred (F.3); the token is surfaced in debug for testing.
+    reset_link = f"{settings.frontend_url}/reset-password?token={token}&email={payload.email}"
+    await email.send_email(
+        to=payload.email,
+        subject="Сброс пароля — AI Academy",
+        body=(
+            "Вы запросили сброс пароля.\n\n"
+            f"Перейдите по ссылке, чтобы задать новый пароль:\n{reset_link}\n\n"
+            "Если вы не запрашивали сброс, проигнорируйте это письмо."
+        ),
+    )
+    # Token is also surfaced in debug for testing without a mailbox.
     return ForgotPasswordResult(status="done", token=token if settings.debug else None)
 
 

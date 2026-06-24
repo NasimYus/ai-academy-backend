@@ -32,6 +32,19 @@ class Settings(BaseSettings):
     media_root: str = "media"
     media_url: str = "/media"
 
+    # --- email (F.3) ---
+    # "console" records to an in-memory outbox (dev/tests); "smtp" sends via SMTP.
+    email_backend: str = "console"
+    mail_from: str = "no-reply@aiacademy.tj"
+    mail_from_name: str = "AI Academy"
+    smtp_host: str = "localhost"
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_use_tls: bool = True
+    # Public base URL for links embedded in emails (reset, receipts).
+    frontend_url: str = "http://localhost:3000"
+
     # Comma-separated in env; use `cors_origins` (the parsed list) in code.
     cors_origins_raw: str = "http://localhost:3000,http://localhost:5173"
 

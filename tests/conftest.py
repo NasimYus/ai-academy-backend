@@ -70,6 +70,9 @@ async def _clean_db():
             ]
         )
         await db.commit()
+    from app.services.email import outbox
+
+    outbox.clear()
     yield
 
 

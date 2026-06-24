@@ -11,7 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.order import Order, OrderStatus, PaymentMethod
 from app.models.payment import PaymentChannel
+from app.models.user import User
 from app.repositories import enrollments as enrollments_repo
+from app.repositories import orders as orders_repo
+from app.services import email
 
 
 def build_redirect_url(order: Order, channel: PaymentChannel) -> str:
@@ -49,6 +52,28 @@ async def complete(db: AsyncSession, order: Order) -> None:
             )
     await db.commit()
     await db.refresh(order)
+    await _send_receipt(db, order)
+
+
+async def _send_receipt(db: AsyncSession, order: Order) -> None:
+    """Email a purchase receipt for a paid order (F.3)."""
+    user = await db.get(User, order.user_id)
+    if user is None or not user.email:
+        return
+    order = await orders_repo.reload(db, order.id)  # relationships expired after commit
+    lines = [
+        f"- {i.course.title if i.course else 'Курс'}: {float(i.total_amount)} TJS"
+        for i in order.items
+    ]
+    body = (
+        f"Спасибо за покупку! Заказ #{order.id} оплачен.\n\n"
+        + "\n".join(lines)
+        + f"\n\nИтого: {float(order.total_amount)} TJS\n\n"
+        "Доступ к курсам уже открыт в разделе «Мои курсы»."
+    )
+    await email.send_email(
+        to=user.email, subject=f"Чек по заказу #{order.id} — AI Academy", body=body
+    )
 
 
 async def fail(db: AsyncSession, order: Order) -> None:

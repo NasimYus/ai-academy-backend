@@ -1,0 +1,70 @@
+"""Email delivery (F.3) with pluggable backends.
+
+- `console` (default): records messages to an in-memory outbox and logs them —
+  used in dev and tests (no SMTP needed; codes/tokens still surface in debug).
+- `smtp`: sends via aiosmtplib using the configured SMTP server.
+
+Sending is synchronous within the request for now; moving it onto a background
+queue is F.2 (arq/Celery).
+"""
+
+import logging
+from dataclasses import dataclass, field
+
+import aiosmtplib
+
+from app.core.config import settings
+
+logger = logging.getLogger("app.email")
+
+
+@dataclass
+class EmailMessage:
+    to: str
+    subject: str
+    body: str
+
+
+@dataclass
+class _Outbox:
+    messages: list[EmailMessage] = field(default_factory=list)
+
+    def clear(self) -> None:
+        self.messages.clear()
+
+
+# Inspectable in tests / dev when backend == "console".
+outbox = _Outbox()
+
+
+async def send_email(to: str | None, subject: str, body: str) -> None:
+    """Best-effort send. No-op when there is no recipient address."""
+    if not to:
+        return
+
+    message = EmailMessage(to=to, subject=subject, body=body)
+
+    if settings.email_backend == "smtp":
+        await _send_smtp(message)
+    else:
+        outbox.messages.append(message)
+        logger.info("EMAIL → %s | %s", to, subject)
+
+
+async def _send_smtp(message: EmailMessage) -> None:
+    from email.message import EmailMessage as MimeMessage
+
+    mime = MimeMessage()
+    mime["From"] = f"{settings.mail_from_name} <{settings.mail_from}>"
+    mime["To"] = message.to
+    mime["Subject"] = message.subject
+    mime.set_content(message.body)
+
+    await aiosmtplib.send(
+        mime,
+        hostname=settings.smtp_host,
+        port=settings.smtp_port,
+        username=settings.smtp_user,
+        password=settings.smtp_password,
+        start_tls=settings.smtp_use_tls,
+    )
