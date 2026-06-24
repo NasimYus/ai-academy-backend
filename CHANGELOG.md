@@ -61,6 +61,7 @@
 - ✅ 🧪 **5.1** Favorites: модель/миграция `Favorite` (uniq user+course); `GET /favorites`, `POST /favorites/toggle/{course_id}` (favored/unfavored), `DELETE /favorites/{id}` (owner-scoped). NOTE: bundle-избранное — store-фаза
 - ✅ 🧪 **5.2** Follow: модель/миграция `Follow` (follower→user, uniq); `POST /users/{id}/follow` {status}, `GET /panel/following`; `followers_count`/`is_following` в публичном профиле (optional-auth)
 - ✅ 🧪 **5.3** Notifications: модели/миграция `Notification`+`NotificationStatus`; `GET /notifications?status=all|read|unread` → `{count, notifications}`, `POST /notifications/{id}/seen` (seen/already_seen). Аудитория по `type` (single→user_id, all_users→broadcast не-админам, role-bucket students/instructors/organizations); read-статус per-user. NOTE: `group`/`course_students`/FCM-push отложены (user-groups + firebase)
+- ✅ 🧪 **5.4** Support-тикеты: модели/миграция `Support`+`SupportConversation`+`SupportDepartment`; `GET /support` (`{class_support, my_class_support, tickets}`), `/support/{class_support,my_class_support,tickets,departments}`, `GET /support/{id}`, `POST /support` (multipart), `POST /support/{id}/conversations` (multipart, owner→open/teacher→replied), `GET /support/{id}/close`. course_support→course_id, platform_support→department_id; `my_class_support` = тикеты по курсам, где я преподаватель. NOTE: title отдела inline (легаси — translations); supporter/admin-сторона + sendNotification отложены
 
 ## Сквозные задачи (foundation)
 

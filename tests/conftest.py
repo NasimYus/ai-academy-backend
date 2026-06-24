@@ -11,6 +11,9 @@ from app.models.role import Role
 _DATA_TABLES = (
     "verifications",
     "password_resets",
+    "support_conversations",
+    "supports",
+    "support_departments",
     "notifications_status",
     "notifications",
     "follows",

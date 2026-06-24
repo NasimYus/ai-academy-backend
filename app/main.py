@@ -26,6 +26,7 @@ from app.api.routes import (
     providers,
     quizzes,
     search,
+    support,
 )
 from app.core.config import settings
 
@@ -60,6 +61,7 @@ app.include_router(certificates.router, prefix="/api/v1")
 app.include_router(personal_notes.router, prefix="/api/v1")
 app.include_router(noticeboards.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
+app.include_router(support.router, prefix="/api/v1")
 app.include_router(forums.router, prefix="/api/v1")
 app.include_router(cart.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")
