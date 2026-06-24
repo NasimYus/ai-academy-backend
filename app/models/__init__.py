@@ -6,6 +6,7 @@ from app.models.assignment import (
     AssignmentStatus,
 )
 from app.models.category import Category, TrendCategory
+from app.models.certificate import Certificate
 from app.models.comment import Comment, CommentStatus
 from app.models.content import (
     Accessibility,
@@ -74,6 +75,7 @@ __all__ = [
     "AssignmentHistory",
     "AssignmentHistoryStatus",
     "AssignmentHistoryMessage",
+    "Certificate",
     "Verification",
     "PasswordReset",
 ]

@@ -72,6 +72,22 @@ async def user_results(db: AsyncSession, quiz_id: int, user_id: int) -> list[Qui
     return list(result.scalars().all())
 
 
+async def passed_results_for_user(db: AsyncSession, user_id: int) -> list[QuizResult]:
+    """A user's passed attempts on active quizzes (legacy achievements), quiz loaded."""
+    result = await db.execute(
+        select(QuizResult)
+        .join(QuizModel, QuizModel.id == QuizResult.quiz_id)
+        .where(
+            QuizResult.user_id == user_id,
+            QuizResult.status == ResultStatus.passed,
+            QuizModel.status == QuizStatus.active,
+        )
+        .options(selectinload(QuizResult.quiz))
+        .order_by(QuizResult.id.desc())
+    )
+    return list(result.scalars().all())
+
+
 async def count_results(db: AsyncSession, quiz_id: int, user_id: int) -> int:
     result = await db.execute(
         select(func.count())

@@ -12,6 +12,7 @@ from app.schemas.quiz import (
     StoreResultRequest,
 )
 from app.services import access
+from app.services import certificates as certificates_service
 from app.services import quizzes as quiz_service
 
 router = APIRouter(tags=["quizzes"])
@@ -135,6 +136,10 @@ async def store_result(
     result.status = new_status
     await db.commit()
     await db.refresh(result)
+
+    # Issue an achievement certificate when a certificate-quiz is passed (Phase 3.6).
+    await certificates_service.issue_if_passed(db, quiz, result)
+
     return quiz_service.result_read(result)
 
 
