@@ -1,4 +1,4 @@
-"""Seed minimal dev data: one admin, one teacher, a few published courses.
+"""Seed minimal dev data: one admin, one teacher, a few active courses.
 
 Run with:  uv run python -m scripts.seed
 Idempotent — safe to run repeatedly.
@@ -7,8 +7,8 @@ Idempotent — safe to run repeatedly.
 import asyncio
 
 from app.core.database import AsyncSessionLocal
-from app.models.course import Course, CourseStatus
-from app.models.user import UserRole
+from app.models.course import Course, CourseStatus, CourseType
+from app.models.role import Role
 from app.repositories import courses as courses_repo
 from app.repositories import users as users_repo
 
@@ -22,8 +22,8 @@ async def main() -> None:
                 email="admin@aiacademy.tj",
                 password="admin12345",
                 full_name="AI Academy Admin",
-                role=UserRole.admin,
-                is_verified=True,
+                role_name=Role.ADMIN,
+                verified=True,
             )
             print(f"created admin: {admin.email} / admin12345")
 
@@ -34,8 +34,8 @@ async def main() -> None:
                 email="teacher@aiacademy.tj",
                 password="teacher12345",
                 full_name="Demo Teacher",
-                role=UserRole.teacher,
-                is_verified=True,
+                role_name=Role.TEACHER,
+                verified=True,
             )
             print(f"created teacher: {teacher.email} / teacher12345")
 
@@ -52,8 +52,10 @@ async def main() -> None:
                         slug=slug,
                         description=desc,
                         price=price,
-                        status=CourseStatus.published,
+                        type=CourseType.course,
+                        status=CourseStatus.active,
                         teacher_id=teacher.id,
+                        creator_id=teacher.id,
                     )
                 )
                 print(f"created course: {slug}")
