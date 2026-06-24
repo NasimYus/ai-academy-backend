@@ -21,6 +21,7 @@ from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
 from app.models.learning import CourseLearning
 from app.models.password_reset import PasswordReset
+from app.models.personal_note import CoursePersonalNote, NoteTargetType
 from app.models.quiz import (
     QuestionType,
     Quiz,
@@ -76,6 +77,8 @@ __all__ = [
     "AssignmentHistoryStatus",
     "AssignmentHistoryMessage",
     "Certificate",
+    "CoursePersonalNote",
+    "NoteTargetType",
     "Verification",
     "PasswordReset",
 ]

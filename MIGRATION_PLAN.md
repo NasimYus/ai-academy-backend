@@ -141,7 +141,9 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] BE `Assignment`/`AssignmentHistory`/`AssignmentHistoryMessage`+миграция; show/course-list/my_assignments/messages(get+post); deadline+attempts гейт, access-gate, history-on-first-message  [ ] FE `features/submit-assignment`  [x] test  [ ] admin (грейдинг/review — Phase 6)
 - [~] **3.6 Certificates** (achievements, validation, рендер/скачивание) — паритет легаси (CertificatesController/MakeCertificate, student-flow)
   - [x] BE `Certificate`+миграция; выдача при сдаче quiz; achievements/show(PDF через fpdf2)/validation; sync-генерация + кэш на диске  [ ] FE `pages/certificates`  [x] test  [ ] admin (шаблоны/позиционирование, Unicode-шрифт — Phase 6)
-- [ ] **3.7 Personal notes**  — [ ] BE  [ ] FE  [ ] test
+- [x] **3.7 Personal notes** — паритет легаси (CoursePersonalNotesController)
+  - [x] BE `CoursePersonalNote`+миграция (`c5d6e7f8a9b0`), `GET/POST /personal-notes` (upsert по user+course+target), `DELETE /personal-notes/delete/{id}` (scoped to owner)  [x] FE `entities/note` + `features/personal-note` (NotePanel на items в `pages/learn`)  [x] test (BE: upsert/show/404/owner-scoped/bad-type)
+  - NOTE: `course_notes_status` admin-гейт отложён (нет settings-инфры) — фича считается включённой; attachment-аплоад через storage(F.1)
 - [ ] **3.8 Noticeboards**  — [ ] BE  [ ] FE  [ ] test  [ ] admin
 - [ ] **3.9 Forums (Q&A: threads, answers, pin, resolve)**
   - [ ] BE  [ ] FE `pages/course-forum`  [ ] test
