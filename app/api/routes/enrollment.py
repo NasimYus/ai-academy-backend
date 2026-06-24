@@ -5,8 +5,21 @@ from app.models.enrollment import EnrollmentSource
 from app.repositories import courses as courses_repo
 from app.repositories import enrollments as enrollments_repo
 from app.schemas.common import error_responses
+from app.schemas.course import CourseRead
+from app.services.course_presenter import to_brief
 
 router = APIRouter(prefix="/panel", tags=["enrollment"])
+
+
+@router.get(
+    "/my-courses",
+    response_model=list[CourseRead],
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED),
+)
+async def my_courses(current_user: CurrentUser, db: DbSession) -> list[CourseRead]:
+    """Courses the user has access to (enrolled / purchased)."""
+    courses = await enrollments_repo.list_courses_for_user(db, current_user.id)
+    return [to_brief(c) for c in courses]
 
 
 @router.post(

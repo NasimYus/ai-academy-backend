@@ -167,8 +167,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 - [x] **4.4 Payments — абстракция шлюзов** + Sandbox-драйвер + verify/return — паритет легаси (PaymentsController + ChannelManager)
   - [x] BE `PaymentChannel`+миграция (`c1d2e3f4a5b6`); `GET /payments/channels`, `POST /payments/request` (pending→paying, redirect_url), `POST /payments/verify/{gateway}` (paying→paid|fail); сервис `payments` (start/complete/fail)  [x] FE `entities/payment` + `features/pay-order` (PayButton) + `pages/payment-callback` (/payment/callback) + «Оплатить» на pending-заказах  [x] test (channels/flow/fail/inactive/non-pending/verify-guard/scope)
   - NOTE: реальные шлюзы (Stripe/Paypal/локальные TJ) — per-deployment с креды; webhook-подпись — позже; выдача доступа (paid→enrollment) → 4.5
-- [ ] **4.5 Покупка → enrollment** (после успешной оплаты выдать доступ)
-  - [ ] BE связка payment→enrollment  [ ] FE «мои курсы» после оплаты  [ ] test
+- [x] **4.5 Покупка → enrollment** (после успешной оплаты выдать доступ) — паритет легаси (setPaymentAccounting → Sale)
+  - [x] BE `payments.complete` на paid создаёт `Enrollment(source=purchase)` на каждый курс заказа (идемпотентно) → `has_course_access`; `GET /panel/my-courses`  [x] FE `pages/my-courses` (/my-courses) + ссылка в Header + переход «Мои курсы» из payment-callback  [x] test (paid→доступ+my-courses, fail→нет доступа, empty/auth)
 - [ ] **4.6 Purchases (мои курсы)**
   - [ ] BE  [ ] FE `pages/my-courses`  [ ] test
 

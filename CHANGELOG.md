@@ -53,7 +53,8 @@
 - ✅ 🧪 **4.2** Coupons/discounts: модели/миграция `Discount`+`discount_courses/categories/users`; `POST /cart/coupon/validate` (паритет checkValidDiscount + handleDiscountPrice для источников all/course/category; percentage/fixed_amount, max_amount-кап, minimum_order, expired, special_users; reason-коды). NOTE: count/first_purchase (Orders→4.3), groups (Phase 5), bundle/product/meeting — отложены
 - ✅ 🧪 **4.3** Checkout + Orders: модели/миграция `Order`/`OrderItem`; `POST /cart/checkout` (pending-заказ из корзины + купон по discount_id + очистка корзины), `GET /panel/orders[/{id}]` (owner-scoped). NOTE: tax/commission=0, per-item скидка пропорционально; оплата→4.4, paid→enrollment→4.5
 - ✅ 🧪 **4.4** Payments: модель/миграция `PaymentChannel`; `GET /payments/channels`, `POST /payments/request` (pending→paying + redirect_url), `POST /payments/verify/{gateway}` (paying→paid|fail); сервис абстракции + Sandbox-драйвер. NOTE: реальные шлюзы (креды per-deploy), webhook-подпись — позже; paid→enrollment → 4.5
-- ⬜ **4.5** Покупка→enrollment · **4.6** Purchases
+- ✅ 🧪 **4.5** Покупка→enrollment: `payments.complete` на `paid` выдаёт `Enrollment(source=purchase)` на каждый курс заказа (идемпотентно) → доступ через `has_course_access`; `GET /panel/my-courses`. NOTE: charge-account/subscribe/promotion accounting — позже
+- ⬜ **4.6** Purchases (история)
 
 ## Сквозные задачи (foundation)
 
