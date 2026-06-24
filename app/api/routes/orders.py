@@ -4,38 +4,14 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, DbSession
 from app.models.discount import Discount
-from app.models.order import Order
 from app.repositories import cart as cart_repo
 from app.repositories import orders as orders_repo
 from app.schemas.common import error_responses
-from app.schemas.order import CheckoutRequest, OrderItemRead, OrderRead
+from app.schemas.order import CheckoutRequest, OrderRead
 from app.services import discounts as discount_service
+from app.services.order_presenter import order_read as _order_read
 
 router = APIRouter(tags=["orders"])
-
-
-def _order_read(order: Order) -> OrderRead:
-    return OrderRead(
-        id=order.id,
-        status=order.status.value,
-        amount=float(order.amount),
-        total_discount=float(order.total_discount) if order.total_discount is not None else None,
-        tax=float(order.tax) if order.tax is not None else None,
-        total_amount=float(order.total_amount),
-        created_at=order.created_at,
-        items=[
-            OrderItemRead(
-                id=i.id,
-                course_id=i.course_id,
-                title=i.course.title if i.course else None,
-                slug=i.course.slug if i.course else None,
-                amount=float(i.amount),
-                discount=float(i.discount) if i.discount is not None else None,
-                total_amount=float(i.total_amount),
-            )
-            for i in order.items
-        ],
-    )
 
 
 @router.post(
