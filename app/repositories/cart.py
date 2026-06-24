@@ -45,3 +45,10 @@ async def get_owned(db: AsyncSession, item_id: int, user_id: int) -> CartItem | 
 async def remove(db: AsyncSession, item: CartItem) -> None:
     await db.delete(item)
     await db.commit()
+
+
+async def clear(db: AsyncSession, user_id: int) -> None:
+    from sqlalchemy import delete
+
+    await db.execute(delete(CartItem).where(CartItem.creator_id == user_id))
+    await db.commit()

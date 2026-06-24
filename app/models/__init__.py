@@ -32,6 +32,7 @@ from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedSta
 from app.models.forum import CourseForum, CourseForumAnswer
 from app.models.learning import CourseLearning
 from app.models.noticeboard import CourseNoticeboard, NoticeboardColor
+from app.models.order import Order, OrderItem, OrderStatus, PaymentMethod
 from app.models.password_reset import PasswordReset
 from app.models.personal_note import CoursePersonalNote, NoteTargetType
 from app.models.quiz import (
@@ -103,6 +104,10 @@ __all__ = [
     "DiscountType",
     "DiscountUserType",
     "DiscountSource",
+    "Order",
+    "OrderItem",
+    "OrderStatus",
+    "PaymentMethod",
     "Verification",
     "PasswordReset",
 ]

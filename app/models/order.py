@@ -1,0 +1,76 @@
+import enum
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.course import Course
+
+
+class OrderStatus(str, enum.Enum):
+    pending = "pending"
+    paying = "paying"
+    paid = "paid"
+    fail = "fail"
+
+
+class PaymentMethod(str, enum.Enum):
+    credit = "credit"
+    payment_channel = "payment_channel"
+
+
+class Order(Base):
+    """A checkout order, parity of legacy `orders` (course items)."""
+
+    __tablename__ = "orders"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    status: Mapped[OrderStatus] = mapped_column(
+        Enum(OrderStatus, name="order_status"), default=OrderStatus.pending, nullable=False
+    )
+    payment_method: Mapped[PaymentMethod | None] = mapped_column(
+        Enum(PaymentMethod, name="payment_method")
+    )
+    amount: Mapped[float] = mapped_column(Numeric(15, 3), nullable=False)  # sub_total
+    tax: Mapped[float | None] = mapped_column(Numeric(15, 3))
+    total_discount: Mapped[float | None] = mapped_column(Numeric(15, 3))
+    total_amount: Mapped[float] = mapped_column(Numeric(15, 3), nullable=False)
+    reference_id: Mapped[int | None] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    items: Mapped[list["OrderItem"]] = relationship(
+        "OrderItem", cascade="all, delete-orphan", lazy="raise"
+    )
+
+
+class OrderItem(Base):
+    """A single course line in an order, parity of legacy `order_items`."""
+
+    __tablename__ = "order_items"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    order_id: Mapped[int] = mapped_column(
+        ForeignKey("orders.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    course_id: Mapped[int | None] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"))
+    discount_id: Mapped[int | None] = mapped_column(ForeignKey("discounts.id", ondelete="SET NULL"))
+    amount: Mapped[float] = mapped_column(Numeric(15, 3), nullable=False)  # item price
+    tax: Mapped[float | None] = mapped_column(Numeric(15, 3))
+    commission: Mapped[float | None] = mapped_column(Numeric(15, 3))
+    discount: Mapped[float | None] = mapped_column(Numeric(15, 3))
+    total_amount: Mapped[float] = mapped_column(Numeric(15, 3), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    course: Mapped["Course | None"] = relationship("Course", lazy="raise")
