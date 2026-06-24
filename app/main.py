@@ -12,6 +12,7 @@ from app.api.routes import (
     courses,
     enrollment,
     featured,
+    noticeboards,
     personal_notes,
     profile,
     providers,
@@ -46,6 +47,7 @@ app.include_router(quizzes.router, prefix="/api/v1")
 app.include_router(assignments.router, prefix="/api/v1")
 app.include_router(certificates.router, prefix="/api/v1")
 app.include_router(personal_notes.router, prefix="/api/v1")
+app.include_router(noticeboards.router, prefix="/api/v1")
 
 # Serve uploaded media from local storage (F.1).
 Path(settings.media_root).mkdir(parents=True, exist_ok=True)

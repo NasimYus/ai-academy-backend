@@ -144,7 +144,9 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 - [x] **3.7 Personal notes** — паритет легаси (CoursePersonalNotesController)
   - [x] BE `CoursePersonalNote`+миграция (`c5d6e7f8a9b0`), `GET/POST /personal-notes` (upsert по user+course+target), `DELETE /personal-notes/delete/{id}` (scoped to owner)  [x] FE `entities/note` + `features/personal-note` (NotePanel на items в `pages/learn`)  [x] test (BE: upsert/show/404/owner-scoped/bad-type)
   - NOTE: `course_notes_status` admin-гейт отложён (нет settings-инфры) — фича считается включённой; attachment-аплоад через storage(F.1)
-- [ ] **3.8 Noticeboards**  — [ ] BE  [ ] FE  [ ] test  [ ] admin
+- [x] **3.8 Noticeboards** — паритет легаси (CourseNoticeboardController@index)
+  - [x] BE `CourseNoticeboard`+миграция (`d6e7f8a9b0c1`), `GET /courses/{id}/noticeboards` (color→icon, creator brief)  [x] FE `entities/noticeboard` + секция объявлений в `pages/learn`  [x] test (BE: list newest-first/icon/creator, auth, 404)  [ ] admin (CRUD) — Phase 6
+  - NOTE: `course_noticeboard_status` (seen-трекинг) не используется API (seen закомментирован в легаси) — опущено
 - [ ] **3.9 Forums (Q&A: threads, answers, pin, resolve)**
   - [ ] BE  [ ] FE `pages/course-forum`  [ ] test
 

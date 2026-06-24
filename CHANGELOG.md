@@ -44,7 +44,8 @@
 - ✅ 🧪 **3.5** Assignments (student-flow): модели/миграция `Assignment`/`AssignmentHistory`/`AssignmentHistoryMessage` (`a3b4c5d6e7f8`); `GET /assignments/{id}` + `GET /courses/{id}/assignments`, `GET /panel/my_assignments[/{id}]`, `GET|POST /assignments/{id}/messages` (multipart submit+attachment, history создаётся при первом сообщении, гейт deadline/attempts → 401, access-gate → 403, not_submitted→pending). Отложено: грейдинг/review инструктора, attachments-аплоады инструктора (Phase 6)
 - ✅ 🧪 **3.6** Certificates (achievements + PDF + validation): модель/миграция `Certificate` (`b4c5d6e7f8a9`); выдача при сдаче quiz с флагом `certificate` (вшито в store-result); `GET /panel/certificates/achievements` (пройденные quiz + сертификат), `GET /panel/quizzes/results/{id}/show` (синхронный рендер PDF через `fpdf2`, кэш на диске → FileResponse), публичная `GET /certificate_validation?certificate_id=`. Отложено: шаблоны (CertificateTemplate) + позиционирование, Unicode-шрифт для кириллицы (latin-1 fallback, NOTE F.6) — Phase 6
 - ✅ 🧪 **3.7** Personal notes: модель/миграция `CoursePersonalNote` (target_type enum + target_id, уник по user+course+target); `GET /personal-notes?type=&item=` (404 not_found), `POST /personal-notes` (multipart upsert + attachment через storage F.1), `DELETE /personal-notes/delete/{id}` (scoped к владельцу — легаси оставлял без скоупа). NOTE: `course_notes_status`-гейт отложён (нет settings-инфры)
-- ⬜ **3.8** Noticeboards · **3.9** Forums (Q&A)
+- ✅ 🧪 **3.8** Noticeboards: модель/миграция `CourseNoticeboard` (color enum); `GET /courses/{id}/noticeboards` (newest-first, color→icon как в легаси, creator brief). NOTE: seen-трекинг (`course_noticeboard_status`) опущен — API его не использует
+- ⬜ **3.9** Forums (Q&A)
 
 ## Phase 4 — Коммерция
 
