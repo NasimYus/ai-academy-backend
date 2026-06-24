@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     media_root: str = "media"
     media_url: str = "/media"
 
+    # --- i18n content (F.4) ---
+    default_locale: str = "en"
+
     # --- background tasks (F.2) ---
     # "inline" runs work synchronously (dev/tests); "asyncio" fire-and-forgets it.
     task_backend: str = "inline"

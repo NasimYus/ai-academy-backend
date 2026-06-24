@@ -16,6 +16,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.models.category import Category
+from app.models.translation import CourseTranslation
 from app.models.user import User
 
 
@@ -111,3 +112,6 @@ class Course(Base):
 
     teacher: Mapped[User | None] = relationship("User", foreign_keys=[teacher_id], lazy="raise")
     category: Mapped[Category | None] = relationship("Category", lazy="raise")
+    translations: Mapped[list["CourseTranslation"]] = relationship(
+        "CourseTranslation", cascade="all, delete-orphan", lazy="raise"
+    )

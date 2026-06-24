@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from app.api.deps import DbSession
+from app.api.deps import DbSession, Locale
+from app.core.config import settings
 from app.repositories import categories as categories_repo
 from app.repositories import courses as courses_repo
 from app.schemas.category import (
@@ -10,12 +11,17 @@ from app.schemas.category import (
     TrendCategoryList,
     TrendCategoryRead,
 )
+from app.services import i18n
 
 router = APIRouter(tags=["categories"])
 
 
+def _title(category, locale: str) -> str:
+    return i18n.localize(category, locale, settings.default_locale, "title")["title"]
+
+
 @router.get("/categories", response_model=CategoryList)
-async def list_categories(db: DbSession) -> CategoryList:
+async def list_categories(db: DbSession, locale: Locale) -> CategoryList:
     tops = await categories_repo.list_top_level(db)
     children = await categories_repo.children_by_parent(db)
     colors = await categories_repo.color_by_category(db)
@@ -26,7 +32,10 @@ async def list_categories(db: DbSession) -> CategoryList:
         subs = children.get(top.id, [])
         sub_reads = [
             SubCategoryRead(
-                id=sub.id, title=sub.title, icon=sub.icon, webinars_count=counts.get(sub.id, 0)
+                id=sub.id,
+                title=_title(sub, locale),
+                icon=sub.icon,
+                webinars_count=counts.get(sub.id, 0),
             )
             for sub in subs
         ]
@@ -35,7 +44,7 @@ async def list_categories(db: DbSession) -> CategoryList:
         categories.append(
             CategoryRead(
                 id=top.id,
-                title=top.title,
+                title=_title(top, locale),
                 color=colors.get(top.id),
                 icon=top.icon,
                 sub_categories=sub_reads,
@@ -46,10 +55,12 @@ async def list_categories(db: DbSession) -> CategoryList:
 
 
 @router.get("/trend-categories", response_model=TrendCategoryList)
-async def list_trend_categories(db: DbSession) -> TrendCategoryList:
+async def list_trend_categories(db: DbSession, locale: Locale) -> TrendCategoryList:
     rows = await categories_repo.list_trend(db)
     categories = [
-        TrendCategoryRead(id=cat.id, title=cat.title, color=tc.color, icon=tc.icon or cat.icon)
+        TrendCategoryRead(
+            id=cat.id, title=_title(cat, locale), color=tc.color, icon=tc.icon or cat.icon
+        )
         for tc, cat in rows
     ]
     return TrendCategoryList(count=len(categories), categories=categories)

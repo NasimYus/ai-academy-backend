@@ -1,16 +1,20 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.translation import CategoryTranslation
 
 
 class Category(Base):
     """Course category, parity of the legacy `categories` table.
 
-    Legacy `title` is translatable (category_translations); multilingual titles
-    are deferred to F.4 — for now a single `title` column is used.
+    `title` is the default-locale value; per-locale overrides live in
+    `category_translations` (F.4).
     """
 
     __tablename__ = "categories"
@@ -23,6 +27,10 @@ class Category(Base):
     url: Mapped[str | None] = mapped_column(String(255))
     order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     enable: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    translations: Mapped[list["CategoryTranslation"]] = relationship(
+        "CategoryTranslation", cascade="all, delete-orphan", lazy="raise"
+    )
 
 
 class TrendCategory(Base):

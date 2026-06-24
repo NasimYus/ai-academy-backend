@@ -12,7 +12,11 @@ def _catalogue():
     return (
         select(Course)
         .where(Course.status == CourseStatus.active, Course.private.is_(False))
-        .options(selectinload(Course.teacher), selectinload(Course.category))
+        .options(
+            selectinload(Course.teacher),
+            selectinload(Course.category),
+            selectinload(Course.translations),
+        )
     )
 
 
@@ -106,7 +110,11 @@ async def get_by_slug(db: AsyncSession, slug: str) -> Course | None:
     result = await db.execute(
         select(Course)
         .where(Course.slug == slug, Course.private.is_(False))
-        .options(selectinload(Course.teacher), selectinload(Course.category))
+        .options(
+            selectinload(Course.teacher),
+            selectinload(Course.category),
+            selectinload(Course.translations),
+        )
     )
     return result.scalar_one_or_none()
 

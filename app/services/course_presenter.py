@@ -6,6 +6,7 @@ the repository (they are `lazy="raise"`).
 
 from app.models.course import Course
 from app.schemas.course import CourseDetail, CourseRead, CourseTeacher
+from app.services import i18n
 
 
 def price_string(price: float) -> str | None:
@@ -29,11 +30,14 @@ def teacher_brief(course: Course) -> CourseTeacher | None:
     )
 
 
-def to_brief(course: Course) -> CourseRead:
+def to_brief(course: Course, locale: str | None = None, default_locale: str = "en") -> CourseRead:
     price = float(course.price)
+    title = course.title
+    if locale:
+        title = i18n.localize(course, locale, default_locale, "title")["title"]
     return CourseRead(
         id=course.id,
-        title=course.title,
+        title=title,
         slug=course.slug,
         type=course.type,
         status=course.status,
@@ -56,12 +60,20 @@ def to_brief(course: Course) -> CourseRead:
     )
 
 
-def to_detail(course: Course) -> CourseDetail:
+def to_detail(
+    course: Course, locale: str | None = None, default_locale: str = "en"
+) -> CourseDetail:
     price = float(course.price)
+    description = course.description
+    seo_description = course.seo_description
+    if locale:
+        loc = i18n.localize(course, locale, default_locale, "description", "seo_description")
+        description = loc["description"]
+        seo_description = loc["seo_description"]
     return CourseDetail(
-        **to_brief(course).model_dump(),
-        description=course.description,
-        seo_description=course.seo_description,
+        **to_brief(course, locale, default_locale).model_dump(),
+        description=description,
+        seo_description=seo_description,
         video_demo=course.video_demo,
         video_demo_source=course.video_demo_source,
         support=course.support,

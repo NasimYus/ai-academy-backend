@@ -184,7 +184,7 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
       статика на `/media`; S3-совместимый бэкенд можно подменить за тем же интерфейсом позже
 - [x] **F.2 Фоновые задачи** — абстракция очереди `tasks.enqueue` с бэкендами `inline`(dev/тесты) / `asyncio`(in-process fire-and-forget); email-отправка идёт через очередь (не блокирует запрос). NOTE: durable arq/Celery+Redis (ретраи/персистентность) — за тем же интерфейсом, per-deploy
 - [x] **F.3 Email-отправка** (verification, reset, чеки) — сервис `email` с бэкендами `console`(dev/тесты, in-memory outbox) / `smtp`(aiosmtplib); подключено: код верификации, ссылка сброса пароля, чек об оплате. SMS (mobile) — всё ещё заглушка (нет провайдера). Отправка синхронная — очередь = F.2
-- [ ] **F.4 i18n контента** — воспроизвести translatable (мультиязык) как в легаси
+- [x] **F.4 i18n контента** — translatable как в легаси: `category_translations`/`course_translations` (`d2e3f4a5b6c7`), locale-зависимость (`?locale=`/Accept-Language→`Locale`), хелпер `i18n.localize` (fallback locale→default→базовая колонка); применено к категориям (title) и курсам list/detail (title/description/seo). NOTE: остальные translatable-модели (quizzes/…) — тем же паттерном инкрементально
 - [ ] **F.5 Мультивалюта** — воспроизвести `MultiCurrency` как в легаси
 - [ ] **F.6 i18n UI** на фронте (если нужен таджикский/русский/английский переключатель)
 

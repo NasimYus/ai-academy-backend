@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -48,6 +48,19 @@ async def get_optional_user(
 
 
 OptionalUser = Annotated[User | None, Depends(get_optional_user)]
+
+
+def get_locale(
+    locale: Annotated[str | None, Query()] = None,
+    accept_language: Annotated[str | None, Header()] = None,
+) -> str:
+    """Resolve content locale: ?locale= wins, else Accept-Language, else default."""
+    from app.services.i18n import resolve_locale
+
+    return resolve_locale(locale or accept_language)
+
+
+Locale = Annotated[str, Depends(get_locale)]
 
 
 def require_role(*role_names: str):
