@@ -12,9 +12,8 @@ from app.schemas.forum import (
     ForumListResponse,
     ForumThreadRead,
 )
-from app.services import access
+from app.services import access, storage
 from app.services import forums as forum_service
-from app.services import storage
 
 router = APIRouter(tags=["forums"])
 
