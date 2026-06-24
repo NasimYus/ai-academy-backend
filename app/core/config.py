@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     media_root: str = "media"
     media_url: str = "/media"
 
+    # --- background tasks (F.2) ---
+    # "inline" runs work synchronously (dev/tests); "asyncio" fire-and-forgets it.
+    task_backend: str = "inline"
+
     # --- email (F.3) ---
     # "console" records to an in-memory outbox (dev/tests); "smtp" sends via SMTP.
     email_backend: str = "console"

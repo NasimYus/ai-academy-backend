@@ -182,7 +182,7 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 
 - [x] **F.1 Файловое хранилище** — локальное disk-хранилище (`app/services/storage.py`),
       статика на `/media`; S3-совместимый бэкенд можно подменить за тем же интерфейсом позже
-- [ ] **F.2 Фоновые задачи** (arq/Celery) — email, FCM, генерация PDF (нужно к 1.2 / 3.6)
+- [x] **F.2 Фоновые задачи** — абстракция очереди `tasks.enqueue` с бэкендами `inline`(dev/тесты) / `asyncio`(in-process fire-and-forget); email-отправка идёт через очередь (не блокирует запрос). NOTE: durable arq/Celery+Redis (ретраи/персистентность) — за тем же интерфейсом, per-deploy
 - [x] **F.3 Email-отправка** (verification, reset, чеки) — сервис `email` с бэкендами `console`(dev/тесты, in-memory outbox) / `smtp`(aiosmtplib); подключено: код верификации, ссылка сброса пароля, чек об оплате. SMS (mobile) — всё ещё заглушка (нет провайдера). Отправка синхронная — очередь = F.2
 - [ ] **F.4 i18n контента** — воспроизвести translatable (мультиязык) как в легаси
 - [ ] **F.5 Мультивалюта** — воспроизвести `MultiCurrency` как в легаси

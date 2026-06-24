@@ -59,7 +59,7 @@
 ## Сквозные задачи (foundation)
 
 - ✅ **F.1** Файловое хранилище (локальный диск, `/media`; S3 — позже)
-- ⬜ **F.2** Фоновые задачи (arq/Celery) — email/FCM/PDF
+- ✅ 🧪 **F.2** Фоновые задачи: `tasks.enqueue` (бэкенды `inline`/`asyncio`); email теперь через очередь. NOTE: durable arq/Celery+Redis — за тем же интерфейсом, per-deploy
 - ✅ 🧪 **F.3** Email-отправка: сервис `email` (бэкенды `console`/`smtp` через aiosmtplib, in-memory outbox для тестов); шлёт код верификации, ссылку сброса пароля, чек об оплате. SMS — заглушка (нет провайдера); очередь — F.2
 - ⬜ **F.4** i18n контента (translatable: категории/курсы/…)
 - ⬜ **F.5** Мультивалюта (`MultiCurrency`)
