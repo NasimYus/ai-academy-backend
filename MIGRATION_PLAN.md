@@ -158,8 +158,9 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 - [x] **4.1 Cart** (add / list / remove) — паритет легаси (CartController/AddCartController, webinar-ветка)
   - [x] BE `CartItem`+миграция (`f8a9b0c1d2e3`); `GET/POST /cart`, `DELETE /cart/{id}` (owner-scoped); add гейтит already_in_cart/already_purchased/404; amounts (sub_total/total) — tax/discount в 4.2/4.3  [x] FE `entities/cart` + `features/cart` (AddToCartButton, remove) + `pages/cart` (/cart) + ссылка в Header  [x] test (BE: add/list/remove, dup, owned, 404, scope)
   - NOTE: bundle/product/ticket/special_offer/reserve_meeting в корзине — store/meetings фазы
-- [ ] **4.2 Coupons / discounts** (валидация)
-  - [ ] BE `Discount` + validate  [ ] FE применение купона  [ ] test  [ ] admin
+- [x] **4.2 Coupons / discounts** (валидация) — паритет легаси (Discount::checkValidDiscount + handleDiscountPrice, course-scope)
+  - [x] BE `Discount`+`discount_courses/categories/users`+миграция (`a9b0c1d2e3f4`); `POST /cart/coupon/validate` (источники all/course/category; percentage/fixed_amount; max_amount/min_order/expired/special_users; reason-коды)  [x] FE `features/cart` CouponForm + применение скидки к итогам в `pages/cart`  [x] test (BE: percent/fixed/cap/expired/min_order/scope/invalid/empty)  [ ] admin
+  - NOTE: count(max-uses)/for_first_purchase (нужны Orders→4.3), user-groups (Phase 5), bundle/product/meeting sources — отложены
 - [ ] **4.3 Checkout + Orders + OrderItems**
   - [ ] BE `Order`, `OrderItem`  [ ] FE `features/checkout`  [ ] test  [ ] admin
 - [ ] **4.4 Payments — абстракция шлюзов** + 1–2 шлюза (выбрать под рынок TJ) + verify/webhook

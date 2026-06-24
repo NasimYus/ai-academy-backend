@@ -32,3 +32,23 @@ class AddToCartRequest(BaseModel):
     item_id: int
     # only courses are purchasable for now; bundle/product arrive with the store phase
     item_name: Literal["webinar"] = "webinar"
+
+
+class CouponValidateRequest(BaseModel):
+    coupon: str
+
+
+class DiscountBrief(BaseModel):
+    id: int
+    title: str
+    code: str
+    discount_type: str
+    percent: int | None = None
+    amount: int | None = None
+
+
+class CouponValidation(BaseModel):
+    valid: bool
+    message: str  # "valid" or a reason code (invalid/expired/min_order/…)
+    amounts: CartAmounts | None = None
+    discount: DiscountBrief | None = None

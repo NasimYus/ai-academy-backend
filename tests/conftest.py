@@ -11,6 +11,10 @@ from app.models.role import Role
 _DATA_TABLES = (
     "verifications",
     "password_resets",
+    "discount_users",
+    "discount_categories",
+    "discount_courses",
+    "discounts",
     "cart",
     "course_forum_answers",
     "course_forums",

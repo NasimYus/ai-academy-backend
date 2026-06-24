@@ -18,6 +18,15 @@ from app.models.content import (
     TextLesson,
 )
 from app.models.course import Course, CourseStatus, CourseType, VideoDemoSource
+from app.models.discount import (
+    Discount,
+    DiscountCategory,
+    DiscountCourse,
+    DiscountSource,
+    DiscountType,
+    DiscountUser,
+    DiscountUserType,
+)
 from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
 from app.models.forum import CourseForum, CourseForumAnswer
@@ -87,6 +96,13 @@ __all__ = [
     "CourseForum",
     "CourseForumAnswer",
     "CartItem",
+    "Discount",
+    "DiscountCourse",
+    "DiscountCategory",
+    "DiscountUser",
+    "DiscountType",
+    "DiscountUserType",
+    "DiscountSource",
     "Verification",
     "PasswordReset",
 ]

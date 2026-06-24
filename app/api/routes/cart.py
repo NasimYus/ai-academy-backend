@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, DbSession
@@ -5,9 +7,19 @@ from app.models.cart import CartItem
 from app.models.course import CourseStatus
 from app.repositories import cart as cart_repo
 from app.repositories import courses as courses_repo
-from app.schemas.cart import AddToCartRequest, CartAmounts, CartItemRead, CartRead
+from app.repositories import discounts as discounts_repo
+from app.schemas.cart import (
+    AddToCartRequest,
+    CartAmounts,
+    CartItemRead,
+    CartRead,
+    CouponValidateRequest,
+    CouponValidation,
+    DiscountBrief,
+)
 from app.schemas.common import error_responses
 from app.services import access
+from app.services import discounts as discount_service
 
 router = APIRouter(prefix="/cart", tags=["cart"])
 
@@ -62,6 +74,51 @@ async def add_to_cart(
 
     item = await cart_repo.add(db, user_id=current_user.id, course_id=course.id)
     return _item_read(item)
+
+
+@router.post(
+    "/coupon/validate",
+    response_model=CouponValidation,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED),
+)
+async def validate_coupon(
+    payload: CouponValidateRequest, current_user: CurrentUser, db: DbSession
+) -> CouponValidation:
+    """Validate a coupon against the user's cart (legacy CartController@validateCoupon)."""
+    discount = await discounts_repo.get_by_code(db, payload.coupon)
+    if discount is None:
+        return CouponValidation(valid=False, message="invalid")
+
+    items = await cart_repo.list_for_user(db, current_user.id)
+    reason = await discount_service.validate(db, discount, current_user, items, datetime.now(UTC))
+    if reason != "ok":
+        return CouponValidation(valid=False, message=reason)
+    if not items:
+        return CouponValidation(valid=False, message="cart_empty")
+
+    sub_total = sum(float(i.course.price) for i in items if i.course)
+    total_discount = await discount_service.compute_discount(db, discount, items)
+    if total_discount > sub_total:
+        total_discount = sub_total
+    amounts = CartAmounts(
+        sub_total=sub_total,
+        total_discount=total_discount,
+        tax_price=0,
+        total=sub_total - total_discount,
+    )
+    return CouponValidation(
+        valid=True,
+        message="valid",
+        amounts=amounts,
+        discount=DiscountBrief(
+            id=discount.id,
+            title=discount.title,
+            code=discount.code,
+            discount_type=discount.discount_type.value,
+            percent=discount.percent,
+            amount=discount.amount,
+        ),
+    )
 
 
 @router.delete(

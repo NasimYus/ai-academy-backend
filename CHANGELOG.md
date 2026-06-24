@@ -50,7 +50,8 @@
 ## Phase 4 — Коммерция
 
 - ✅ 🧪 **4.1** Cart: модель/миграция `CartItem` (uniq user+course); `GET /cart` (items + amounts sub_total/total), `POST /cart` (add — гейт already_in_cart/already_purchased/404 на missing|private|inactive), `DELETE /cart/{id}` (owner-scoped). tax/discount/coupon → 4.2/4.3; bundle/product/ticket → store-фаза
-- ⬜ **4.2** Coupons/discounts · **4.3** Checkout/Orders
+- ✅ 🧪 **4.2** Coupons/discounts: модели/миграция `Discount`+`discount_courses/categories/users`; `POST /cart/coupon/validate` (паритет checkValidDiscount + handleDiscountPrice для источников all/course/category; percentage/fixed_amount, max_amount-кап, minimum_order, expired, special_users; reason-коды). NOTE: count/first_purchase (Orders→4.3), groups (Phase 5), bundle/product/meeting — отложены
+- ⬜ **4.3** Checkout/Orders
 - ⬜ **4.4** Payments (абстракция шлюзов + verify/webhook) · **4.5** Покупка→enrollment · **4.6** Purchases
 
 ## Сквозные задачи (foundation)
