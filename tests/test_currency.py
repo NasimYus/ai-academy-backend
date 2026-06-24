@@ -63,6 +63,15 @@ async def test_unknown_currency_falls_back(client: AsyncClient):
     assert body["currency"] == "USD"
 
 
+async def test_course_price_converted_via_header(client: AsyncClient):
+    slug = await _seed_course(100)
+    await _seed_currency(currency="EUR", currency_decimal=2, exchange_rate=0.9)
+    r = await client.get(f"/api/v1/courses/{slug}", headers={"X-Currency": "EUR"})
+    body = r.json()
+    assert body["price"] == 90.0
+    assert body["currency"] == "EUR"
+
+
 async def test_course_list_converted(client: AsyncClient):
     slug = await _seed_course(200)
     await _seed_currency(currency="EUR", exchange_rate=0.5)

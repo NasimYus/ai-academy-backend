@@ -63,11 +63,15 @@ def get_locale(
 Locale = Annotated[str, Depends(get_locale)]
 
 
-async def get_currency(db: DbSession, currency: Annotated[str | None, Query()] = None):
-    """Resolve the display currency: ?currency= if active, else the default."""
+async def get_currency(
+    db: DbSession,
+    currency: Annotated[str | None, Query()] = None,
+    x_currency: Annotated[str | None, Header()] = None,
+):
+    """Resolve the display currency: ?currency= wins, else X-Currency header, else default."""
     from app.services.currency import CurrencyItem, resolve
 
-    item: CurrencyItem = await resolve(db, currency)
+    item: CurrencyItem = await resolve(db, currency or x_currency)
     return item
 
 
