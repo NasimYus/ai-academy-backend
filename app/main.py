@@ -27,6 +27,7 @@ from app.api.routes import (
     orders,
     payments,
     personal_notes,
+    products,
     profile,
     providers,
     quizzes,
@@ -71,6 +72,7 @@ app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(newsletter.router, prefix="/api/v1")
 app.include_router(rewards.router, prefix="/api/v1")
 app.include_router(subscriptions.router, prefix="/api/v1")
+app.include_router(products.router, prefix="/api/v1")
 app.include_router(instructor.router, prefix="/api/v1")
 app.include_router(meetings.router, prefix="/api/v1")
 app.include_router(support.router, prefix="/api/v1")

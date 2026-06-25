@@ -56,6 +56,7 @@ from app.models.order import Order, OrderItem, OrderStatus, PaymentMethod
 from app.models.password_reset import PasswordReset
 from app.models.payment import PaymentChannel, PaymentChannelStatus
 from app.models.personal_note import CoursePersonalNote, NoteTargetType
+from app.models.product import Product, ProductCategory, ProductStatus, ProductType
 from app.models.quiz import (
     QuestionType,
     Quiz,
@@ -144,6 +145,10 @@ __all__ = [
     "Subscribe",
     "UserSubscribe",
     "SubscribeUse",
+    "Product",
+    "ProductCategory",
+    "ProductType",
+    "ProductStatus",
     "Blog",
     "BlogCategory",
     "BlogStatus",
