@@ -168,3 +168,7 @@ class SubmissionView(BaseModel):
 
 class GradeInput(BaseModel):
     grade: int
+
+
+class CommentReplyInput(BaseModel):
+    reply: str = Field(min_length=1)

@@ -9,6 +9,7 @@ from app.models.course import Course, CourseStatus, CourseType
 from app.models.quiz import Quiz, QuizStatus
 from app.models.user import User
 from app.repositories import assignments as assignments_repo
+from app.repositories import comments as comments_repo
 from app.repositories import courses as courses_repo
 from app.repositories import quizzes as quizzes_repo
 from app.schemas.common import error_responses
@@ -16,6 +17,7 @@ from app.schemas.course import CourseDetail, CourseRead
 from app.schemas.instructor import (
     AssignmentDashboard,
     AssignmentHistoryRow,
+    CommentReplyInput,
     CourseCreate,
     CourseUpdate,
     GradeInput,
@@ -28,7 +30,9 @@ from app.schemas.instructor import (
     SubmissionMessage,
     SubmissionView,
 )
+from app.schemas.review import CommentRead
 from app.schemas.user import UserBrief
+from app.services import blog_presenter
 from app.services.course_presenter import to_brief, to_detail
 
 router = APIRouter(prefix="/panel", tags=["instructor"])
@@ -426,3 +430,37 @@ async def grade_submission(
             for m in messages
         ],
     )
+
+
+# --- Comments (Phase 6.4, legacy CommentsController@myClassComments/reply) ---
+
+
+@router.get(
+    "/comments",
+    response_model=list[CommentRead],
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+)
+async def my_class_comments(current_user: TeacherUser, db: DbSession) -> list[CommentRead]:
+    """Comments on the instructor's courses, threaded (legacy @myClassComments).
+
+    NOTE: legacy also stamps `viewed_at`; we don't track that column yet.
+    """
+    comments = await comments_repo.list_for_instructor(db, current_user.id)
+    return blog_presenter.comment_tree(comments)
+
+
+@router.post(
+    "/comments/{comment_id}/reply",
+    responses=error_responses(
+        status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND
+    ),
+)
+async def reply_to_comment(
+    comment_id: int, payload: CommentReplyInput, current_user: TeacherUser, db: DbSession
+) -> dict[str, str]:
+    """Reply to a comment on the instructor's course (legacy @reply, scoped)."""
+    parent = await comments_repo.get_for_instructor(db, comment_id, current_user.id)
+    if parent is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
+    await comments_repo.create_reply(db, parent=parent, user_id=current_user.id, text=payload.reply)
+    return {"status": "stored"}
