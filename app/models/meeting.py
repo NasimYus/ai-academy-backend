@@ -110,6 +110,13 @@ class ReserveMeeting(Base):
     student_count: Mapped[int | None] = mapped_column(Integer)
     description: Mapped[str | None] = mapped_column(Text)
     link: Mapped[str | None] = mapped_column(String(512))
+    # Set when a paid reservation is settled (legacy reserve_meetings.sale_id).
+    # use_alter breaks the sales <-> reserve_meetings FK cycle for create_all.
+    sale_id: Mapped[int | None] = mapped_column(
+        ForeignKey(
+            "sales.id", ondelete="SET NULL", use_alter=True, name="fk_reserve_meetings_sale_id"
+        )
+    )
     reserved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

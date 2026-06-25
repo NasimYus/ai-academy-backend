@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.bundle import Bundle
 from app.models.course import Course
+from app.models.meeting import Meeting, ReserveMeeting
 from app.models.order import OrderItem, PaymentMethod
 from app.models.sale import Sale, SaleType
 
@@ -38,6 +39,15 @@ async def record_sale(
         # Subscriptions are sold by the platform (no instructor seller), per legacy.
         sale_type = SaleType.subscribe
         refs["subscribe_id"] = item.subscribe_id
+    elif item.reserve_meeting_id is not None:
+        sale_type = SaleType.meeting
+        reservation = await db.get(ReserveMeeting, item.reserve_meeting_id)
+        if reservation is not None:
+            refs["reserve_meeting_id"] = reservation.id
+            refs["meeting_id"] = reservation.meeting_id
+            refs["meeting_time_id"] = reservation.meeting_time_id
+            meeting = await db.get(Meeting, reservation.meeting_id)
+            seller_id = meeting.creator_id if meeting else None
     elif item.course_id is not None:
         sale_type = SaleType.webinar
         refs["webinar_id"] = item.course_id

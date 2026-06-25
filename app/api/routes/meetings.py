@@ -6,6 +6,7 @@ from app.api.deps import CurrentUser, DbSession, require_level
 from app.models.meeting import ReserveMeeting, ReserveStatus
 from app.models.user import User
 from app.repositories import meetings as meetings_repo
+from app.repositories import orders as orders_repo
 from app.schemas.common import error_responses
 from app.schemas.meeting import (
     MeetingConfig,
@@ -17,7 +18,9 @@ from app.schemas.meeting import (
     ReserveIndex,
     ReserveMeetingRead,
 )
+from app.schemas.order import OrderRead
 from app.services import meeting_presenter
+from app.services.order_presenter import order_read
 
 router = APIRouter(tags=["meetings"])
 
@@ -133,6 +136,43 @@ async def reserve_meeting(
     )
     reserve = await meetings_repo.create_reservation(db, reserve)
     return meeting_presenter.reserve_detail(reserve)
+
+
+@router.post(
+    "/meetings/reserve/{reserve_id}/pay",
+    response_model=OrderRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(
+        status.HTTP_401_UNAUTHORIZED,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def pay_reservation(reserve_id: int, current_user: CurrentUser, db: DbSession) -> OrderRead:
+    """Create a pending order for a paid reservation (legacy reserve → checkout).
+
+    Settling it via /payments links the Sale to the reservation, stamps
+    `reserved_at`, and opens it (`payments._confirm_reservation`)."""
+    reservation = await db.get(ReserveMeeting, reserve_id)
+    if reservation is None or reservation.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservation not found")
+    if reservation.sale_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="already_paid"
+        )
+    amount = float(reservation.paid_amount or 0)
+    if amount <= 0:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="not_free")
+
+    order = await orders_repo.create(
+        db,
+        user_id=current_user.id,
+        amount=amount,
+        total_discount=0,
+        total_amount=amount,
+        items=[{"reserve_meeting_id": reserve_id, "amount": amount, "total_amount": amount}],
+    )
+    return order_read(order)
 
 
 @router.get(

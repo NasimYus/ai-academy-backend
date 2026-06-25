@@ -26,6 +26,7 @@ async def get_by_id(db: AsyncSession, order_id: int) -> Order | None:
 
 
 def _loaded():
+    # reserve_meeting items show a static label; no relationship load needed.
     return (
         selectinload(Order.items).selectinload(OrderItem.course),
         selectinload(Order.items).selectinload(OrderItem.bundle),

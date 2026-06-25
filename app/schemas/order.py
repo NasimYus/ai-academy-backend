@@ -8,6 +8,7 @@ class OrderItemRead(BaseModel):
     course_id: int | None = None
     bundle_id: int | None = None
     subscribe_id: int | None = None
+    reserve_meeting_id: int | None = None
     title: str | None = None
     slug: str | None = None
     amount: float
