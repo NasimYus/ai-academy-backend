@@ -7,6 +7,10 @@ class PaymentChannelRead(BaseModel):
     id: int
     title: str
     class_name: str
+    image: str | None = None
+    # Credential keys this gateway needs (legacy getCredentialItems()).
+    credential_items: list[str] = []
+    supported: bool = True  # a driver is registered for this class_name
 
 
 class PaymentRequestInput(BaseModel):

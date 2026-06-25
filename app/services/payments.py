@@ -15,15 +15,13 @@ from app.models.user import User
 from app.repositories import enrollments as enrollments_repo
 from app.repositories import orders as orders_repo
 from app.services import email
+from app.services.payment_channels import make_channel
 
 
 def build_redirect_url(order: Order, channel: PaymentChannel) -> str:
-    """Where the gateway would send the user to pay. The Sandbox driver points
-    back at the frontend callback which then POSTs /payments/verify."""
-    return (
-        f"/payment/callback?order_id={order.id}"
-        f"&gateway={channel.class_name}&channel_id={channel.id}"
-    )
+    """Resolve the channel's driver and build its payment redirect (legacy
+    ChannelManager::makeChannel → paymentRequest)."""
+    return make_channel(channel).payment_request(order)
 
 
 async def start(db: AsyncSession, order: Order, channel: PaymentChannel) -> str:

@@ -14,6 +14,7 @@ from app.schemas.payment import (
 )
 from app.services import payments as payment_service
 from app.services.order_presenter import order_read
+from app.services.payment_channels import credential_items_for, is_supported, make_channel
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -24,9 +25,19 @@ router = APIRouter(prefix="/payments", tags=["payments"])
     responses=error_responses(status.HTTP_401_UNAUTHORIZED),
 )
 async def list_channels(current_user: CurrentUser, db: DbSession) -> list[PaymentChannelRead]:
-    """Active payment gateways the user can pay with."""
+    """Active payment gateways the user can pay with (+ their credential contract)."""
     channels = await payments_repo.list_active(db)
-    return [PaymentChannelRead(id=c.id, title=c.title, class_name=c.class_name) for c in channels]
+    return [
+        PaymentChannelRead(
+            id=c.id,
+            title=c.title,
+            class_name=c.class_name,
+            image=c.image,
+            credential_items=credential_items_for(c.class_name),
+            supported=is_supported(c.class_name),
+        )
+        for c in channels
+    ]
 
 
 @router.post(
@@ -76,7 +87,14 @@ async def payment_verify(
     if order.status != OrderStatus.paying:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="not_paying")
 
-    if payload.status == "success":
+    # Let the gateway's driver interpret the callback (legacy IChannel::verify).
+    channel = await payments_repo.get_active_by_class(db, gateway)
+    if channel is not None:
+        ok = make_channel(channel).verify(payload.model_dump())
+    else:
+        ok = payload.status == "success"
+
+    if ok:
         await payment_service.complete(db, order)
     else:
         await payment_service.fail(db, order)

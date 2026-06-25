@@ -21,3 +21,15 @@ async def get_active(db: AsyncSession, channel_id: int) -> PaymentChannel | None
         )
     )
     return result.scalar_one_or_none()
+
+
+async def get_active_by_class(db: AsyncSession, class_name: str) -> PaymentChannel | None:
+    result = await db.execute(
+        select(PaymentChannel)
+        .where(
+            PaymentChannel.class_name == class_name,
+            PaymentChannel.status == PaymentChannelStatus.active,
+        )
+        .order_by(PaymentChannel.id.asc())
+    )
+    return result.scalars().first()
