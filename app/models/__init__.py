@@ -67,6 +67,12 @@ from app.models.quiz import (
     QuizStatus,
     ResultStatus,
 )
+from app.models.registration_package import (
+    PackageRole,
+    PackageStatus,
+    RegistrationPackage,
+    UserRegistrationPackage,
+)
 from app.models.review import CourseReview, ReviewStatus
 from app.models.reward import RewardAccounting, RewardStatus
 from app.models.role import Role
@@ -155,6 +161,10 @@ __all__ = [
     "ProductCategory",
     "ProductType",
     "ProductStatus",
+    "RegistrationPackage",
+    "UserRegistrationPackage",
+    "PackageRole",
+    "PackageStatus",
     "Blog",
     "BlogCategory",
     "BlogStatus",
