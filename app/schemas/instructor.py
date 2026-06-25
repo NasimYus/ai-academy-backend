@@ -172,3 +172,22 @@ class GradeInput(BaseModel):
 
 class CommentReplyInput(BaseModel):
     reply: str = Field(min_length=1)
+
+
+# Instructor course statistics — parity of WebinarStatisticController (statistic=true).
+
+
+class CourseStatistics(BaseModel):
+    students_count: int
+    sales_count: int
+    sales_amount: float
+    rate: float
+    reviews_count: int
+    comments_count: int
+    chapters_count: int
+    sessions_count: int
+    files_count: int
+    text_lessons_count: int
+    quizzes_count: int
+    assignments_count: int
+    forums_count: int

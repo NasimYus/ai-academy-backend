@@ -21,6 +21,7 @@ from app.schemas.instructor import (
     AssignmentHistoryRow,
     CommentReplyInput,
     CourseCreate,
+    CourseStatistics,
     CourseUpdate,
     GradeInput,
     InstructorAssignmentRow,
@@ -35,6 +36,7 @@ from app.schemas.instructor import (
 from app.schemas.review import CommentRead
 from app.schemas.user import UserBrief
 from app.services import blog_presenter
+from app.services import statistics as statistics_service
 from app.services.course_presenter import to_brief, to_detail
 
 router = APIRouter(prefix="/panel", tags=["instructor"])
@@ -161,6 +163,21 @@ async def delete_course(course_id: int, current_user: TeacherUser, db: DbSession
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     await courses_repo.delete_course(db, course)
+
+
+@router.get(
+    "/webinar/{course_id}/statistic",
+    response_model=CourseStatistics,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def course_statistics(
+    course_id: int, current_user: TeacherUser, db: DbSession
+) -> CourseStatistics:
+    """Aggregate statistics for an owned course (legacy WebinarStatisticController)."""
+    course = await courses_repo.get_owned(db, course_id, current_user.id)
+    if course is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    return await statistics_service.build_course_statistics(db, course)
 
 
 # --- Quizzes (Phase 6.2, legacy Instructor\QuizzesController) ---
