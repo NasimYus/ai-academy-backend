@@ -12,6 +12,26 @@ async def get_by_id(db: AsyncSession, user_id: int) -> User | None:
     return await db.get(User, user_id)
 
 
+async def admin_list(
+    db: AsyncSession,
+    *,
+    role_name: str | None = None,
+    status: UserStatus | None = None,
+    banned: bool | None = None,
+    limit: int = 200,
+) -> list[User]:
+    """Users for admin management, newest first (optionally filtered)."""
+    stmt = select(User)
+    if role_name is not None:
+        stmt = stmt.where(User.role_name == role_name)
+    if status is not None:
+        stmt = stmt.where(User.status == status)
+    if banned is not None:
+        stmt = stmt.where(User.ban.is_(banned))
+    stmt = stmt.order_by(User.id.desc()).limit(limit)
+    return list((await db.execute(stmt)).scalars().all())
+
+
 async def list_providers(
     db: AsyncSession,
     roles: list[str],

@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import (
     admin_courses,
     admin_payments,
+    admin_users,
     assignments,
     auth,
     blog,
@@ -88,6 +89,7 @@ app.include_router(orders.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")
 app.include_router(admin_payments.router, prefix="/api/v1")
 app.include_router(admin_courses.router, prefix="/api/v1")
+app.include_router(admin_users.router, prefix="/api/v1")
 
 # Serve uploaded media from local storage (F.1).
 Path(settings.media_root).mkdir(parents=True, exist_ok=True)
