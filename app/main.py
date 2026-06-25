@@ -8,6 +8,7 @@ from app.api.routes import (
     assignments,
     auth,
     blog,
+    bundles,
     cart,
     categories,
     certificates,
@@ -72,6 +73,7 @@ app.include_router(instructor.router, prefix="/api/v1")
 app.include_router(meetings.router, prefix="/api/v1")
 app.include_router(support.router, prefix="/api/v1")
 app.include_router(blog.router, prefix="/api/v1")
+app.include_router(bundles.router, prefix="/api/v1")
 app.include_router(forums.router, prefix="/api/v1")
 app.include_router(cart.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")

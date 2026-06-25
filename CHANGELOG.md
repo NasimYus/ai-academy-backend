@@ -78,6 +78,7 @@
 ## Phase 7 — Live & advanced
 
 - ✅ 🧪 **7.1** Meetings/консультации: модели/миграция `Meeting`/`MeetingTime`/`ReserveMeeting` (`e2f3a4b5c6d7`); инструктор `GET/PUT /panel/meeting` (цена/disabled) + `POST/DELETE /panel/meeting/times` (слоты); публично `GET /users/{id}/meeting`; юзер `POST /meetings/reserve`, `GET /panel/meetings` (`{reservations,requests}`), `GET /panel/meetings/{id}`, `POST /panel/meetings/{id}/finish`. NOTE: paid-checkout (sale_id) + Agora live-link гейтнуты (free path); `details.user`=создатель встречи (легаси-квирк)
+- ✅ 🧪 **7.3** Bundle purchase: публично `GET /bundles` (active), `GET /bundles/{id}` (+ courses), `GET /bundles/{id}/webinars`; покупка `POST /bundles/{id}/free` (price>0→422 not_free, иначе `Enrollment(source=bundle)` на все курсы; повтор→422 already_purchased) и `POST /bundles/{id}/buyWithPoint` (no_points/no_enough_points→422, иначе enroll all + reward deduction). NOTE: paid-bundle через cart/checkout — отложено (как course paid)
 
 ## Сквозные задачи (foundation)
 

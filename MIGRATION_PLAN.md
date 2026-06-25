@@ -212,7 +212,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [ ] 6.6 store/products (отдельная подсистема — Product/ProductCategory/ProductOrder)
 - **Phase 7 — Live & advanced**: meetings/reservations (консультации), live-сессии (Agora/Zoom/BBB), subscriptions, bundle purchase, gifts.
   - [x] **7.1 Meetings/reservations (консультации)** — паритет `ReserveMeetingsController` + meeting setup: модели `Meeting`/`MeetingTime`/`ReserveMeeting`+миграция (`e2f3a4b5c6d7`); инструктор: `GET/PUT /panel/meeting` (цена/disabled), `POST/DELETE /panel/meeting/times` (слоты); публично `GET /users/{id}/meeting` (доступность); юзер: `POST /meetings/reserve`, `GET /panel/meetings` (`{reservations,requests}`), `GET /panel/meetings/{id}`, `POST /panel/meetings/{id}/finish`. FE `entities/meeting`+`features/manage-meeting`+`features/reserve-meeting` + `pages/instructor-meetings`+`pages/my-meetings` + панель брони на профиле. test ✅. NOTE: paid-checkout (sale_id/order_items) и Agora live-link гейтнуты — бронь создаётся напрямую (free path); легаси `details.user` = создатель встречи (инструктор)
-  - [ ] 7.2 subscriptions/registration-packages · 7.3 bundle purchase · 7.4 live-sessions (Agora/Zoom/BBB)
+  - [x] **7.3 Bundle purchase** — паритет `Web\BundleController` + `BundleController@free/buyWithPoint`: публично `GET /bundles[/{id}][/{id}/webinars]`, покупка `POST /bundles/{id}/free` (→Enrollment source=bundle на все курсы) и `POST /bundles/{id}/buyWithPoint` (reward deduction). FE `entities/bundle` + `features/buy-bundle` + `pages/bundles`+`pages/bundle`. test ✅. NOTE: paid-bundle через cart — отложено
+  - [ ] 7.2 subscriptions/registration-packages · 7.4 live-sessions (Agora/Zoom/BBB)
 - **Admin**: наращиваем постепенно — на каждой фазе добавляем CRUD для её сущностей (отмечено `admin` в чекбоксах выше).
 
 ---
