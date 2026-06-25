@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.models.assignment import AssignmentHistoryStatus
 from app.models.course import CourseType, VideoDemoSource
 from app.models.quiz import QuizStatus
 from app.schemas.user import UserBrief
@@ -118,3 +119,52 @@ class QuizResultsOverview(BaseModel):
     avg_grade: float
     quizzes: list[QuizManageRead]
     results: list[QuizResultRow]
+
+
+# Instructor assignment grading — parity of Instructor\AssignmentController.
+
+
+class AssignmentHistoryRow(BaseModel):
+    id: int
+    student: UserBrief | None
+    status: AssignmentHistoryStatus
+    grade: int | None
+    submissions_count: int
+    created_at: datetime
+
+
+class InstructorAssignmentRow(BaseModel):
+    id: int
+    title: str
+    course_id: int
+    pass_grade: int | None
+    histories: list[AssignmentHistoryRow]
+
+
+class AssignmentDashboard(BaseModel):
+    course_assignments_count: int
+    pending_reviews_count: int
+    passed_count: int
+    failed_count: int
+    assignments: list[InstructorAssignmentRow]
+
+
+class SubmissionMessage(BaseModel):
+    id: int
+    sender: UserBrief | None
+    message: str
+    file_title: str | None
+    file_path: str | None
+    created_at: datetime
+
+
+class SubmissionView(BaseModel):
+    id: int
+    student: UserBrief | None
+    status: AssignmentHistoryStatus
+    grade: int | None
+    messages: list[SubmissionMessage]
+
+
+class GradeInput(BaseModel):
+    grade: int

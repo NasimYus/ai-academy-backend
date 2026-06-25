@@ -6,6 +6,7 @@ from app.models.assignment import (
     Assignment,
     AssignmentHistory,
     AssignmentHistoryMessage,
+    AssignmentHistoryStatus,
     AssignmentStatus,
 )
 
@@ -134,3 +135,83 @@ async def create_message(
     await db.commit()
     await db.refresh(msg, attribute_names=["sender"])
     return msg
+
+
+# --- instructor grading (Phase 6.3, legacy Instructor\AssignmentController) ---
+
+
+async def list_by_creator(db: AsyncSession, creator_id: int) -> list[Assignment]:
+    """Assignments the instructor created (newest first)."""
+    result = await db.execute(
+        select(Assignment)
+        .where(Assignment.creator_id == creator_id)
+        .order_by(Assignment.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def histories_for_assignment(
+    db: AsyncSession, *, assignment_id: int, instructor_id: int
+) -> list[AssignmentHistory]:
+    """Student submission threads on one assignment (legacy submmision)."""
+    result = await db.execute(
+        select(AssignmentHistory)
+        .where(
+            AssignmentHistory.assignment_id == assignment_id,
+            AssignmentHistory.instructor_id == instructor_id,
+            AssignmentHistory.student_id != instructor_id,
+        )
+        .options(selectinload(AssignmentHistory.student))
+        .order_by(AssignmentHistory.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def histories_for_creator(db: AsyncSession, *, creator_id: int) -> list[AssignmentHistory]:
+    """All submission threads on the instructor's assignments (for the dashboard)."""
+    assignment_ids = select(Assignment.id).where(Assignment.creator_id == creator_id)
+    result = await db.execute(
+        select(AssignmentHistory)
+        .where(
+            AssignmentHistory.assignment_id.in_(assignment_ids),
+            AssignmentHistory.instructor_id == creator_id,
+        )
+        .options(selectinload(AssignmentHistory.student))
+        .order_by(AssignmentHistory.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_history_owned(
+    db: AsyncSession, history_id: int, creator_id: int
+) -> AssignmentHistory | None:
+    """A submission thread on an assignment the instructor created."""
+    result = await db.execute(
+        select(AssignmentHistory)
+        .join(Assignment, Assignment.id == AssignmentHistory.assignment_id)
+        .where(AssignmentHistory.id == history_id, Assignment.creator_id == creator_id)
+        .options(selectinload(AssignmentHistory.assignment))
+    )
+    return result.scalar_one_or_none()
+
+
+async def message_counts(db: AsyncSession, history_ids: list[int]) -> dict[int, int]:
+    """Submission-message count per history id (single grouped query)."""
+    if not history_ids:
+        return {}
+    result = await db.execute(
+        select(AssignmentHistoryMessage.assignment_history_id, func.count())
+        .where(AssignmentHistoryMessage.assignment_history_id.in_(history_ids))
+        .group_by(AssignmentHistoryMessage.assignment_history_id)
+    )
+    return {hid: n for hid, n in result.all()}
+
+
+async def set_grade(
+    db: AsyncSession, history: AssignmentHistory, *, grade: int, status: AssignmentHistoryStatus
+) -> AssignmentHistory:
+    history.grade = grade
+    history.status = status
+    await db.commit()
+    await db.refresh(history)
+    return history

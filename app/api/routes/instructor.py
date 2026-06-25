@@ -3,22 +3,30 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.deps import DbSession, require_level
+from app.models.assignment import AssignmentHistoryStatus
 from app.models.category import Category
 from app.models.course import Course, CourseStatus, CourseType
 from app.models.quiz import Quiz, QuizStatus
 from app.models.user import User
+from app.repositories import assignments as assignments_repo
 from app.repositories import courses as courses_repo
 from app.repositories import quizzes as quizzes_repo
 from app.schemas.common import error_responses
 from app.schemas.course import CourseDetail, CourseRead
 from app.schemas.instructor import (
+    AssignmentDashboard,
+    AssignmentHistoryRow,
     CourseCreate,
     CourseUpdate,
+    GradeInput,
+    InstructorAssignmentRow,
     QuizCreate,
     QuizManageRead,
     QuizResultRow,
     QuizResultsOverview,
     QuizUpdate,
+    SubmissionMessage,
+    SubmissionView,
 )
 from app.schemas.user import UserBrief
 from app.services.course_presenter import to_brief, to_detail
@@ -289,3 +297,132 @@ async def delete_quiz(quiz_id: int, current_user: TeacherUser, db: DbSession) ->
     if quiz is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found")
     await quizzes_repo.delete_quiz(db, quiz)
+
+
+# --- Assignment grading (Phase 6.3, legacy Instructor\AssignmentController) ---
+# NOTE: legacy gates these on the `webinar_assignment_status` feature flag; we keep
+# assignments ungated (the student flow is too), matching our build.
+
+
+@router.get(
+    "/assignments",
+    response_model=AssignmentDashboard,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+)
+async def assignment_dashboard(current_user: TeacherUser, db: DbSession) -> AssignmentDashboard:
+    """Instructor assignments + review counts (legacy AssignmentController@index)."""
+    assignments = await assignments_repo.list_by_creator(db, current_user.id)
+    histories = await assignments_repo.histories_for_creator(db, creator_id=current_user.id)
+    counts = await assignments_repo.message_counts(db, [h.id for h in histories])
+
+    by_assignment: dict[int, list[AssignmentHistoryRow]] = {}
+    for h in histories:
+        by_assignment.setdefault(h.assignment_id, []).append(
+            AssignmentHistoryRow(
+                id=h.id,
+                student=UserBrief.model_validate(h.student) if h.student else None,
+                status=h.status,
+                grade=h.grade,
+                submissions_count=counts.get(h.id, 0),
+                created_at=h.created_at,
+            )
+        )
+
+    return AssignmentDashboard(
+        course_assignments_count=len(assignments),
+        pending_reviews_count=sum(
+            1 for h in histories if h.status == AssignmentHistoryStatus.pending
+        ),
+        passed_count=sum(1 for h in histories if h.status == AssignmentHistoryStatus.passed),
+        failed_count=sum(1 for h in histories if h.status == AssignmentHistoryStatus.not_passed),
+        assignments=[
+            InstructorAssignmentRow(
+                id=a.id,
+                title=a.title,
+                course_id=a.course_id,
+                pass_grade=a.pass_grade,
+                histories=by_assignment.get(a.id, []),
+            )
+            for a in assignments
+        ],
+    )
+
+
+@router.get(
+    "/assignments/{assignment_id}/submissions",
+    response_model=list[SubmissionView],
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+)
+async def assignment_submissions(
+    assignment_id: int, current_user: TeacherUser, db: DbSession
+) -> list[SubmissionView]:
+    """Student submission threads on one assignment (legacy @submmision)."""
+    histories = await assignments_repo.histories_for_assignment(
+        db, assignment_id=assignment_id, instructor_id=current_user.id
+    )
+    views: list[SubmissionView] = []
+    for h in histories:
+        messages = await assignments_repo.messages_for_history(db, h.id)
+        views.append(
+            SubmissionView(
+                id=h.id,
+                student=UserBrief.model_validate(h.student) if h.student else None,
+                status=h.status,
+                grade=h.grade,
+                messages=[
+                    SubmissionMessage(
+                        id=m.id,
+                        sender=UserBrief.model_validate(m.sender) if m.sender else None,
+                        message=m.message,
+                        file_title=m.file_title,
+                        file_path=m.file_path,
+                        created_at=m.created_at,
+                    )
+                    for m in messages
+                ],
+            )
+        )
+    return views
+
+
+@router.post(
+    "/assignments/histories/{history_id}/rate",
+    response_model=SubmissionView,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_404_NOT_FOUND),
+)
+async def grade_submission(
+    history_id: int, payload: GradeInput, current_user: TeacherUser, db: DbSession
+) -> SubmissionView:
+    """Grade a submission (legacy AssignmentController@setGrade)."""
+    history = await assignments_repo.get_history_owned(db, history_id, current_user.id)
+    if history is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+
+    pass_grade = history.assignment.pass_grade or 0
+    new_status = (
+        AssignmentHistoryStatus.passed
+        if payload.grade >= pass_grade
+        else AssignmentHistoryStatus.not_passed
+    )
+    history = await assignments_repo.set_grade(db, history, grade=payload.grade, status=new_status)
+    # NOTE(5.7): legacy awards PASS_ASSIGNMENT reward points here — earning rules
+    # are gated/deferred, so no accounting yet.
+    messages = await assignments_repo.messages_for_history(db, history.id)
+    student = await db.get(User, history.student_id)
+    return SubmissionView(
+        id=history.id,
+        student=UserBrief.model_validate(student) if student else None,
+        status=history.status,
+        grade=history.grade,
+        messages=[
+            SubmissionMessage(
+                id=m.id,
+                sender=UserBrief.model_validate(m.sender) if m.sender else None,
+                message=m.message,
+                file_title=m.file_title,
+                file_path=m.file_path,
+                created_at=m.created_at,
+            )
+            for m in messages
+        ],
+    )
