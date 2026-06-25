@@ -33,6 +33,7 @@ from app.api.routes import (
     providers,
     quizzes,
     rewards,
+    sales,
     search,
     subscriptions,
     support,
@@ -72,6 +73,7 @@ app.include_router(noticeboards.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(newsletter.router, prefix="/api/v1")
 app.include_router(rewards.router, prefix="/api/v1")
+app.include_router(sales.router, prefix="/api/v1")
 app.include_router(subscriptions.router, prefix="/api/v1")
 app.include_router(products.router, prefix="/api/v1")
 app.include_router(instructor.router, prefix="/api/v1")

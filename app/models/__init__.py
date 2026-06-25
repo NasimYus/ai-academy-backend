@@ -69,6 +69,7 @@ from app.models.quiz import (
 from app.models.review import CourseReview, ReviewStatus
 from app.models.reward import RewardAccounting, RewardStatus
 from app.models.role import Role
+from app.models.sale import Sale, SaleType
 from app.models.subscription import Subscribe, SubscribeUse, UserSubscribe
 from app.models.support import (
     Support,
@@ -145,6 +146,8 @@ __all__ = [
     "Subscribe",
     "UserSubscribe",
     "SubscribeUse",
+    "Sale",
+    "SaleType",
     "Product",
     "ProductCategory",
     "ProductType",

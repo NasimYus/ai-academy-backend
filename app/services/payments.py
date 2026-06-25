@@ -14,7 +14,7 @@ from app.models.payment import PaymentChannel
 from app.models.user import User
 from app.repositories import enrollments as enrollments_repo
 from app.repositories import orders as orders_repo
-from app.services import email
+from app.services import email, sales
 from app.services.payment_channels import make_channel
 
 
@@ -34,10 +34,12 @@ async def start(db: AsyncSession, order: Order, channel: PaymentChannel) -> str:
 
 
 async def complete(db: AsyncSession, order: Order) -> None:
-    """Mark an order paid and grant course access (legacy setPaymentAccounting →
-    Sale rows). Each course item enrolls the buyer (idempotent)."""
+    """Mark an order paid, record Sale accounting rows, and grant access (legacy
+    setPaymentAccounting → Sale::createSales). Each item gets a Sale; course
+    items also enroll the buyer (idempotent)."""
     order.status = OrderStatus.paid
     for item in order.items:
+        await sales.record_sale(db, item, order.payment_method)
         if item.course_id is None:
             continue
         if not await enrollments_repo.exists(db, user_id=order.user_id, course_id=item.course_id):
