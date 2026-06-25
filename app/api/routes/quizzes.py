@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, DbSession, OptionalUser
 from app.models.quiz import ResultStatus
+from app.models.reward import RewardType
 from app.repositories import courses as courses_repo
 from app.repositories import quizzes as quizzes_repo
 from app.schemas.common import error_responses
@@ -14,6 +15,7 @@ from app.schemas.quiz import (
 from app.services import access
 from app.services import certificates as certificates_service
 from app.services import quizzes as quiz_service
+from app.services import rewards as rewards_service
 
 router = APIRouter(tags=["quizzes"])
 
@@ -139,6 +141,16 @@ async def store_result(
 
     # Issue an achievement certificate when a certificate-quiz is passed (Phase 3.6).
     await certificates_service.issue_if_passed(db, quiz, result)
+
+    # Award points for passing the quiz (once per quiz; gate + rule honoured).
+    if result.status == ResultStatus.passed:
+        await rewards_service.award_for(
+            db,
+            user_id=current_user.id,
+            reward_type=RewardType.pass_the_quiz,
+            item_id=quiz.id,
+            check_duplicate=True,
+        )
 
     return quiz_service.result_read(result)
 

@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import DbSession, OptionalUser
+from app.models.reward import RewardType
 from app.repositories import newsletter as newsletter_repo
 from app.schemas.common import error_responses
 from app.schemas.newsletter import NewsletterRequest, NewsletterResponse
+from app.services import rewards as rewards_service
 
 router = APIRouter(tags=["newsletter"])
 
@@ -30,4 +32,9 @@ async def make_newsletter(
         current_user.newsletter = True
 
     await newsletter_repo.create(db, email=email, user_id=user_id)
+    # Newsletter reward (only for an authenticated own-email subscribe; once).
+    if user_id is not None:
+        await rewards_service.award_for(
+            db, user_id=user_id, reward_type=RewardType.newsletters, check_duplicate=True
+        )
     return NewsletterResponse(message="subscribed_newsletter")

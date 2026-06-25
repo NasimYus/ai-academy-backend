@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -13,6 +13,53 @@ class RewardStatus(str, enum.Enum):
 
     addiction = "addiction"
     deduction = "deduction"
+
+
+class RewardType(str, enum.Enum):
+    """Legacy Reward::getTypesLists — the events that can earn points."""
+
+    account_charge = "account_charge"
+    create_classes = "create_classes"
+    buy = "buy"
+    pass_the_quiz = "pass_the_quiz"
+    certificate = "certificate"
+    comment = "comment"
+    register = "register"
+    review_courses = "review_courses"
+    instructor_meeting_reserve = "instructor_meeting_reserve"
+    student_meeting_reserve = "student_meeting_reserve"
+    newsletters = "newsletters"
+    badge = "badge"
+    referral = "referral"
+    learning_progress_100 = "learning_progress_100"
+    charge_wallet = "charge_wallet"
+    buy_store_product = "buy_store_product"
+    pass_assignment = "pass_assignment"
+    make_topic = "make_topic"
+    send_post_in_topic = "send_post_in_topic"
+    create_blog_by_instructor = "create_blog_by_instructor"
+    comment_for_instructor_blog = "comment_for_instructor_blog"
+
+
+class Reward(Base):
+    """A points-earning rule, parity of legacy `rewards`.
+
+    For each active `type`, award `score` points when the event fires; amount-
+    based types (buy / charge / store-product) scale by `amount / condition`.
+    """
+
+    __tablename__ = "rewards"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    type: Mapped[RewardType] = mapped_column(
+        Enum(RewardType, name="reward_type"), index=True, nullable=False
+    )
+    score: Mapped[int | None] = mapped_column(Integer)
+    condition: Mapped[str | None] = mapped_column(String(64))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
 
 class RewardAccounting(Base):

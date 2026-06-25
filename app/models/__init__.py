@@ -74,7 +74,7 @@ from app.models.registration_package import (
     UserRegistrationPackage,
 )
 from app.models.review import CourseReview, ReviewStatus
-from app.models.reward import RewardAccounting, RewardStatus
+from app.models.reward import Reward, RewardAccounting, RewardStatus, RewardType
 from app.models.role import Role
 from app.models.sale import Sale, SaleType
 from app.models.subscription import Subscribe, SubscribeUse, UserSubscribe
@@ -142,6 +142,8 @@ __all__ = [
     "Newsletter",
     "RewardAccounting",
     "RewardStatus",
+    "Reward",
+    "RewardType",
     "Notification",
     "NotificationStatus",
     "NotificationType",

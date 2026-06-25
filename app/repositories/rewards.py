@@ -2,7 +2,35 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.reward import RewardAccounting, RewardStatus
+from app.models.reward import Reward, RewardAccounting, RewardStatus, RewardType
+
+
+async def get_active_rule(db: AsyncSession, reward_type: RewardType) -> Reward | None:
+    """The enabled earning rule for an event type (legacy Reward::where(type))."""
+    result = await db.execute(
+        select(Reward).where(Reward.type == reward_type, Reward.enabled.is_(True))
+    )
+    return result.scalars().first()
+
+
+async def entry_exists(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    type: str,
+    item_id: int | None,
+    status: RewardStatus = RewardStatus.addiction,
+) -> bool:
+    """Legacy checkDuplicate: one award per user+item+type+status."""
+    result = await db.execute(
+        select(RewardAccounting.id).where(
+            RewardAccounting.user_id == user_id,
+            RewardAccounting.type == type,
+            RewardAccounting.item_id == item_id,
+            RewardAccounting.status == status,
+        )
+    )
+    return result.first() is not None
 
 
 async def _sum(db: AsyncSession, user_id: int, status: RewardStatus) -> int:

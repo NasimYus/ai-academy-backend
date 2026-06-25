@@ -19,6 +19,7 @@ _DATA_TABLES = (
     "user_subscribes",
     "subscribes",
     "rewards_accounting",
+    "rewards",
     "newsletters",
     "support_conversations",
     "supports",

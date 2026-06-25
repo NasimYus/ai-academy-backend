@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.reward import RewardAccounting, RewardStatus
+from app.models.reward import Reward, RewardAccounting, RewardStatus, RewardType
 from app.models.user import User
 from app.repositories import rewards as rewards_repo
 from app.schemas.reward import LeaderUser, RewardEntry, RewardsOverview
@@ -37,6 +37,54 @@ async def record(
         return None
     return await rewards_repo.create_entry(
         db, user_id=user_id, score=score, type=type, status=status, item_id=item_id, commit=commit
+    )
+
+
+# Amount-based types scale by amount/condition; charge_wallet is a threshold.
+_PROPORTIONAL = {RewardType.buy, RewardType.account_charge, RewardType.buy_store_product}
+
+
+def _compute_score(rule: Reward, amount: float | None) -> int:
+    """Legacy Reward::calculateScore."""
+    base = rule.score or 0
+    if rule.type in _PROPORTIONAL:
+        cond = float(rule.condition) if rule.condition else 0
+        return int(base * (amount / cond)) if amount and cond else 0
+    if rule.type == RewardType.charge_wallet:
+        cond = float(rule.condition) if rule.condition else 0
+        return base if amount and cond and amount > cond else 0
+    return base
+
+
+async def award_for(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    reward_type: RewardType,
+    amount: float | None = None,
+    item_id: int | None = None,
+    check_duplicate: bool = False,
+    commit: bool = True,
+) -> RewardAccounting | None:
+    """Award points for an event per its active rule (legacy makeRewardAccounting).
+
+    No-op when the rewards gate is off, no active rule exists, the computed
+    score is 0, or (when check_duplicate) the user already earned it.
+    """
+    if not enabled():
+        return None
+    rule = await rewards_repo.get_active_rule(db, reward_type)
+    if rule is None:
+        return None
+    score = _compute_score(rule, amount)
+    if score <= 0:
+        return None
+    if check_duplicate and await rewards_repo.entry_exists(
+        db, user_id=user_id, type=reward_type.value, item_id=item_id
+    ):
+        return None
+    return await record(
+        db, user_id=user_id, score=score, type=reward_type.value, item_id=item_id, commit=commit
     )
 
 

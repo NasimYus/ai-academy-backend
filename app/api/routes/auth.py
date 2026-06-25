@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.api.deps import CurrentUser, DbSession
 from app.core.config import settings
 from app.core.security import create_token, hash_password, verify_password
+from app.models.reward import RewardType
 from app.models.role import Role
 from app.models.user import UserStatus
 from app.repositories import password_resets as password_resets_repo
@@ -32,6 +33,7 @@ from app.schemas.auth import (
 from app.schemas.common import error_responses
 from app.schemas.user import UserRead
 from app.services import email
+from app.services import rewards as rewards_service
 from app.services import verification as verification_svc
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -140,9 +142,12 @@ async def register_step_three(payload: RegisterStep3, db: DbSession) -> AuthToke
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     user.full_name = payload.full_name
-    # NOTE(Phase 5): registration bonus, reward accounting and referral handling
-    # are gated behind their settings (off on a clean install) — ported later.
     await db.commit()
+    # Registration reward (gate + active rule honoured; once per user).
+    await rewards_service.award_for(
+        db, user_id=user.id, reward_type=RewardType.register, check_duplicate=True
+    )
+    # NOTE(Phase 5): registration bonus + referral handling are still gated stubs.
     return AuthToken(access_token=create_token(str(user.id)), user_id=user.id)
 
 
