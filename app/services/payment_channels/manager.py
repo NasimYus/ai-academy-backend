@@ -30,3 +30,15 @@ def credential_items_for(class_name: str) -> list[str]:
 
 def is_supported(class_name: str) -> bool:
     return class_name in _DRIVERS
+
+
+def show_test_mode_toggle_for(class_name: str) -> bool:
+    """Whether the admin UI should offer a test-mode toggle (legacy
+    getShowTestModeToggle())."""
+    driver_cls = _DRIVERS.get(class_name)
+    return driver_cls.show_test_mode_toggle if driver_cls else True
+
+
+def known_drivers() -> list[str]:
+    """All registered gateway driver class_names."""
+    return list(_DRIVERS.keys())

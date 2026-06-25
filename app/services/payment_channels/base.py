@@ -26,6 +26,8 @@ class PaymentDriver:
     # Subclasses set these (legacy class_name + getCredentialItems()).
     class_name: str = "Base"
     credential_items: list[str] = []
+    # Legacy getShowTestModeToggle(): whether the admin UI offers a test-mode flag.
+    show_test_mode_toggle: bool = True
 
     def __init__(self, channel: PaymentChannel) -> None:
         self.channel = channel

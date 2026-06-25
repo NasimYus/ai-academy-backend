@@ -83,6 +83,10 @@
 - ✅ 🧪 **7.2** Subscriptions: модели/миграция `Subscribe`/`UserSubscribe`/`SubscribeUse` (`f3a4b5c6d7e8`); `GET /subscribe` (optional-auth — планы + активная подписка `{used/remaining/days_left}` + `day_of_use`), `POST /subscribe/{id}/activate` (free-план → `UserSubscribe`; платный → 422 not_free), `POST /subscribe/apply` ({course_id}: not_subscribable/no_active_subscribe/free/already_purchased→422, иначе `SubscribeUse`+`Enrollment(source=subscribe)`). Активность = в окне `days` и `used<usable_count`. NOTE: paid-checkout (webPay) и registration-packages (teacher) — отложены
 - ✅ 🧪 **7.3** Bundle purchase: публично `GET /bundles` (active), `GET /bundles/{id}` (+ courses), `GET /bundles/{id}/webinars`; покупка `POST /bundles/{id}/free` (price>0→422 not_free, иначе `Enrollment(source=bundle)` на все курсы; повтор→422 already_purchased) и `POST /bundles/{id}/buyWithPoint` (no_points/no_enough_points→422, иначе enroll all + reward deduction). NOTE: paid-bundle через cart/checkout — отложено (как course paid)
 
+## Admin
+
+- ✅ 🧪 **A.1** Payment channels (паритет `Admin\PaymentChannelController`): гейт `require_admin` (role=admin; NOTE: fine-grained `authorize('admin_…')` отложены); `GET /admin/payment-channels` (все, newest-first), `POST` (create по class_name), `GET/{id}` (+ `credential_items`/`supported`/`show_test_mode_toggle`), `PUT /{id}` (title/image/status/credentials/currencies/test_mode — легаси перезаписывает на каждом save), `POST /{id}/toggle-status`. Драйвер: добавлен `show_test_mode_toggle` (getShowTestModeToggle) + helpers `show_test_mode_toggle_for`/`known_drivers`
+
 ## Сквозные задачи (foundation)
 
 - ✅ **F.1** Файловое хранилище (локальный диск, `/media`; S3 — позже)

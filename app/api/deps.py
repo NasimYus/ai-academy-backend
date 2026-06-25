@@ -111,3 +111,19 @@ def require_level(level: str):
         return user
 
     return checker
+
+
+async def require_admin(user: CurrentUser) -> User:
+    """Allow only admin users (legacy admin-panel gate).
+
+    NOTE: legacy uses fine-grained permissions (`authorize('admin_…')`); we gate
+    by the admin role until a permissions system is ported.
+    """
+    from app.models.role import Role
+
+    if user.role_name != Role.ADMIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+    return user
+
+
+AdminUser = Annotated[User, Depends(require_admin)]

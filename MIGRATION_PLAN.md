@@ -217,6 +217,7 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [~] **7.2 Subscriptions** — паритет `SubscribesController` + `Subscribe::getActiveSubscribe`: модели `Subscribe`/`UserSubscribe`/`SubscribeUse`+миграция (`f3a4b5c6d7e8`); `GET /subscribe`, `POST /subscribe/{id}/activate` (free), `POST /subscribe/apply` (→Enrollment source=subscribe). FE `entities/subscription`+`features/subscribe` + `pages/subscriptions` + кнопка «по подписке» на курсе. test ✅. NOTE: registration-packages (teacher) + paid-checkout — отложены
   - [ ] 7.4 live-sessions (Agora/Zoom/BBB) · registration-packages
 - **Admin**: наращиваем постепенно — на каждой фазе добавляем CRUD для её сущностей (отмечено `admin` в чекбоксах выше).
+  - [x] **A.1 Payment channels (admin)** — паритет `Admin\PaymentChannelController` (index/edit/update/toggleStatus): гейт `require_admin` (role=admin; NOTE: fine-grained `authorize('admin_…')` отложены); `GET /admin/payment-channels` (все, newest-first), `POST` (create по class_name — легаси сидит на install, у нас add), `GET/{id}` (+ `credential_items`/`supported`/`show_test_mode_toggle` из драйвера), `PUT /{id}` (title/image/status/credentials/currencies/test_mode), `POST /{id}/toggle-status`. FE `features/manage-payment-channels` (ChannelEditor: креды по `credential_items`, валюты, test-mode; CreateChannelForm) + `pages/admin-payments` (/admin/payment-channels, гейт `requireRole('admin')`) + ссылка «Админ» в Header. test 🧪 (гейт 401/403, CRUD, credential-контракт, toggle)
 
 ---
 
