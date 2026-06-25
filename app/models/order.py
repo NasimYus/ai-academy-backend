@@ -10,6 +10,7 @@ from app.core.database import Base
 if TYPE_CHECKING:
     from app.models.bundle import Bundle
     from app.models.course import Course
+    from app.models.subscription import Subscribe
 
 
 class OrderStatus(str, enum.Enum):
@@ -65,6 +66,9 @@ class OrderItem(Base):
     )
     course_id: Mapped[int | None] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"))
     bundle_id: Mapped[int | None] = mapped_column(ForeignKey("bundles.id", ondelete="SET NULL"))
+    subscribe_id: Mapped[int | None] = mapped_column(
+        ForeignKey("subscribes.id", ondelete="SET NULL")
+    )
     discount_id: Mapped[int | None] = mapped_column(ForeignKey("discounts.id", ondelete="SET NULL"))
     amount: Mapped[float] = mapped_column(Numeric(15, 3), nullable=False)  # item price
     tax: Mapped[float | None] = mapped_column(Numeric(15, 3))
@@ -77,3 +81,4 @@ class OrderItem(Base):
 
     course: Mapped["Course | None"] = relationship("Course", lazy="raise")
     bundle: Mapped["Bundle | None"] = relationship("Bundle", lazy="raise")
+    subscribe: Mapped["Subscribe | None"] = relationship("Subscribe", lazy="raise")

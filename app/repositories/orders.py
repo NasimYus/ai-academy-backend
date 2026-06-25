@@ -29,6 +29,7 @@ def _loaded():
     return (
         selectinload(Order.items).selectinload(OrderItem.course),
         selectinload(Order.items).selectinload(OrderItem.bundle),
+        selectinload(Order.items).selectinload(OrderItem.subscribe),
     )
 
 

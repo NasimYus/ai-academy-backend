@@ -5,8 +5,10 @@ from app.models.enrollment import EnrollmentSource
 from app.models.subscription import Subscribe
 from app.repositories import courses as courses_repo
 from app.repositories import enrollments as enrollments_repo
+from app.repositories import orders as orders_repo
 from app.repositories import subscriptions as subs_repo
 from app.schemas.common import error_responses
+from app.schemas.order import OrderRead
 from app.schemas.subscription import (
     SubscribeApplyRequest,
     SubscribeList,
@@ -15,6 +17,7 @@ from app.schemas.subscription import (
 )
 from app.services import access
 from app.services import subscriptions as subs_service
+from app.services.order_presenter import order_read
 
 router = APIRouter(prefix="/subscribe", tags=["subscriptions"])
 
@@ -66,6 +69,37 @@ async def activate_subscription(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="not_free")
     await subs_repo.create_user_subscribe(db, user_id=current_user.id, subscribe_id=plan.id)
     return SubscribeResponse(message="subscribed")
+
+
+@router.post(
+    "/{plan_id}/pay",
+    response_model=OrderRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(
+        status.HTTP_401_UNAUTHORIZED,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def pay_subscription(plan_id: int, current_user: CurrentUser, db: DbSession) -> OrderRead:
+    """Create a pending order for a paid plan (legacy webPay). Settling it via
+    /payments activates the subscription and records a `subscribe` Sale."""
+    plan = await subs_repo.get_plan(db, plan_id)
+    if plan is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+    price = float(plan.price)
+    if price <= 0:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="not_free")
+
+    order = await orders_repo.create(
+        db,
+        user_id=current_user.id,
+        amount=price,
+        total_discount=0,
+        total_amount=price,
+        items=[{"subscribe_id": plan_id, "amount": price, "total_amount": price}],
+    )
+    return order_read(order)
 
 
 @router.post(

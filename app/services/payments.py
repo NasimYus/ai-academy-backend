@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.order import Order, OrderStatus, PaymentMethod
 from app.models.payment import PaymentChannel
+from app.models.subscription import UserSubscribe
 from app.models.user import User
 from app.repositories import bundles as bundles_repo
 from app.repositories import enrollments as enrollments_repo
@@ -29,6 +30,12 @@ async def _grant_bundle(db: AsyncSession, user_id: int, bundle_id: int) -> None:
     """Enroll a buyer in every active course of a paid bundle (idempotent)."""
     for course_id in await bundles_repo.active_course_ids(db, bundle_id):
         await _enroll(db, user_id, course_id, EnrollmentSource.bundle)
+
+
+def _grant_subscribe(db: AsyncSession, user_id: int, subscribe_id: int) -> None:
+    """Activate a purchased subscription plan for the buyer (legacy
+    createAccountingForSubscribe → UserSubscribe)."""
+    db.add(UserSubscribe(user_id=user_id, subscribe_id=subscribe_id))
 
 
 def build_redirect_url(order: Order, channel: PaymentChannel) -> str:
@@ -55,6 +62,8 @@ async def complete(db: AsyncSession, order: Order) -> None:
         await sales.record_sale(db, item, order.payment_method)
         if item.bundle_id is not None:
             await _grant_bundle(db, order.user_id, item.bundle_id)
+        elif item.subscribe_id is not None:
+            _grant_subscribe(db, order.user_id, item.subscribe_id)
         elif item.course_id is not None:
             await _enroll(db, order.user_id, item.course_id, EnrollmentSource.purchase)
     await db.commit()

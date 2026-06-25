@@ -34,12 +34,16 @@ async def record_sale(
         refs["bundle_id"] = item.bundle_id
         bundle = await db.get(Bundle, item.bundle_id)
         seller_id = bundle.creator_id if bundle else None
+    elif item.subscribe_id is not None:
+        # Subscriptions are sold by the platform (no instructor seller), per legacy.
+        sale_type = SaleType.subscribe
+        refs["subscribe_id"] = item.subscribe_id
     elif item.course_id is not None:
         sale_type = SaleType.webinar
         refs["webinar_id"] = item.course_id
         seller_id = await _seller_for_course(db, item.course_id)
-    # NOTE: subscribe/reserve_meeting/product refs land here as their paid
-    # entrypoints are wired (order item gains the matching column).
+    # NOTE: reserve_meeting/product refs land here as their paid entrypoints
+    # are wired (order item gains the matching column).
 
     sale = Sale(
         buyer_id=item.user_id,
