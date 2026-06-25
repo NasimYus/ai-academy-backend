@@ -12,10 +12,23 @@ from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.order import Order, OrderStatus, PaymentMethod
 from app.models.payment import PaymentChannel
 from app.models.user import User
+from app.repositories import bundles as bundles_repo
 from app.repositories import enrollments as enrollments_repo
 from app.repositories import orders as orders_repo
 from app.services import email, sales
 from app.services.payment_channels import make_channel
+
+
+async def _enroll(db: AsyncSession, user_id: int, course_id: int, source: EnrollmentSource) -> None:
+    """Enroll a buyer in a course (idempotent)."""
+    if not await enrollments_repo.exists(db, user_id=user_id, course_id=course_id):
+        db.add(Enrollment(user_id=user_id, course_id=course_id, source=source))
+
+
+async def _grant_bundle(db: AsyncSession, user_id: int, bundle_id: int) -> None:
+    """Enroll a buyer in every active course of a paid bundle (idempotent)."""
+    for course_id in await bundles_repo.active_course_ids(db, bundle_id):
+        await _enroll(db, user_id, course_id, EnrollmentSource.bundle)
 
 
 def build_redirect_url(order: Order, channel: PaymentChannel) -> str:
@@ -40,16 +53,10 @@ async def complete(db: AsyncSession, order: Order) -> None:
     order.status = OrderStatus.paid
     for item in order.items:
         await sales.record_sale(db, item, order.payment_method)
-        if item.course_id is None:
-            continue
-        if not await enrollments_repo.exists(db, user_id=order.user_id, course_id=item.course_id):
-            db.add(
-                Enrollment(
-                    user_id=order.user_id,
-                    course_id=item.course_id,
-                    source=EnrollmentSource.purchase,
-                )
-            )
+        if item.bundle_id is not None:
+            await _grant_bundle(db, order.user_id, item.bundle_id)
+        elif item.course_id is not None:
+            await _enroll(db, order.user_id, item.course_id, EnrollmentSource.purchase)
     await db.commit()
     await db.refresh(order)
     await _send_receipt(db, order)

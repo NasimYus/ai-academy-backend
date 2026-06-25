@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class OrderItemRead(BaseModel):
     id: int
     course_id: int | None = None
+    bundle_id: int | None = None
     title: str | None = None
     slug: str | None = None
     amount: float

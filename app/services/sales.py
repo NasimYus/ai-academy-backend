@@ -8,6 +8,7 @@ adding their ref to the order item — the derivation here already handles them.
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.bundle import Bundle
 from app.models.course import Course
 from app.models.order import OrderItem, PaymentMethod
 from app.models.sale import Sale, SaleType
@@ -28,12 +29,17 @@ async def record_sale(
     seller_id: int | None = None
     refs: dict = {}
 
-    if item.course_id is not None:
+    if item.bundle_id is not None:
+        sale_type = SaleType.bundle
+        refs["bundle_id"] = item.bundle_id
+        bundle = await db.get(Bundle, item.bundle_id)
+        seller_id = bundle.creator_id if bundle else None
+    elif item.course_id is not None:
         sale_type = SaleType.webinar
         refs["webinar_id"] = item.course_id
         seller_id = await _seller_for_course(db, item.course_id)
-    # NOTE: bundle/subscribe/reserve_meeting/product refs land here as their
-    # paid entrypoints are wired (order item gains the matching column).
+    # NOTE: subscribe/reserve_meeting/product refs land here as their paid
+    # entrypoints are wired (order item gains the matching column).
 
     sale = Sale(
         buyer_id=item.user_id,

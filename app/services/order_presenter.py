@@ -15,7 +15,8 @@ def order_read(order: Order) -> OrderRead:
             OrderItemRead(
                 id=i.id,
                 course_id=i.course_id,
-                title=i.course.title if i.course else None,
+                bundle_id=i.bundle_id,
+                title=(i.course.title if i.course else (i.bundle.title if i.bundle else None)),
                 slug=i.course.slug if i.course else None,
                 amount=float(i.amount),
                 discount=float(i.discount) if i.discount is not None else None,

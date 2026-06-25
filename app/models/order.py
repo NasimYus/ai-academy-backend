@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 if TYPE_CHECKING:
+    from app.models.bundle import Bundle
     from app.models.course import Course
 
 
@@ -63,6 +64,7 @@ class OrderItem(Base):
         ForeignKey("orders.id", ondelete="CASCADE"), index=True, nullable=False
     )
     course_id: Mapped[int | None] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"))
+    bundle_id: Mapped[int | None] = mapped_column(ForeignKey("bundles.id", ondelete="SET NULL"))
     discount_id: Mapped[int | None] = mapped_column(ForeignKey("discounts.id", ondelete="SET NULL"))
     amount: Mapped[float] = mapped_column(Numeric(15, 3), nullable=False)  # item price
     tax: Mapped[float | None] = mapped_column(Numeric(15, 3))
@@ -74,3 +76,4 @@ class OrderItem(Base):
     )
 
     course: Mapped["Course | None"] = relationship("Course", lazy="raise")
+    bundle: Mapped["Bundle | None"] = relationship("Bundle", lazy="raise")

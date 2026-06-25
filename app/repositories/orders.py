@@ -26,25 +26,28 @@ async def get_by_id(db: AsyncSession, order_id: int) -> Order | None:
 
 
 def _loaded():
-    return selectinload(Order.items).selectinload(OrderItem.course)
+    return (
+        selectinload(Order.items).selectinload(OrderItem.course),
+        selectinload(Order.items).selectinload(OrderItem.bundle),
+    )
 
 
 async def list_for_user(db: AsyncSession, user_id: int) -> list[Order]:
     result = await db.execute(
-        select(Order).where(Order.user_id == user_id).options(_loaded()).order_by(Order.id.desc())
+        select(Order).where(Order.user_id == user_id).options(*_loaded()).order_by(Order.id.desc())
     )
     return list(result.scalars().all())
 
 
 async def get_owned(db: AsyncSession, order_id: int, user_id: int) -> Order | None:
     result = await db.execute(
-        select(Order).where(Order.id == order_id, Order.user_id == user_id).options(_loaded())
+        select(Order).where(Order.id == order_id, Order.user_id == user_id).options(*_loaded())
     )
     return result.scalar_one_or_none()
 
 
 async def reload(db: AsyncSession, order_id: int) -> Order:
-    result = await db.execute(select(Order).where(Order.id == order_id).options(_loaded()))
+    result = await db.execute(select(Order).where(Order.id == order_id).options(*_loaded()))
     return result.scalar_one()
 
 

@@ -6,11 +6,14 @@ from app.models.enrollment import EnrollmentSource
 from app.models.reward import RewardStatus
 from app.repositories import bundles as bundles_repo
 from app.repositories import enrollments as enrollments_repo
+from app.repositories import orders as orders_repo
 from app.repositories import rewards as rewards_repo
 from app.schemas.bundle import BundleDetail, BundlePublicRead, BundlePurchaseResponse
 from app.schemas.common import error_responses
 from app.schemas.course import CourseRead
+from app.schemas.order import OrderRead
 from app.services.course_presenter import to_brief
+from app.services.order_presenter import order_read
 
 router = APIRouter(prefix="/bundles", tags=["bundles"])
 
@@ -134,3 +137,44 @@ async def buy_bundle_with_points(
         item_id=bundle.id,
     )
     return BundlePurchaseResponse(message="paid")
+
+
+@router.post(
+    "/{bundle_id}/pay",
+    response_model=OrderRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(
+        status.HTTP_401_UNAUTHORIZED,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def pay_bundle(bundle_id: int, current_user: CurrentUser, db: DbSession) -> OrderRead:
+    """Create a pending order for a paid bundle (legacy fakeCart → checkout).
+
+    Settle it via the normal /payments flow; on `paid`, `payments.complete`
+    records a `bundle` Sale and enrolls the buyer in every bundle course."""
+    bundle = await bundles_repo.get_active(db, bundle_id)
+    if bundle is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bundle not found")
+
+    price = float(bundle.price or 0)
+    if price <= 0:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="not_free")
+
+    target = await bundles_repo.active_course_ids(db, bundle_id)
+    owned = set(await enrollments_repo.course_ids_for_user(db, current_user.id))
+    if target and all(cid in owned for cid in target):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="already_purchased"
+        )
+
+    order = await orders_repo.create(
+        db,
+        user_id=current_user.id,
+        amount=price,
+        total_discount=0,
+        total_amount=price,
+        items=[{"bundle_id": bundle_id, "amount": price, "total_amount": price}],
+    )
+    return order_read(order)
