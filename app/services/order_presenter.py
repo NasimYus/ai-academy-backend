@@ -18,6 +18,7 @@ def order_read(order: Order) -> OrderRead:
                 bundle_id=i.bundle_id,
                 subscribe_id=i.subscribe_id,
                 reserve_meeting_id=i.reserve_meeting_id,
+                product_id=i.product_id,
                 title=(
                     i.course.title
                     if i.course
@@ -25,6 +26,8 @@ def order_read(order: Order) -> OrderRead:
                     if i.bundle
                     else i.subscribe.title
                     if i.subscribe
+                    else i.product.title
+                    if i.product
                     else "Консультация"
                     if i.reserve_meeting_id
                     else None

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.models.bundle import Bundle
     from app.models.course import Course
     from app.models.meeting import ReserveMeeting
+    from app.models.product import Product
     from app.models.subscription import Subscribe
 
 
@@ -73,6 +74,10 @@ class OrderItem(Base):
     reserve_meeting_id: Mapped[int | None] = mapped_column(
         ForeignKey("reserve_meetings.id", ondelete="SET NULL")
     )
+    product_id: Mapped[int | None] = mapped_column(ForeignKey("products.id", ondelete="SET NULL"))
+    product_order_id: Mapped[int | None] = mapped_column(
+        ForeignKey("product_orders.id", ondelete="SET NULL")
+    )
     discount_id: Mapped[int | None] = mapped_column(ForeignKey("discounts.id", ondelete="SET NULL"))
     amount: Mapped[float] = mapped_column(Numeric(15, 3), nullable=False)  # item price
     tax: Mapped[float | None] = mapped_column(Numeric(15, 3))
@@ -87,3 +92,4 @@ class OrderItem(Base):
     bundle: Mapped["Bundle | None"] = relationship("Bundle", lazy="raise")
     subscribe: Mapped["Subscribe | None"] = relationship("Subscribe", lazy="raise")
     reserve_meeting: Mapped["ReserveMeeting | None"] = relationship("ReserveMeeting", lazy="raise")
+    product: Mapped["Product | None"] = relationship("Product", lazy="raise")

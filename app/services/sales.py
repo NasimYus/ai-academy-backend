@@ -12,6 +12,7 @@ from app.models.bundle import Bundle
 from app.models.course import Course
 from app.models.meeting import Meeting, ReserveMeeting
 from app.models.order import OrderItem, PaymentMethod
+from app.models.product import Product
 from app.models.sale import Sale, SaleType
 
 
@@ -39,6 +40,11 @@ async def record_sale(
         # Subscriptions are sold by the platform (no instructor seller), per legacy.
         sale_type = SaleType.subscribe
         refs["subscribe_id"] = item.subscribe_id
+    elif item.product_id is not None:
+        sale_type = SaleType.product
+        refs["product_id"] = item.product_id
+        product = await db.get(Product, item.product_id)
+        seller_id = product.creator_id if product else None
     elif item.reserve_meeting_id is not None:
         sale_type = SaleType.meeting
         reservation = await db.get(ReserveMeeting, item.reserve_meeting_id)

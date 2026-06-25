@@ -14,6 +14,8 @@ from app.models.enrollment import Enrollment, EnrollmentSource
 from app.models.meeting import ReserveMeeting, ReserveStatus
 from app.models.order import Order, OrderStatus, PaymentMethod
 from app.models.payment import PaymentChannel
+from app.models.product import Product, ProductType
+from app.models.product_order import ProductOrder, ProductOrderStatus
 from app.models.sale import Sale
 from app.models.subscription import UserSubscribe
 from app.models.user import User
@@ -53,6 +55,22 @@ async def _confirm_reservation(db: AsyncSession, reserve_meeting_id: int, sale: 
         reservation.status = ReserveStatus.open
 
 
+async def _confirm_product_order(db: AsyncSession, product_order_id: int, sale: Sale) -> None:
+    """Link a paid product order to its Sale and advance its status (legacy
+    updateProductOrder): physical goods await delivery, virtual are done."""
+    await db.flush()  # assign sale.id
+    po = await db.get(ProductOrder, product_order_id)
+    if po is None:
+        return
+    po.sale_id = sale.id
+    product = await db.get(Product, po.product_id)
+    po.status = (
+        ProductOrderStatus.waiting_delivery
+        if product is not None and product.type == ProductType.physical
+        else ProductOrderStatus.success
+    )
+
+
 def build_redirect_url(order: Order, channel: PaymentChannel) -> str:
     """Resolve the channel's driver and build its payment redirect (legacy
     ChannelManager::makeChannel → paymentRequest)."""
@@ -81,6 +99,8 @@ async def complete(db: AsyncSession, order: Order) -> None:
             _grant_subscribe(db, order.user_id, item.subscribe_id)
         elif item.reserve_meeting_id is not None:
             await _confirm_reservation(db, item.reserve_meeting_id, sale)
+        elif item.product_order_id is not None:
+            await _confirm_product_order(db, item.product_order_id, sale)
         elif item.course_id is not None:
             await _enroll(db, order.user_id, item.course_id, EnrollmentSource.purchase)
     await db.commit()

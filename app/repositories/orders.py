@@ -31,6 +31,7 @@ def _loaded():
         selectinload(Order.items).selectinload(OrderItem.course),
         selectinload(Order.items).selectinload(OrderItem.bundle),
         selectinload(Order.items).selectinload(OrderItem.subscribe),
+        selectinload(Order.items).selectinload(OrderItem.product),
     )
 
 
