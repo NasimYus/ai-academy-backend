@@ -74,6 +74,10 @@
 - ✅ 🧪 **6.4** Instructor comments: `GET /panel/comments` (комменты на курсах инструктора, деревом с ответами), `POST /panel/comments/{id}/reply` ({reply}, scoped к своим курсам); `require_level("teacher")`. NOTE: `viewed_at` не трекаем; reply-scope сужен (легаси ownership закомментирован)
 - ✅ 🧪 **6.5** Bundles (инструктор): модели/миграция `Bundle`+`BundleWebinar` (`d1e2f3a4b5c6`); `GET /panel/bundles` (свои наборы + bundles_count/hours; sales=0 — bundle-покупок нет), `DELETE /panel/bundles/{id}` (owner-scoped); `require_level("teacher")`. NOTE: store/update/show в легаси пустые; title inline (translations)
 
+## Phase 7 — Live & advanced
+
+- ✅ 🧪 **7.1** Meetings/консультации: модели/миграция `Meeting`/`MeetingTime`/`ReserveMeeting` (`e2f3a4b5c6d7`); инструктор `GET/PUT /panel/meeting` (цена/disabled) + `POST/DELETE /panel/meeting/times` (слоты); публично `GET /users/{id}/meeting`; юзер `POST /meetings/reserve`, `GET /panel/meetings` (`{reservations,requests}`), `GET /panel/meetings/{id}`, `POST /panel/meetings/{id}/finish`. NOTE: paid-checkout (sale_id) + Agora live-link гейтнуты (free path); `details.user`=создатель встречи (легаси-квирк)
+
 ## Сквозные задачи (foundation)
 
 - ✅ **F.1** Файловое хранилище (локальный диск, `/media`; S3 — позже)

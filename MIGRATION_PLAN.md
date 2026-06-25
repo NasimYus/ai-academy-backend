@@ -210,6 +210,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
   - [x] **6.5 Bundles (инструктор)** — паритет `Instructor\BundleController` index/destroy: `GET /panel/bundles` (свои наборы + bundles_count/sales(0)/hours), `DELETE /panel/bundles/{id}` (owner-scoped); модели `Bundle`+`BundleWebinar`+миграция (`d1e2f3a4b5c6`). FE `features/manage-bundle`+`pages/instructor-bundles`. test ✅. NOTE: store/update/show в легаси — пустые стабы; bundle-покупки нет (sales=0); title inline
   - [ ] 6.6 store/products · 6.7 statistics
 - **Phase 7 — Live & advanced**: meetings/reservations (консультации), live-сессии (Agora/Zoom/BBB), subscriptions, bundle purchase, gifts.
+  - [x] **7.1 Meetings/reservations (консультации)** — паритет `ReserveMeetingsController` + meeting setup: модели `Meeting`/`MeetingTime`/`ReserveMeeting`+миграция (`e2f3a4b5c6d7`); инструктор: `GET/PUT /panel/meeting` (цена/disabled), `POST/DELETE /panel/meeting/times` (слоты); публично `GET /users/{id}/meeting` (доступность); юзер: `POST /meetings/reserve`, `GET /panel/meetings` (`{reservations,requests}`), `GET /panel/meetings/{id}`, `POST /panel/meetings/{id}/finish`. FE `entities/meeting`+`features/manage-meeting`+`features/reserve-meeting` + `pages/instructor-meetings`+`pages/my-meetings` + панель брони на профиле. test ✅. NOTE: paid-checkout (sale_id/order_items) и Agora live-link гейтнуты — бронь создаётся напрямую (free path); легаси `details.user` = создатель встречи (инструктор)
+  - [ ] 7.2 subscriptions/registration-packages · 7.3 bundle purchase · 7.4 live-sessions (Agora/Zoom/BBB)
 - **Admin**: наращиваем постепенно — на каждой фазе добавляем CRUD для её сущностей (отмечено `admin` в чекбоксах выше).
 
 ---
