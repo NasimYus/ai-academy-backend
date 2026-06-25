@@ -1,7 +1,6 @@
 from httpx import AsyncClient
 
 from app.core.database import AsyncSessionLocal
-from app.models.category import Category
 from app.models.course import Course, CourseStatus, CourseType
 from app.models.quiz import Quiz, QuizResult, QuizStatus, ResultStatus
 from app.models.role import Role

@@ -9,9 +9,11 @@ from app.models.course import Course, CourseStatus, CourseType
 from app.models.quiz import Quiz, QuizStatus
 from app.models.user import User
 from app.repositories import assignments as assignments_repo
+from app.repositories import bundles as bundles_repo
 from app.repositories import comments as comments_repo
 from app.repositories import courses as courses_repo
 from app.repositories import quizzes as quizzes_repo
+from app.schemas.bundle import BundleDashboard, BundleRead
 from app.schemas.common import error_responses
 from app.schemas.course import CourseDetail, CourseRead
 from app.schemas.instructor import (
@@ -464,3 +466,55 @@ async def reply_to_comment(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
     await comments_repo.create_reply(db, parent=parent, user_id=current_user.id, text=payload.reply)
     return {"status": "stored"}
+
+
+# --- Bundles (Phase 6.5, legacy Instructor\BundleController index/destroy) ---
+
+
+@router.get(
+    "/bundles",
+    response_model=BundleDashboard,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+)
+async def my_bundles(current_user: TeacherUser, db: DbSession) -> BundleDashboard:
+    """The instructor's bundles + sales aggregates (legacy BundleController@index).
+
+    NOTE: bundle purchasing isn't implemented (no Sale/bundle-order), so sales
+    aggregates are 0 — faithful on a clean install.
+    """
+    bundles = await bundles_repo.list_for_instructor(db, current_user.id)
+    hours = await bundles_repo.total_hours(db, [b.id for b in bundles])
+    return BundleDashboard(
+        bundles=[
+            BundleRead(
+                id=b.id,
+                title=b.title,
+                slug=b.slug,
+                thumbnail=b.thumbnail,
+                image_cover=b.image_cover,
+                price=b.price,
+                status=b.status,
+                category=b.category.title if b.category else None,
+                webinars_count=len(b.webinars),
+                created_at=b.created_at,
+            )
+            for b in bundles
+        ],
+        bundles_count=len(bundles),
+        bundle_sales_amount=0.0,
+        bundle_sales_count=0,
+        bundles_hours=hours,
+    )
+
+
+@router.delete(
+    "/bundles/{bundle_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_404_NOT_FOUND),
+)
+async def delete_bundle(bundle_id: int, current_user: TeacherUser, db: DbSession) -> None:
+    """Delete a bundle (legacy BundleController@destroy)."""
+    bundle = await bundles_repo.get_owned(db, bundle_id, current_user.id)
+    if bundle is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bundle not found")
+    await bundles_repo.delete(db, bundle)

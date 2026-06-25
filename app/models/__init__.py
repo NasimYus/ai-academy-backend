@@ -6,6 +6,7 @@ from app.models.assignment import (
     AssignmentStatus,
 )
 from app.models.blog import Blog, BlogCategory, BlogStatus
+from app.models.bundle import Bundle, BundleStatus, BundleWebinar
 from app.models.cart import CartItem
 from app.models.category import Category, TrendCategory
 from app.models.certificate import Certificate
@@ -130,6 +131,9 @@ __all__ = [
     "BlogStatus",
     "CourseForum",
     "CourseForumAnswer",
+    "Bundle",
+    "BundleWebinar",
+    "BundleStatus",
     "CartItem",
     "Discount",
     "DiscountCourse",

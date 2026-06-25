@@ -16,6 +16,8 @@ _DATA_TABLES = (
     "support_conversations",
     "supports",
     "support_departments",
+    "bundle_webinars",
+    "bundles",
     "blog",
     "blog_categories",
     "notifications_status",
