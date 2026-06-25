@@ -34,7 +34,10 @@ def upgrade() -> None:
         sa.Column("tracking_code", sa.String(length=128), nullable=True),
         sa.Column("status", _STATUS, nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["seller_id"], ["users.id"], ondelete="SET NULL"),
@@ -48,12 +51,20 @@ def upgrade() -> None:
     op.add_column("order_items", sa.Column("product_id", sa.Integer(), nullable=True))
     op.add_column("order_items", sa.Column("product_order_id", sa.Integer(), nullable=True))
     op.create_foreign_key(
-        "fk_order_items_product_id", "order_items", "products", ["product_id"], ["id"],
+        "fk_order_items_product_id",
+        "order_items",
+        "products",
+        ["product_id"],
+        ["id"],
         ondelete="SET NULL",
     )
     op.create_foreign_key(
-        "fk_order_items_product_order_id", "order_items", "product_orders",
-        ["product_order_id"], ["id"], ondelete="SET NULL",
+        "fk_order_items_product_order_id",
+        "order_items",
+        "product_orders",
+        ["product_order_id"],
+        ["id"],
+        ondelete="SET NULL",
     )
 
 
