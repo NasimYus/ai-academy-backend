@@ -91,6 +91,7 @@
 ## Admin
 
 - ✅ 🧪 **A.1** Payment channels (паритет `Admin\PaymentChannelController`): гейт `require_admin` (role=admin; NOTE: fine-grained `authorize('admin_…')` отложены); `GET /admin/payment-channels` (все, newest-first), `POST` (create по class_name), `GET/{id}` (+ `credential_items`/`supported`/`show_test_mode_toggle`), `PUT /{id}` (title/image/status/credentials/currencies/test_mode — легаси перезаписывает на каждом save), `POST /{id}/toggle-status`. Драйвер: добавлен `show_test_mode_toggle` (getShowTestModeToggle) + helpers `show_test_mode_toggle_for`/`known_drivers`
+- ✅ 🧪 **A.2** Course moderation (паритет `Admin\WebinarController`): `GET /admin/courses?status=` (все/фильтр, newest-first, + `pending_count`), `POST /admin/courses/{id}/approve` (→active), `/reject` (→inactive), `/unpublish` (→pending); гейт `require_admin`
 
 ## Сквозные задачи (foundation)
 

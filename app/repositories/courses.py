@@ -109,6 +109,22 @@ async def list_featured(db: AsyncSession) -> list[Course]:
     return [fc.course for fc in result.scalars().all()]
 
 
+async def admin_list(db: AsyncSession, status: CourseStatus | None = None) -> list[Course]:
+    """All courses regardless of status, newest first (admin moderation)."""
+    stmt = select(Course)
+    if status is not None:
+        stmt = stmt.where(Course.status == status)
+    stmt = stmt.order_by(Course.created_at.desc(), Course.id.desc())
+    return list((await db.execute(stmt)).scalars().all())
+
+
+async def count_by_status(db: AsyncSession, status: CourseStatus) -> int:
+    result = await db.execute(
+        select(func.count()).select_from(Course).where(Course.status == status)
+    )
+    return int(result.scalar_one())
+
+
 async def get_by_id(db: AsyncSession, course_id: int) -> Course | None:
     return await db.get(Course, course_id)
 
