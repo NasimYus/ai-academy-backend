@@ -16,6 +16,59 @@ async def get_by_id(db: AsyncSession, quiz_id: int) -> QuizModel | None:
     return await db.get(QuizModel, quiz_id)
 
 
+# --- instructor management (Phase 6.2) ---
+
+
+async def get_owned(db: AsyncSession, quiz_id: int, creator_id: int) -> QuizModel | None:
+    """A quiz created by the given user (legacy creator_id scope)."""
+    result = await db.execute(
+        select(QuizModel).where(QuizModel.id == quiz_id, QuizModel.creator_id == creator_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def list_by_creator(db: AsyncSession, creator_id: int) -> list[QuizModel]:
+    """All quizzes the instructor created (newest first)."""
+    result = await db.execute(
+        select(QuizModel)
+        .where(QuizModel.creator_id == creator_id)
+        .order_by(QuizModel.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def create_quiz(db: AsyncSession, quiz: QuizModel) -> QuizModel:
+    db.add(quiz)
+    await db.commit()
+    await db.refresh(quiz)
+    return quiz
+
+
+async def update_quiz(db: AsyncSession, quiz: QuizModel, changes: dict) -> QuizModel:
+    for key, value in changes.items():
+        setattr(quiz, key, value)
+    await db.commit()
+    await db.refresh(quiz)
+    return quiz
+
+
+async def delete_quiz(db: AsyncSession, quiz: QuizModel) -> None:
+    await db.delete(quiz)
+    await db.commit()
+
+
+async def results_for_creator(db: AsyncSession, creator_id: int) -> list[QuizResult]:
+    """Every attempt on the instructor's quizzes (quiz + student eager-loaded)."""
+    quiz_ids = select(QuizModel.id).where(QuizModel.creator_id == creator_id)
+    result = await db.execute(
+        select(QuizResult)
+        .where(QuizResult.quiz_id.in_(quiz_ids))
+        .options(selectinload(QuizResult.quiz), selectinload(QuizResult.user))
+        .order_by(QuizResult.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
 async def get_active(db: AsyncSession, quiz_id: int) -> QuizModel | None:
     result = await db.execute(
         select(QuizModel).where(QuizModel.id == quiz_id, QuizModel.status == QuizStatus.active)

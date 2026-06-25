@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.content import Chapter
 from app.models.course import Course, CourseStatus, CourseType
 
 
@@ -196,3 +197,7 @@ async def get_owned(db: AsyncSession, course_id: int, user_id: int) -> Course | 
         .options(selectinload(Course.teacher), selectinload(Course.category))
     )
     return result.scalar_one_or_none()
+
+
+async def get_chapter(db: AsyncSession, chapter_id: int) -> Chapter | None:
+    return await db.get(Chapter, chapter_id)

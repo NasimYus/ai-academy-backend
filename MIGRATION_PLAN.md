@@ -204,7 +204,8 @@ JWT), **frontend** `ai-academy-frontend` (TanStack Start SPA, FSD).
 
 - **Phase 6 — Инструктор**: create/edit course (storeAll), chapters/lessons CRUD, quizzes CRUD, assignment grading, bundles, store/products, statistics, registration-packages.
   - [x] **6.1 Course CRUD** — паритет `WebinarsController@storeAll/updateAll`: `POST /panel/webinar`, `GET /panel/classes`, `GET /panel/webinar/{id}/edit`, `PUT/DELETE /panel/webinar/{id}`; `require_level("teacher")` + ownership; status pending/is_draft; slug автоген. FE `features/manage-course` + `pages/instructor`. test ✅. NOTE: tags/filters/partners — позже
-  - [ ] 6.2 chapters/lessons CRUD · 6.3 quizzes CRUD · 6.4 assignment grading · 6.5 bundles · 6.6 store/products · 6.7 statistics
+  - [x] **6.2 Quizzes CRUD (инструктор)** — паритет `Instructor\QuizzesController`: `POST /panel/quizzes` (create shell: title/course_id/chapter_id?/pass_mark/attempt?/time?/active→status/certificate; chapter сбрасывается если не на курсе), `PUT /panel/quizzes/{id}`, `DELETE /panel/quizzes/{id}` (оба creator-scoped), `GET /panel/quizzes/list` (дашборд: свои квизы + попытки + stats count/passed/waiting/success_rate/avg_grade). `require_level("teacher")` + ownership курса. FE `features/manage-quiz` (QuizForm) + `pages/instructor-quizzes`. test ✅. NOTE: update — добавлен ownership-гейт (легаси `Quiz::find` без проверки = IDOR-баг); вопросы квиза (questions CRUD) — отдельный web-panel, не в API
+  - [ ] 6.3 assignment grading · 6.4 instructor comments · 6.5 bundles · 6.6 store/products · 6.7 statistics
 - **Phase 7 — Live & advanced**: meetings/reservations (консультации), live-сессии (Agora/Zoom/BBB), subscriptions, bundle purchase, gifts.
 - **Admin**: наращиваем постепенно — на каждой фазе добавляем CRUD для её сущностей (отмечено `admin` в чекбоксах выше).
 

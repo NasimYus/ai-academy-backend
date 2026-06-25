@@ -141,3 +141,4 @@ class QuizResult(Base):
     )
 
     quiz: Mapped["Quiz"] = relationship("Quiz", lazy="raise")
+    user: Mapped["User"] = relationship("User", lazy="raise")  # noqa: F821

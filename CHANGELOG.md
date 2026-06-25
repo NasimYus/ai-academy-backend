@@ -69,6 +69,7 @@
 ## Phase 6 — Инструктор
 
 - ✅ 🧪 **6.1** Course CRUD (инструктор): `POST /panel/webinar` (create, паритет `storeAll`: required type/title/thumbnail/image_cover/description/category_id; status `pending` если `rules` принят и не `draft`, иначе `is_draft`; slug автоген уникальный; webinar→`start_date` обязателен), `GET /panel/classes` (свои курсы), `GET /panel/webinar/{id}/edit`, `PUT /panel/webinar/{id}`, `DELETE /panel/webinar/{id}`; гейт `require_level("teacher")` (teacher|organization → иначе 403) + ownership (creator|teacher → 404 чужие). Отложено: tags/filters/partner-instructors (отдельные подсистемы), org→teacher_id назначение
+- ✅ 🧪 **6.2** Quizzes CRUD (инструктор): `POST /panel/quizzes` (создание shell: title/course_id/chapter_id?/pass_mark/attempt?/time?/active→status/certificate; chapter сбрасывается если не на курсе), `PUT /panel/quizzes/{id}`, `DELETE /panel/quizzes/{id}` (creator-scoped), `GET /panel/quizzes/list` (дашборд: свои квизы + попытки + stats count/passed/waiting/success_rate/avg_grade); `require_level("teacher")` + ownership курса. NOTE: на update добавлен ownership-гейт (легаси `Quiz::find` без проверки = IDOR); questions CRUD — web-panel, вне API
 
 ## Сквозные задачи (foundation)
 
