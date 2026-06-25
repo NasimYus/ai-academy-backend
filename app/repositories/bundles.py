@@ -2,12 +2,8 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.bundle import Bundle, BundleWebinar
-from app.models.course import Course
-
-
-from app.models.bundle import BundleStatus
-from app.models.course import CourseStatus
+from app.models.bundle import Bundle, BundleStatus, BundleWebinar
+from app.models.course import Course, CourseStatus
 
 
 async def list_active(db: AsyncSession) -> list[Bundle]:

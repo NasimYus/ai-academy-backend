@@ -32,6 +32,7 @@ from app.api.routes import (
     quizzes,
     rewards,
     search,
+    subscriptions,
     support,
 )
 from app.core.config import settings
@@ -69,6 +70,7 @@ app.include_router(noticeboards.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(newsletter.router, prefix="/api/v1")
 app.include_router(rewards.router, prefix="/api/v1")
+app.include_router(subscriptions.router, prefix="/api/v1")
 app.include_router(instructor.router, prefix="/api/v1")
 app.include_router(meetings.router, prefix="/api/v1")
 app.include_router(support.router, prefix="/api/v1")

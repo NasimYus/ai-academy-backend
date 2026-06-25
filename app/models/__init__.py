@@ -68,6 +68,7 @@ from app.models.quiz import (
 from app.models.review import CourseReview, ReviewStatus
 from app.models.reward import RewardAccounting, RewardStatus
 from app.models.role import Role
+from app.models.subscription import Subscribe, SubscribeUse, UserSubscribe
 from app.models.support import (
     Support,
     SupportConversation,
@@ -140,6 +141,9 @@ __all__ = [
     "SupportConversation",
     "SupportDepartment",
     "SupportStatus",
+    "Subscribe",
+    "UserSubscribe",
+    "SubscribeUse",
     "Blog",
     "BlogCategory",
     "BlogStatus",
