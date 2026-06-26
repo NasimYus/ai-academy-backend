@@ -96,6 +96,7 @@
 - ✅ 🧪 **A.2** Course moderation (паритет `Admin\WebinarController`): `GET /admin/courses?status=` (все/фильтр, newest-first, + `pending_count`), `POST /admin/courses/{id}/approve` (→active), `/reject` (→inactive), `/unpublish` (→pending); гейт `require_admin`
 - ✅ 🧪 **A.3** User management (паритет `Admin\UserController`): `GET /admin/users?role=&status=&banned=` (newest-first), `POST /admin/users/{id}/ban` ({days?}, null=permanent), `/unban`, `/role` ({role_id}→role_name из `Role`); гейт `require_admin` + `cannot_modify_self`
 - ✅ 🧪 **R.1** Course reviews — write + moderation (паритет `WebinarReviewController@store`): `POST /courses/{id}/reviews` (4 оценки 1–5 + описание; гейты 404/not_bought/duplicate_review; `rates`=сумма; status pending или active по конфиг-флагу `direct_publication_of_reviews`); admin `GET /admin/reviews?status=` (по умолч. pending) + `POST /admin/reviews/{id}/approve` + `DELETE /admin/reviews/{id}`; read уже фильтрует active
+- ✅ 🧪 **P.1** Panel dashboard (паритет `Panel\DashboardController`): `GET /panel/dashboard` → агрегаты (enrolled/purchases/favorites; для инструктора + courses/sales count/sales income/meeting requests). Основа для сайдбар-кабинета фронта
 
 ## Сквозные задачи (foundation)
 
