@@ -15,6 +15,45 @@ async def list_for_course(db: AsyncSession, course_id: int) -> list[CourseReview
     return list(result.scalars().all())
 
 
+async def get_user_review(db: AsyncSession, course_id: int, user_id: int) -> CourseReview | None:
+    result = await db.execute(
+        select(CourseReview).where(
+            CourseReview.course_id == course_id, CourseReview.user_id == user_id
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def create_review(db: AsyncSession, review: CourseReview) -> CourseReview:
+    db.add(review)
+    await db.commit()
+    await db.refresh(review)
+    return review
+
+
+async def list_by_status(db: AsyncSession, status: ReviewStatus | None) -> list[CourseReview]:
+    """Reviews for admin moderation (optionally by status), newest first."""
+    stmt = select(CourseReview).options(selectinload(CourseReview.user))
+    if status is not None:
+        stmt = stmt.where(CourseReview.status == status)
+    stmt = stmt.order_by(CourseReview.created_at.desc(), CourseReview.id.desc())
+    return list((await db.execute(stmt)).scalars().all())
+
+
+async def get_by_id(db: AsyncSession, review_id: int) -> CourseReview | None:
+    result = await db.execute(
+        select(CourseReview)
+        .where(CourseReview.id == review_id)
+        .options(selectinload(CourseReview.user))
+    )
+    return result.scalar_one_or_none()
+
+
+async def delete_review(db: AsyncSession, review: CourseReview) -> None:
+    await db.delete(review)
+    await db.commit()
+
+
 async def aggregate_for_course(db: AsyncSession, course_id: int) -> dict[str, float | int]:
     """Avg of each rating dimension + overall rate and count (active reviews)."""
     result = await db.execute(

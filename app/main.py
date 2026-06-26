@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import (
     admin_courses,
     admin_payments,
+    admin_reviews,
     admin_users,
     assignments,
     auth,
@@ -35,6 +36,7 @@ from app.api.routes import (
     providers,
     quizzes,
     registration_packages,
+    reviews,
     rewards,
     sales,
     search,
@@ -75,6 +77,7 @@ app.include_router(personal_notes.router, prefix="/api/v1")
 app.include_router(noticeboards.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(newsletter.router, prefix="/api/v1")
+app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(rewards.router, prefix="/api/v1")
 app.include_router(sales.router, prefix="/api/v1")
 app.include_router(subscriptions.router, prefix="/api/v1")
@@ -92,6 +95,7 @@ app.include_router(payments.router, prefix="/api/v1")
 app.include_router(admin_payments.router, prefix="/api/v1")
 app.include_router(admin_courses.router, prefix="/api/v1")
 app.include_router(admin_users.router, prefix="/api/v1")
+app.include_router(admin_reviews.router, prefix="/api/v1")
 
 # Serve uploaded media from local storage (F.1).
 Path(settings.media_root).mkdir(parents=True, exist_ok=True)

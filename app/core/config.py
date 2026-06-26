@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     disable_registration_verification_process: bool = False
     # Default value of the per-user `affiliate` flag at registration (Phase 5).
     users_affiliate_status: bool = False
+    # When true, submitted course reviews are published immediately (else pending
+    # until an admin approves) — legacy general option `direct_publication_of_reviews`.
+    direct_publication_of_reviews: bool = False
 
     # --- login (legacy security settings parity) ---
     login_device_limit: bool = False

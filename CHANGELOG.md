@@ -95,6 +95,7 @@
 - ✅ 🧪 **A.1** Payment channels (паритет `Admin\PaymentChannelController`): гейт `require_admin` (role=admin; NOTE: fine-grained `authorize('admin_…')` отложены); `GET /admin/payment-channels` (все, newest-first), `POST` (create по class_name), `GET/{id}` (+ `credential_items`/`supported`/`show_test_mode_toggle`), `PUT /{id}` (title/image/status/credentials/currencies/test_mode — легаси перезаписывает на каждом save), `POST /{id}/toggle-status`. Драйвер: добавлен `show_test_mode_toggle` (getShowTestModeToggle) + helpers `show_test_mode_toggle_for`/`known_drivers`
 - ✅ 🧪 **A.2** Course moderation (паритет `Admin\WebinarController`): `GET /admin/courses?status=` (все/фильтр, newest-first, + `pending_count`), `POST /admin/courses/{id}/approve` (→active), `/reject` (→inactive), `/unpublish` (→pending); гейт `require_admin`
 - ✅ 🧪 **A.3** User management (паритет `Admin\UserController`): `GET /admin/users?role=&status=&banned=` (newest-first), `POST /admin/users/{id}/ban` ({days?}, null=permanent), `/unban`, `/role` ({role_id}→role_name из `Role`); гейт `require_admin` + `cannot_modify_self`
+- ✅ 🧪 **R.1** Course reviews — write + moderation (паритет `WebinarReviewController@store`): `POST /courses/{id}/reviews` (4 оценки 1–5 + описание; гейты 404/not_bought/duplicate_review; `rates`=сумма; status pending или active по конфиг-флагу `direct_publication_of_reviews`); admin `GET /admin/reviews?status=` (по умолч. pending) + `POST /admin/reviews/{id}/approve` + `DELETE /admin/reviews/{id}`; read уже фильтрует active
 
 ## Сквозные задачи (foundation)
 
