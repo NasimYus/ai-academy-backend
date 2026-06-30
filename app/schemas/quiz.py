@@ -53,6 +53,27 @@ class QuizResultRead(BaseModel):
     answer_sheet: dict[str, Any] | None = None
 
 
+class MyQuizResultRead(BaseModel):
+    """A student's own quiz attempt for the panel `my-results` list."""
+
+    id: int
+    quiz_id: int
+    quiz_title: str
+    course_id: int
+    status: str
+    user_grade: int | None = None
+    created_at: datetime
+
+
+class OpenQuizRead(BaseModel):
+    """An active quiz the student hasn't completed (panel `not participated`)."""
+
+    id: int
+    title: str
+    course_id: int
+    question_count: int
+
+
 class QuizStartResult(BaseModel):
     quiz_result_id: int
     attempt_number: int

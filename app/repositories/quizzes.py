@@ -141,6 +141,62 @@ async def passed_results_for_user(db: AsyncSession, user_id: int) -> list[QuizRe
     return list(result.scalars().all())
 
 
+async def results_for_user_in_courses(
+    db: AsyncSession, user_id: int, course_ids: list[int]
+) -> list[QuizResult]:
+    """A student's quiz attempts on active quizzes of their enrolled courses
+    (legacy panel `my-results`), quiz eager-loaded, newest first."""
+    if not course_ids:
+        return []
+    result = await db.execute(
+        select(QuizResult)
+        .join(QuizModel, QuizModel.id == QuizResult.quiz_id)
+        .where(
+            QuizResult.user_id == user_id,
+            QuizModel.course_id.in_(course_ids),
+            QuizModel.status == QuizStatus.active,
+        )
+        .options(selectinload(QuizResult.quiz))
+        .order_by(QuizResult.id.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def open_quizzes_for_user(
+    db: AsyncSession, user_id: int, course_ids: list[int]
+) -> list[QuizModel]:
+    """Active quizzes of enrolled courses the student has not completed yet —
+    no attempt, or only a still-waiting one (legacy `opens` / not participated)."""
+    if not course_ids:
+        return []
+    completed = select(QuizResult.quiz_id).where(
+        QuizResult.user_id == user_id,
+        QuizResult.status.in_([ResultStatus.passed, ResultStatus.failed]),
+    )
+    result = await db.execute(
+        select(QuizModel)
+        .where(
+            QuizModel.course_id.in_(course_ids),
+            QuizModel.status == QuizStatus.active,
+            QuizModel.id.not_in(completed),
+        )
+        .order_by(QuizModel.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def question_counts(db: AsyncSession, quiz_ids: list[int]) -> dict[int, int]:
+    """Question count per quiz, for list views (one grouped query)."""
+    if not quiz_ids:
+        return {}
+    rows = await db.execute(
+        select(QuizQuestion.quiz_id, func.count())
+        .where(QuizQuestion.quiz_id.in_(quiz_ids))
+        .group_by(QuizQuestion.quiz_id)
+    )
+    return {quiz_id: count for quiz_id, count in rows.all()}
+
+
 async def count_results(db: AsyncSession, quiz_id: int, user_id: int) -> int:
     result = await db.execute(
         select(func.count())

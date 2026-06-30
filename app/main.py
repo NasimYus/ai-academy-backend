@@ -16,6 +16,7 @@ from app.api.routes import (
     cart,
     categories,
     certificates,
+    comments,
     contact,
     courses,
     currencies,
@@ -73,6 +74,7 @@ app.include_router(providers.router, prefix="/api/v1")
 app.include_router(enrollment.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(events_calendar.router, prefix="/api/v1")
+app.include_router(comments.router, prefix="/api/v1")
 app.include_router(favorites.router, prefix="/api/v1")
 app.include_router(follows.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")

@@ -4,9 +4,12 @@ from app.api.deps import CurrentUser, DbSession, OptionalUser
 from app.models.quiz import ResultStatus
 from app.models.reward import RewardType
 from app.repositories import courses as courses_repo
+from app.repositories import enrollments as enrollments_repo
 from app.repositories import quizzes as quizzes_repo
 from app.schemas.common import error_responses
 from app.schemas.quiz import (
+    MyQuizResultRead,
+    OpenQuizRead,
     QuizDetail,
     QuizResultRead,
     QuizStartResult,
@@ -35,6 +38,47 @@ async def list_course_quizzes(
     has_access = await access.has_course_access(db, current_user, course)
     quizzes = await quizzes_repo.active_for_course(db, course_id)
     return [await quiz_service.build_detail(db, q, current_user, has_access) for q in quizzes]
+
+
+@router.get(
+    "/panel/quizzes/my-results",
+    response_model=list[MyQuizResultRead],
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED),
+)
+async def my_quiz_results(current_user: CurrentUser, db: DbSession) -> list[MyQuizResultRead]:
+    """The student's quiz attempts across enrolled courses (legacy my-results)."""
+    course_ids = await enrollments_repo.course_ids_for_user(db, current_user.id)
+    results = await quizzes_repo.results_for_user_in_courses(db, current_user.id, course_ids)
+    return [
+        MyQuizResultRead(
+            id=r.id,
+            quiz_id=r.quiz_id,
+            quiz_title=r.quiz.title,
+            course_id=r.quiz.course_id,
+            status=r.status.value,
+            user_grade=r.user_grade,
+            created_at=r.created_at,
+        )
+        for r in results
+    ]
+
+
+@router.get(
+    "/panel/quizzes/opens",
+    response_model=list[OpenQuizRead],
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED),
+)
+async def open_quizzes(current_user: CurrentUser, db: DbSession) -> list[OpenQuizRead]:
+    """Active quizzes in enrolled courses the student hasn't completed (legacy opens)."""
+    course_ids = await enrollments_repo.course_ids_for_user(db, current_user.id)
+    quizzes = await quizzes_repo.open_quizzes_for_user(db, current_user.id, course_ids)
+    counts = await quizzes_repo.question_counts(db, [q.id for q in quizzes])
+    return [
+        OpenQuizRead(
+            id=q.id, title=q.title, course_id=q.course_id, question_count=counts.get(q.id, 0)
+        )
+        for q in quizzes
+    ]
 
 
 @router.get(

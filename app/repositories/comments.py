@@ -17,6 +17,16 @@ async def list_for_course(db: AsyncSession, course_id: int) -> list[Comment]:
     return list(result.scalars().all())
 
 
+async def list_for_user(db: AsyncSession, user_id: int) -> list[Comment]:
+    """A user's own top-level comments (legacy panel `my-comments`), newest first."""
+    result = await db.execute(
+        select(Comment)
+        .where(Comment.user_id == user_id, Comment.reply_id.is_(None))
+        .order_by(Comment.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
 # --- instructor "my class comments" (Phase 6.4) ---
 
 
