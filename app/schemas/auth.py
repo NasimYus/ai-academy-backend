@@ -37,6 +37,9 @@ class RegisterStep1(BaseModel):
     country_code: str | None = None
     password: str = Field(min_length=6)
     password_confirmation: str
+    # Legacy register account_type — student ("user") or instructor ("teacher"/
+    # "organization"). Anything unrecognised falls back to student.
+    account_type: str = "user"
 
 
 class RegisterStep1Response(BaseModel):

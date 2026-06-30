@@ -94,12 +94,19 @@ async def register_step_one(payload: RegisterStep1, db: DbSession) -> RegisterSt
             return RegisterStep1Response(status="go_step_3", user_id=existing.id)
         return RegisterStep1Response(status="go_step_2", user_id=existing.id, code=result["code"])
 
+    # Legacy account_type → role at signup (student vs instructor/organization).
+    role_name = (
+        payload.account_type
+        if payload.account_type in {Role.TEACHER, Role.ORGANIZATION}
+        else Role.USER
+    )
+
     user = await users_repo.create(
         db,
         email=value if field == "email" else None,
         mobile=value if field == "mobile" else None,
         password=payload.password,
-        role_name=Role.USER,
+        role_name=role_name,
         status=(
             UserStatus.active
             if settings.disable_registration_verification_process
