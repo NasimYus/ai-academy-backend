@@ -21,6 +21,7 @@ _DATA_TABLES = (
     "rewards_accounting",
     "rewards",
     "newsletters",
+    "contacts",
     "support_conversations",
     "supports",
     "support_departments",

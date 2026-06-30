@@ -11,6 +11,7 @@ from app.models.cart import CartItem
 from app.models.category import Category, TrendCategory
 from app.models.certificate import Certificate
 from app.models.comment import Comment, CommentStatus
+from app.models.contact import Contact
 from app.models.content import (
     Accessibility,
     Chapter,
@@ -110,6 +111,7 @@ __all__ = [
     "ReviewStatus",
     "Comment",
     "CommentStatus",
+    "Contact",
     "Chapter",
     "ChapterStatus",
     "Accessibility",
