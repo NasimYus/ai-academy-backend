@@ -66,6 +66,7 @@ async def test_student_dashboard_counts(client: AsyncClient):
     assert body["certificates_count"] == 0
     assert body["passed_quizzes_count"] == 0
     assert body["balance"] == 0
+    assert body["following_count"] == 0
 
 
 async def test_instructor_dashboard_has_teaching_metrics(client: AsyncClient):

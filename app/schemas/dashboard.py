@@ -9,6 +9,8 @@ class DashboardSummary(BaseModel):
     enrolled_count: int
     purchases_count: int
     favorites_count: int
+    # Sidebar avatar counters (legacy: classes + following)
+    following_count: int = 0
     # Student hello-box counters (legacy getStudentHelloBoxData)
     meetings_count: int = 0
     certificates_count: int = 0

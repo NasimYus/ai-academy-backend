@@ -29,6 +29,14 @@ async def followers_count(db: AsyncSession, user_id: int) -> int:
     return int(result.scalar_one())
 
 
+async def following_count(db: AsyncSession, follower_id: int) -> int:
+    """Legacy sidebar `following()->count()` — users this user follows."""
+    result = await db.execute(
+        select(func.count()).select_from(Follow).where(Follow.follower_id == follower_id)
+    )
+    return int(result.scalar_one())
+
+
 async def following(db: AsyncSession, follower_id: int) -> list[User]:
     """Users the given user follows (newest first)."""
     result = await db.execute(
