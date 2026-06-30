@@ -1,9 +1,21 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.course import Course
 from app.models.enrollment import Enrollment, EnrollmentSource
+
+
+async def count_for_courses(db: AsyncSession, course_ids: list[int]) -> dict[int, int]:
+    """Enrolled-student count per course (one grouped query)."""
+    if not course_ids:
+        return {}
+    rows = await db.execute(
+        select(Enrollment.course_id, func.count(func.distinct(Enrollment.user_id)))
+        .where(Enrollment.course_id.in_(course_ids))
+        .group_by(Enrollment.course_id)
+    )
+    return {course_id: count for course_id, count in rows.all()}
 
 
 async def exists(db: AsyncSession, *, user_id: int, course_id: int) -> bool:

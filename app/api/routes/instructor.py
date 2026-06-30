@@ -12,6 +12,9 @@ from app.repositories import assignments as assignments_repo
 from app.repositories import bundles as bundles_repo
 from app.repositories import comments as comments_repo
 from app.repositories import courses as courses_repo
+from app.repositories import enrollments as enrollments_repo
+from app.repositories import meetings as meetings_repo
+from app.repositories import products as products_repo
 from app.repositories import quizzes as quizzes_repo
 from app.schemas.bundle import BundleDashboard, BundleRead
 from app.schemas.common import error_responses
@@ -25,6 +28,8 @@ from app.schemas.instructor import (
     CourseUpdate,
     GradeInput,
     InstructorAssignmentRow,
+    InstructorDashboard,
+    ManageCourseCard,
     QuizCreate,
     QuizManageRead,
     QuizResultRow,
@@ -81,6 +86,42 @@ async def my_classes(current_user: TeacherUser, db: DbSession) -> list[CourseRea
     """The instructor's own courses (legacy WebinarsController@list)."""
     courses = await courses_repo.list_by_creator(db, current_user.id)
     return [to_brief(c) for c in courses]
+
+
+@router.get(
+    "/instructor-dashboard",
+    response_model=InstructorDashboard,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+)
+async def instructor_dashboard(current_user: TeacherUser, db: DbSession) -> InstructorDashboard:
+    """Instructor panel home — counters + course-management cards (legacy
+    getInstructorDashboardData hello-box + courses overview)."""
+    courses = await courses_repo.list_by_creator(db, current_user.id)
+    products = await products_repo.list_by_creator(db, current_user.id)
+    bundles = await bundles_repo.list_for_instructor(db, current_user.id)
+    meetings = await meetings_repo.requests_for_creator(db, current_user.id)
+    student_counts = await enrollments_repo.count_for_courses(db, [c.id for c in courses])
+
+    return InstructorDashboard(
+        courses_count=len(courses),
+        meetings_count=len(meetings),
+        products_count=len(products),
+        bundles_count=len(bundles),
+        live_courses=sum(1 for c in courses if c.type == CourseType.webinar),
+        video_courses=sum(1 for c in courses if c.type == CourseType.course),
+        text_courses=sum(1 for c in courses if c.type == CourseType.text_lesson),
+        manage_courses=[
+            ManageCourseCard(
+                id=c.id,
+                title=c.title,
+                slug=c.slug,
+                type=c.type.value,
+                image=c.thumbnail,
+                students_count=student_counts.get(c.id, 0),
+            )
+            for c in courses[:6]
+        ],
+    )
 
 
 @router.post(

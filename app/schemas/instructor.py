@@ -177,6 +177,31 @@ class CommentReplyInput(BaseModel):
 # Instructor course statistics — parity of WebinarStatisticController (statistic=true).
 
 
+class ManageCourseCard(BaseModel):
+    """A course card on the instructor dashboard (legacy helloBox manageCourses)."""
+
+    id: int
+    title: str
+    slug: str
+    type: str
+    image: str | None = None
+    students_count: int = 0
+
+
+class InstructorDashboard(BaseModel):
+    """Instructor panel home (legacy getInstructorDashboardData)."""
+
+    courses_count: int
+    meetings_count: int
+    products_count: int
+    bundles_count: int
+    # Courses overview by type (legacy totalLive/Video/Text)
+    live_courses: int
+    video_courses: int
+    text_courses: int
+    manage_courses: list[ManageCourseCard]
+
+
 class CourseStatistics(BaseModel):
     students_count: int
     sales_count: int
