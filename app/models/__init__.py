@@ -35,6 +35,7 @@ from app.models.favorite import Favorite
 from app.models.featured_course import FeaturedCourse, FeaturedPage, FeaturedStatus
 from app.models.follow import Follow, FollowStatus
 from app.models.forum import CourseForum, CourseForumAnswer
+from app.models.gift import Gift, GiftStatus
 from app.models.learning import CourseLearning
 from app.models.meeting import (
     DayLabel,
@@ -195,6 +196,8 @@ __all__ = [
     "Favorite",
     "Follow",
     "FollowStatus",
+    "Gift",
+    "GiftStatus",
     "Verification",
     "PasswordReset",
 ]

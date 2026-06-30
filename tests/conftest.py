@@ -40,6 +40,7 @@ _DATA_TABLES = (
     "category_translations",
     "payment_channels",
     "product_orders",
+    "gifts",
     "sales",
     "order_items",
     "orders",

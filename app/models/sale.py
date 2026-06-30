@@ -45,6 +45,7 @@ class Sale(Base):
     # Typed item references (exactly one set, per legacy createSales).
     webinar_id: Mapped[int | None] = mapped_column(ForeignKey("courses.id", ondelete="SET NULL"))
     bundle_id: Mapped[int | None] = mapped_column(ForeignKey("bundles.id", ondelete="SET NULL"))
+    gift_id: Mapped[int | None] = mapped_column(ForeignKey("gifts.id", ondelete="SET NULL"))
     subscribe_id: Mapped[int | None] = mapped_column(
         ForeignKey("subscribes.id", ondelete="SET NULL")
     )

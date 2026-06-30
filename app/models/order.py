@@ -78,6 +78,7 @@ class OrderItem(Base):
     product_order_id: Mapped[int | None] = mapped_column(
         ForeignKey("product_orders.id", ondelete="SET NULL")
     )
+    gift_id: Mapped[int | None] = mapped_column(ForeignKey("gifts.id", ondelete="SET NULL"))
     discount_id: Mapped[int | None] = mapped_column(ForeignKey("discounts.id", ondelete="SET NULL"))
     amount: Mapped[float] = mapped_column(Numeric(15, 3), nullable=False)  # item price
     tax: Mapped[float | None] = mapped_column(Numeric(15, 3))

@@ -24,6 +24,7 @@ from app.api.routes import (
     featured,
     follows,
     forums,
+    gifts,
     instructor,
     meetings,
     newsletter,
@@ -91,6 +92,7 @@ app.include_router(support.router, prefix="/api/v1")
 app.include_router(blog.router, prefix="/api/v1")
 app.include_router(bundles.router, prefix="/api/v1")
 app.include_router(forums.router, prefix="/api/v1")
+app.include_router(gifts.router, prefix="/api/v1")
 app.include_router(cart.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")

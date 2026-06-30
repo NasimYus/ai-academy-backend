@@ -10,6 +10,7 @@ class OrderItemRead(BaseModel):
     subscribe_id: int | None = None
     reserve_meeting_id: int | None = None
     product_id: int | None = None
+    gift_id: int | None = None
     title: str | None = None
     slug: str | None = None
     amount: float

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.bundle import Bundle
 from app.models.course import Course
+from app.models.gift import Gift
 from app.models.meeting import Meeting, ReserveMeeting
 from app.models.order import OrderItem, PaymentMethod
 from app.models.product import Product
@@ -31,7 +32,17 @@ async def record_sale(
     seller_id: int | None = None
     refs: dict = {}
 
-    if item.bundle_id is not None:
+    if item.gift_id is not None:
+        # Gift sale — seller is the creator of the gifted course/bundle.
+        sale_type = SaleType.gift
+        refs["gift_id"] = item.gift_id
+        gift = await db.get(Gift, item.gift_id)
+        if gift is not None and gift.webinar_id is not None:
+            seller_id = await _seller_for_course(db, gift.webinar_id)
+        elif gift is not None and gift.bundle_id is not None:
+            bundle = await db.get(Bundle, gift.bundle_id)
+            seller_id = bundle.creator_id if bundle else None
+    elif item.bundle_id is not None:
         sale_type = SaleType.bundle
         refs["bundle_id"] = item.bundle_id
         bundle = await db.get(Bundle, item.bundle_id)

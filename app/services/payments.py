@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enrollment import Enrollment, EnrollmentSource
+from app.models.gift import Gift, GiftStatus
 from app.models.meeting import ReserveMeeting, ReserveStatus
 from app.models.order import Order, OrderStatus, PaymentMethod
 from app.models.payment import PaymentChannel
@@ -22,6 +23,7 @@ from app.models.user import User
 from app.repositories import bundles as bundles_repo
 from app.repositories import enrollments as enrollments_repo
 from app.repositories import orders as orders_repo
+from app.repositories import users as users_repo
 from app.services import email, sales
 from app.services.payment_channels import make_channel
 
@@ -71,6 +73,29 @@ async def _confirm_product_order(db: AsyncSession, product_order_id: int, sale: 
     )
 
 
+async def _activate_gift(db: AsyncSession, gift_id: int, sale: Sale) -> None:
+    """Activate a paid gift and, if the recipient already has an account, grant
+    them access immediately (else they redeem after signing up)."""
+    await db.flush()  # assign sale.id
+    gift = await db.get(Gift, gift_id)
+    if gift is None:
+        return
+    gift.sale_id = sale.id
+    gift.status = GiftStatus.active
+    recipient = await users_repo.get_by_email(db, gift.email)
+    if recipient is not None:
+        await _grant_gift(db, gift, recipient.id)
+
+
+async def _grant_gift(db: AsyncSession, gift: Gift, user_id: int) -> None:
+    """Enroll a gift recipient in the gifted course or bundle (idempotent)."""
+    if gift.webinar_id is not None:
+        await _enroll(db, user_id, gift.webinar_id, EnrollmentSource.gift)
+    elif gift.bundle_id is not None:
+        for course_id in await bundles_repo.active_course_ids(db, gift.bundle_id):
+            await _enroll(db, user_id, course_id, EnrollmentSource.gift)
+
+
 def build_redirect_url(order: Order, channel: PaymentChannel) -> str:
     """Resolve the channel's driver and build its payment redirect (legacy
     ChannelManager::makeChannel → paymentRequest)."""
@@ -93,7 +118,9 @@ async def complete(db: AsyncSession, order: Order) -> None:
     order.status = OrderStatus.paid
     for item in order.items:
         sale = await sales.record_sale(db, item, order.payment_method)
-        if item.bundle_id is not None:
+        if item.gift_id is not None:
+            await _activate_gift(db, item.gift_id, sale)
+        elif item.bundle_id is not None:
             await _grant_bundle(db, order.user_id, item.bundle_id)
         elif item.subscribe_id is not None:
             _grant_subscribe(db, order.user_id, item.subscribe_id)
