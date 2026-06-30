@@ -9,6 +9,13 @@ class DashboardSummary(BaseModel):
     enrolled_count: int
     purchases_count: int
     favorites_count: int
+    # Student hello-box counters (legacy getStudentHelloBoxData)
+    meetings_count: int = 0
+    certificates_count: int = 0
+    passed_quizzes_count: int = 0
+    # Wallet card (legacy authUserBalanceCharge). NOTE(Phase): the accounting/
+    # financial subsystem is not yet migrated — 0 on a clean DB, as in legacy.
+    balance: float = 0
     # Instructor-side (zero for plain students)
     courses_count: int = 0
     sales_count: int = 0

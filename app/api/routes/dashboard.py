@@ -2,11 +2,13 @@ from fastapi import APIRouter, status
 
 from app.api.deps import CurrentUser, DbSession
 from app.models.role import Role
+from app.repositories import certificates as certificates_repo
 from app.repositories import courses as courses_repo
 from app.repositories import enrollments as enrollments_repo
 from app.repositories import favorites as favorites_repo
 from app.repositories import meetings as meetings_repo
 from app.repositories import orders as orders_repo
+from app.repositories import quizzes as quizzes_repo
 from app.repositories import sales as sales_repo
 from app.schemas.common import error_responses
 from app.schemas.dashboard import DashboardSummary
@@ -27,12 +29,16 @@ async def dashboard(current_user: CurrentUser, db: DbSession) -> DashboardSummar
     enrolled = await enrollments_repo.list_courses_for_user(db, current_user.id)
     purchases = await orders_repo.paid_items_for_user(db, current_user.id)
     favorites = await favorites_repo.list_for_user(db, current_user.id)
+    passed_quizzes = await quizzes_repo.passed_results_for_user(db, current_user.id)
 
     summary = DashboardSummary(
         is_instructor=current_user.role_name in _INSTRUCTOR_ROLES,
         enrolled_count=len(enrolled),
         purchases_count=len(purchases),
         favorites_count=len(favorites),
+        meetings_count=await meetings_repo.open_reservations_count(db, current_user.id),
+        certificates_count=await certificates_repo.count_for_student(db, current_user.id),
+        passed_quizzes_count=len(passed_quizzes),
     )
 
     if summary.is_instructor:

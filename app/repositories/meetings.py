@@ -1,4 +1,4 @@
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -110,6 +110,21 @@ async def reservations_for_user(db: AsyncSession, user_id: int) -> list[ReserveM
         .order_by(ReserveMeeting.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def open_reservations_count(db: AsyncSession, user_id: int) -> int:
+    """Legacy hello_box meetingsCount: reservations the student booked that are
+    still open (reserved_at set, status == open)."""
+    result = await db.execute(
+        select(func.count())
+        .select_from(ReserveMeeting)
+        .where(
+            ReserveMeeting.user_id == user_id,
+            ReserveMeeting.reserved_at.is_not(None),
+            ReserveMeeting.status == ReserveStatus.open,
+        )
+    )
+    return int(result.scalar_one())
 
 
 async def requests_for_creator(db: AsyncSession, creator_id: int) -> list[ReserveMeeting]:

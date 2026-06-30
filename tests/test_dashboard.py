@@ -61,6 +61,11 @@ async def test_student_dashboard_counts(client: AsyncClient):
     assert body["enrolled_count"] == 1
     assert body["purchases_count"] == 0
     assert body["courses_count"] == 0  # students get zero instructor metrics
+    # hello-box counters present and zeroed on a fresh student
+    assert body["meetings_count"] == 0
+    assert body["certificates_count"] == 0
+    assert body["passed_quizzes_count"] == 0
+    assert body["balance"] == 0
 
 
 async def test_instructor_dashboard_has_teaching_metrics(client: AsyncClient):

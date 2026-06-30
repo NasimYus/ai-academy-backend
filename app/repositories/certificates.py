@@ -1,8 +1,16 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.certificate import Certificate
+
+
+async def count_for_student(db: AsyncSession, student_id: int) -> int:
+    """Legacy hello_box: Certificate::where('student_id', ...)->count()."""
+    result = await db.execute(
+        select(func.count()).select_from(Certificate).where(Certificate.student_id == student_id)
+    )
+    return int(result.scalar_one())
 
 
 async def get_by_result(db: AsyncSession, quiz_result_id: int) -> Certificate | None:
