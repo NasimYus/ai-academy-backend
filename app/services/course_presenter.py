@@ -95,6 +95,7 @@ def to_detail(
         locale=course.locale,
         summary=course.summary,
         icon=course.icon,
+        timezone=course.timezone,
         description=description,
         seo_description=seo_description,
         video_demo=course.video_demo,

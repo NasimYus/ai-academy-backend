@@ -81,6 +81,7 @@ class CourseDetail(CourseRead):
     locale: str | None = None
     summary: str | None = None
     icon: str | None = None
+    timezone: str | None = None
     description: str | None = None
     seo_description: str | None = None
     video_demo: str | None = None
