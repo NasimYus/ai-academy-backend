@@ -11,6 +11,7 @@ from app.api.routes import (
     admin_users,
     assignments,
     auth,
+    become_instructor,
     blog,
     bundles,
     cart,
@@ -77,6 +78,7 @@ app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(events_calendar.router, prefix="/api/v1")
 app.include_router(comments.router, prefix="/api/v1")
 app.include_router(financial.router, prefix="/api/v1")
+app.include_router(become_instructor.router, prefix="/api/v1")
 app.include_router(favorites.router, prefix="/api/v1")
 app.include_router(follows.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")

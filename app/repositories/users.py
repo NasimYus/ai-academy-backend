@@ -105,6 +105,15 @@ async def _role_id(db: AsyncSession, name: str) -> int:
     return role_id
 
 
+async def set_role(db: AsyncSession, user: User, role_name: str) -> User:
+    """Change a user's role (admin become-instructor approval)."""
+    user.role_name = role_name
+    user.role_id = await _role_id(db, role_name)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
 async def create(
     db: AsyncSession,
     *,

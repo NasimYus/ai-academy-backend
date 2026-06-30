@@ -12,6 +12,7 @@ from app.models.assignment import (
     AssignmentHistoryStatus,
     AssignmentStatus,
 )
+from app.models.become_instructor import BecomeInstructor, BecomeInstructorStatus
 from app.models.blog import Blog, BlogCategory, BlogStatus
 from app.models.bundle import Bundle, BundleStatus, BundleWebinar
 from app.models.cart import CartItem
@@ -214,4 +215,6 @@ __all__ = [
     "AccountingTypeAccount",
     "OfflinePayment",
     "OfflinePaymentStatus",
+    "BecomeInstructor",
+    "BecomeInstructorStatus",
 ]
