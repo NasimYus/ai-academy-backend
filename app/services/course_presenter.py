@@ -92,6 +92,9 @@ def to_detail(
         seo_description = loc["seo_description"]
     return CourseDetail(
         **to_brief(course, locale, default_locale, currency).model_dump(),
+        locale=course.locale,
+        summary=course.summary,
+        icon=course.icon,
         description=description,
         seo_description=seo_description,
         video_demo=course.video_demo,

@@ -12,21 +12,27 @@ from app.schemas.user import UserBrief
 
 
 class CourseCreate(BaseModel):
+    """Step-1 (draft-first) create. Only the type+title are required so the
+    wizard can persist a draft early; later steps fill the rest via update."""
+
     type: CourseType
     title: str = Field(min_length=1, max_length=255)
-    thumbnail: str
-    image_cover: str
-    description: str
-    category_id: int
-    duration: int | None = None
+    locale: str | None = None
+    summary: str | None = None
+    description: str | None = None
+    seo_description: str | None = None
+    thumbnail: str | None = None
+    image_cover: str | None = None
+    icon: str | None = None
+    video_demo: str | None = None
+    video_demo_source: VideoDemoSource | None = None
 
-    # webinar-only scheduling (legacy required_if:type,webinar)
+    # category lives on step 2 — optional at create
+    category_id: int | None = None
+    duration: int | None = None
     start_date: datetime | None = None
     capacity: int | None = None
 
-    seo_description: str | None = None
-    video_demo: str | None = None
-    video_demo_source: VideoDemoSource | None = None
     price: float = 0
     organization_price: float | None = None
     points: int | None = None
@@ -44,16 +50,26 @@ class CourseCreate(BaseModel):
     draft: bool = False
 
 
+class CourseMediaResult(BaseModel):
+    """Stored path of an uploaded course asset (thumbnail/cover/icon/demo)."""
+
+    path: str
+
+
 class CourseUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     type: CourseType | None = None
+    locale: str | None = None
+    summary: str | None = None
     thumbnail: str | None = None
     image_cover: str | None = None
+    icon: str | None = None
     description: str | None = None
     category_id: int | None = None
     duration: int | None = None
     start_date: datetime | None = None
     capacity: int | None = None
+    timezone: str | None = None
     seo_description: str | None = None
     video_demo: str | None = None
     video_demo_source: VideoDemoSource | None = None
@@ -66,6 +82,8 @@ class CourseUpdate(BaseModel):
     downloadable: bool | None = None
     partner_instructor: bool | None = None
     subscribe: bool | None = None
+    forum: bool | None = None
+    certificate: bool | None = None
 
 
 # Instructor quiz CRUD — parity of Instructor\QuizzesController.

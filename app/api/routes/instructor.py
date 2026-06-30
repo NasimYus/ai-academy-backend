@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 
 from app.api.deps import DbSession, require_level
 from app.models.assignment import AssignmentHistoryStatus
@@ -24,6 +24,7 @@ from app.schemas.instructor import (
     AssignmentHistoryRow,
     CommentReplyInput,
     CourseCreate,
+    CourseMediaResult,
     CourseStatistics,
     CourseUpdate,
     GradeInput,
@@ -40,7 +41,7 @@ from app.schemas.instructor import (
 )
 from app.schemas.review import CommentRead
 from app.schemas.user import UserBrief
-from app.services import blog_presenter
+from app.services import blog_presenter, storage
 from app.services import statistics as statistics_service
 from app.services.course_presenter import to_brief, to_detail
 
@@ -52,13 +53,17 @@ TeacherUser = Annotated[User, Depends(require_level("teacher"))]
 _EDITABLE = (
     "title",
     "type",
+    "locale",
+    "summary",
     "thumbnail",
     "image_cover",
+    "icon",
     "description",
     "category_id",
     "duration",
     "start_date",
     "capacity",
+    "timezone",
     "seo_description",
     "video_demo",
     "video_demo_source",
@@ -71,6 +76,8 @@ _EDITABLE = (
     "downloadable",
     "partner_instructor",
     "subscribe",
+    "forum",
+    "certificate",
 )
 
 
@@ -156,6 +163,34 @@ async def create_course(payload: CourseCreate, current_user: TeacherUser, db: Db
     )
     course = await courses_repo.create_course(db, course)
     return to_detail(course)
+
+
+_MEDIA_KINDS = {"thumbnail", "image_cover", "icon", "demo_video"}
+
+
+@router.post(
+    "/webinar/media",
+    response_model=CourseMediaResult,
+    responses=error_responses(
+        status.HTTP_401_UNAUTHORIZED,
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def upload_course_media(
+    current_user: TeacherUser,
+    file: UploadFile,
+    kind: Annotated[str, Form()] = "thumbnail",
+) -> CourseMediaResult:
+    """Upload a course asset and return its stored path (legacy storeWebinarMedia).
+
+    The wizard sends the returned path back in the create/update payload."""
+    if kind not in _MEDIA_KINDS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="invalid_media_kind"
+        )
+    path = storage.save_upload(file, f"courses/{current_user.id}/{kind}")
+    return CourseMediaResult(path=path)
 
 
 @router.get(

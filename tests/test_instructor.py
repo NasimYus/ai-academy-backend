@@ -56,6 +56,45 @@ async def test_create_course_pending(client: AsyncClient):
     assert body["description"] == "Learn Python"
 
 
+async def test_create_draft_first_minimal(client: AsyncClient):
+    """Wizard step 1 persists a draft with only type+title (category/images later)."""
+    token, _ = await _teacher(client)
+    r = await client.post(
+        "/api/v1/panel/webinar",
+        json={"type": "course", "title": "Draft Course", "locale": "ru"},
+        headers=_auth(token),
+    )
+    assert r.status_code == 201
+    body = r.json()
+    assert body["status"] == "is_draft"
+    assert body["category_id"] is None
+    assert body["locale"] == "ru"
+
+
+async def test_upload_course_media(client: AsyncClient):
+    token, _ = await _teacher(client)
+    r = await client.post(
+        "/api/v1/panel/webinar/media",
+        files={"file": ("thumb.png", b"\x89PNG\r\n", "image/png")},
+        data={"kind": "thumbnail"},
+        headers=_auth(token),
+    )
+    assert r.status_code == 200
+    assert r.json()["path"].startswith("/media/courses/")
+
+
+async def test_upload_course_media_invalid_kind(client: AsyncClient):
+    token, _ = await _teacher(client)
+    r = await client.post(
+        "/api/v1/panel/webinar/media",
+        files={"file": ("x.png", b"x", "image/png")},
+        data={"kind": "bogus"},
+        headers=_auth(token),
+    )
+    assert r.status_code == 422
+    assert r.json()["detail"] == "invalid_media_kind"
+
+
 async def test_create_as_draft_when_rules_not_accepted(client: AsyncClient):
     token, _ = await _teacher(client)
     cat = await _category()

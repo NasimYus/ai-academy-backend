@@ -40,5 +40,6 @@ class CourseTranslation(Base):
     )
     locale: Mapped[str] = mapped_column(String(8), nullable=False)
     title: Mapped[str | None] = mapped_column(String(255))
+    summary: Mapped[str | None] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     seo_description: Mapped[str | None] = mapped_column(String(128))

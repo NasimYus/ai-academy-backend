@@ -74,10 +74,13 @@ class Course(Base):
         ForeignKey("categories.id", ondelete="SET NULL"), index=True
     )
 
+    locale: Mapped[str | None] = mapped_column(String(8))  # primary content language
+    summary: Mapped[str | None] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     seo_description: Mapped[str | None] = mapped_column(String(128))
     thumbnail: Mapped[str | None] = mapped_column(String(512))
     image_cover: Mapped[str | None] = mapped_column(String(512))
+    icon: Mapped[str | None] = mapped_column(String(512))
     video_demo: Mapped[str | None] = mapped_column(String(512))
     video_demo_source: Mapped[VideoDemoSource | None] = mapped_column(
         Enum(VideoDemoSource, name="video_demo_source")

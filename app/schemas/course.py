@@ -78,6 +78,9 @@ class CourseRead(BaseModel):
 class CourseDetail(CourseRead):
     """Legacy `Webinar::details` = brief + the keys below."""
 
+    locale: str | None = None
+    summary: str | None = None
+    icon: str | None = None
     description: str | None = None
     seo_description: str | None = None
     video_demo: str | None = None
