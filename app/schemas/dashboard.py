@@ -15,8 +15,7 @@ class DashboardSummary(BaseModel):
     meetings_count: int = 0
     certificates_count: int = 0
     passed_quizzes_count: int = 0
-    # Wallet card (legacy authUserBalanceCharge). NOTE(Phase): the accounting/
-    # financial subsystem is not yet migrated — 0 on a clean DB, as in legacy.
+    # Wallet card (legacy authUserBalanceCharge) — accounting asset charge.
     balance: float = 0
     # Instructor-side (zero for plain students)
     courses_count: int = 0

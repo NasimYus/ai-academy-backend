@@ -2,6 +2,7 @@ from fastapi import APIRouter, status
 
 from app.api.deps import CurrentUser, DbSession
 from app.models.role import Role
+from app.repositories import accounting as accounting_repo
 from app.repositories import certificates as certificates_repo
 from app.repositories import courses as courses_repo
 from app.repositories import enrollments as enrollments_repo
@@ -41,6 +42,7 @@ async def dashboard(current_user: CurrentUser, db: DbSession) -> DashboardSummar
         certificates_count=await certificates_repo.count_for_student(db, current_user.id),
         passed_quizzes_count=len(passed_quizzes),
         following_count=await follows_repo.following_count(db, current_user.id),
+        balance=await accounting_repo.charge_for_user(db, current_user.id),
     )
 
     if summary.is_instructor:
