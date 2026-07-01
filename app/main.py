@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import (
     admin_categories,
     admin_courses,
+    admin_offline_payments,
     admin_payments,
     admin_reviews,
     admin_users,
@@ -110,6 +111,7 @@ app.include_router(payments.router, prefix="/api/v1")
 app.include_router(admin_payments.router, prefix="/api/v1")
 app.include_router(admin_courses.router, prefix="/api/v1")
 app.include_router(admin_categories.router, prefix="/api/v1")
+app.include_router(admin_offline_payments.router, prefix="/api/v1")
 app.include_router(admin_users.router, prefix="/api/v1")
 app.include_router(admin_reviews.router, prefix="/api/v1")
 
