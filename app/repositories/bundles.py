@@ -82,3 +82,48 @@ async def get_owned(db: AsyncSession, bundle_id: int, user_id: int) -> Bundle | 
 async def delete(db: AsyncSession, bundle: Bundle) -> None:
     await db.delete(bundle)
     await db.commit()
+
+
+def _slugify(title: str) -> str:
+    import re
+
+    base = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    return base or "bundle"
+
+
+async def unique_slug(db: AsyncSession, title: str) -> str:
+    base = _slugify(title)
+    slug = base
+    i = 1
+    while await db.scalar(select(Bundle.id).where(Bundle.slug == slug)) is not None:
+        i += 1
+        slug = f"{base}-{i}"
+    return slug
+
+
+async def create(db: AsyncSession, bundle: Bundle) -> Bundle:
+    db.add(bundle)
+    await db.commit()
+    await db.refresh(bundle)
+    return bundle
+
+
+async def list_all(db: AsyncSession) -> list[Bundle]:
+    """All bundles for the admin list (legacy Admin\\BundleController@index)."""
+    result = await db.execute(
+        select(Bundle)
+        .options(selectinload(Bundle.category), selectinload(Bundle.webinars))
+        .order_by(Bundle.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def webinar_counts(db: AsyncSession, bundle_ids: list[int]) -> dict[int, int]:
+    if not bundle_ids:
+        return {}
+    rows = await db.execute(
+        select(BundleWebinar.bundle_id, func.count())
+        .where(BundleWebinar.bundle_id.in_(bundle_ids))
+        .group_by(BundleWebinar.bundle_id)
+    )
+    return {bid: int(c) for bid, c in rows.all()}

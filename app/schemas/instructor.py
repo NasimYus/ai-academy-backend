@@ -33,6 +33,10 @@ class CourseCreate(BaseModel):
     start_date: datetime | None = None
     capacity: int | None = None
 
+    # Admin-only: assign the course to a specific instructor (legacy admin
+    # WebinarController@store). Ignored for non-admin callers (teacher = self).
+    teacher_id: int | None = None
+
     price: float = 0
     organization_price: float | None = None
     points: int | None = None
@@ -43,6 +47,13 @@ class CourseCreate(BaseModel):
     downloadable: bool = False
     partner_instructor: bool = False
     subscribe: bool = False
+    # Admin single-page create sends the whole form at once (legacy admin create).
+    timezone: str | None = None
+    forum: bool = False
+    certificate: bool = False
+    only_for_students: bool = False
+    enable_waitlist: bool = False
+    message_for_reviewer: str | None = None
 
     # T&C accepted (legacy `rules` == 1); when false the course stays a draft.
     rules: bool = False
@@ -73,6 +84,7 @@ class CourseUpdate(BaseModel):
     icon: str | None = None
     description: str | None = None
     category_id: int | None = None
+    teacher_id: int | None = None  # admin-only: reassign instructor
     duration: int | None = None
     start_date: datetime | None = None
     capacity: int | None = None

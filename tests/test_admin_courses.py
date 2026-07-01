@@ -74,3 +74,73 @@ async def test_moderate_missing_course_404(client: AsyncClient):
     token = await _admin(client)
     r = await client.post("/api/v1/admin/courses/999/approve", headers=_auth(token))
     assert r.status_code == 404
+
+
+async def _typed_course(slug: str, ctype: CourseType, status: CourseStatus, duration: int) -> int:
+    async with AsyncSessionLocal() as db:
+        c = Course(title=slug, slug=slug, type=ctype, status=status, price=10, duration=duration)
+        db.add(c)
+        await db.commit()
+        await db.refresh(c)
+        return c.id
+
+
+async def test_manage_list_stats_and_type_filter(client: AsyncClient):
+    token = await _admin(client, email="manageadmin@aiacademy.tj")
+    await _typed_course("m-course-1", CourseType.course, CourseStatus.active, 120)
+    await _typed_course("m-course-2", CourseType.course, CourseStatus.pending, 60)
+    await _typed_course("m-webinar-1", CourseType.webinar, CourseStatus.active, 45)
+
+    courses = (
+        await client.get("/api/v1/admin/courses/manage?type=course", headers=_auth(token))
+    ).json()
+    assert courses["total_courses"] == 2
+    assert courses["total_pending"] == 1
+    assert courses["total_duration"] == 180
+    assert courses["total"] == 2
+    assert {c["type"] for c in courses["courses"]} == {"course"}
+    assert all("income" in c and "students_count" in c for c in courses["courses"])
+
+    webinars = (
+        await client.get("/api/v1/admin/courses/manage?type=webinar", headers=_auth(token))
+    ).json()
+    assert webinars["total_courses"] == 1
+    assert webinars["courses"][0]["type"] == "webinar"
+
+
+async def test_manage_search_and_status_filter(client: AsyncClient):
+    token = await _admin(client, email="manage2@aiacademy.tj")
+    await _typed_course("Python basics", CourseType.course, CourseStatus.active, 10)
+    await _typed_course("Java basics", CourseType.course, CourseStatus.pending, 10)
+
+    found = (
+        await client.get(
+            "/api/v1/admin/courses/manage?type=course&search=python", headers=_auth(token)
+        )
+    ).json()
+    assert found["total"] == 1
+    assert found["courses"][0]["title"] == "Python basics"
+
+    pending = (
+        await client.get(
+            "/api/v1/admin/courses/manage?type=course&status=pending", headers=_auth(token)
+        )
+    ).json()
+    assert pending["total"] == 1
+    assert pending["courses"][0]["status"] == "pending"
+
+
+async def test_delete_course(client: AsyncClient):
+    token = await _admin(client, email="deladmin@aiacademy.tj")
+    course_id = await _course("c-del", CourseStatus.active)
+    r = await client.delete(f"/api/v1/admin/courses/{course_id}", headers=_auth(token))
+    assert r.status_code == 204
+    async with AsyncSessionLocal() as db:
+        assert await db.get(Course, course_id) is None
+
+
+async def test_live_sessions_empty(client: AsyncClient):
+    token = await _admin(client, email="liveadmin@aiacademy.tj")
+    body = (await client.get("/api/v1/admin/courses/live-sessions", headers=_auth(token))).json()
+    assert body["total"] == 0
+    assert body["sessions"] == []

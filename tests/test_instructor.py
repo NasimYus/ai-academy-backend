@@ -420,6 +420,82 @@ async def test_create_requires_teacher(client: AsyncClient):
     assert r.status_code == 403
 
 
+async def test_admin_creates_course_for_instructor(client: AsyncClient):
+    # An admin can create a course and assign it to a chosen instructor.
+    teacher_token, teacher_id = await _teacher(client, email="assigned-teacher@aiacademy.tj")
+    admin_token, admin_id = await register_verified_user(client, email="courseadmin2@aiacademy.tj")
+    async with AsyncSessionLocal() as db:
+        user = await db.get(User, admin_id)
+        user.role_name = Role.ADMIN
+        await db.commit()
+
+    cat = await _category()
+    r = await client.post(
+        "/api/v1/panel/webinar",
+        json=_payload(cat, teacher_id=teacher_id),
+        headers=_auth(admin_token),
+    )
+    assert r.status_code == 201
+    course_id = r.json()["id"]
+
+    from app.models.course import Course
+
+    async with AsyncSessionLocal() as db:
+        course = await db.get(Course, course_id)
+        assert course.teacher_id == teacher_id  # assigned instructor
+        assert course.creator_id == admin_id  # admin remains creator/owner
+
+    # the admin remains creator so it can keep editing the wizard steps
+    edit = await client.get(f"/api/v1/panel/webinar/{course_id}/edit", headers=_auth(admin_token))
+    assert edit.status_code == 200
+
+
+async def test_create_persists_single_page_fields(client: AsyncClient):
+    # The admin single-page form submits the whole course at once.
+    token, uid = await _teacher(client, email="singlepage@aiacademy.tj")
+    cat = await _category()
+    payload = _payload(
+        cat,
+        timezone="Asia/Dushanbe",
+        forum=True,
+        certificate=True,
+        only_for_students=True,
+        enable_waitlist=True,
+        message_for_reviewer="Please review",
+        points=50,
+    )
+    r = await client.post("/api/v1/panel/webinar", json=payload, headers=_auth(token))
+    assert r.status_code == 201
+    course_id = r.json()["id"]
+
+    from app.models.course import Course
+
+    async with AsyncSessionLocal() as db:
+        c = await db.get(Course, course_id)
+        assert c.timezone == "Asia/Dushanbe"
+        assert c.forum is True
+        assert c.certificate is True
+        assert c.only_for_students is True
+        assert c.enable_waitlist is True
+        assert c.message_for_reviewer == "Please review"
+        assert c.points == 50
+
+
+async def test_admin_course_teachers_list(client: AsyncClient):
+    await _teacher(client, email="pick-me-teacher@aiacademy.tj")
+    admin_token, admin_id = await register_verified_user(client, email="courseadmin3@aiacademy.tj")
+    async with AsyncSessionLocal() as db:
+        user = await db.get(User, admin_id)
+        user.role_name = Role.ADMIN
+        await db.commit()
+
+    r = await client.get("/api/v1/admin/courses/teachers", headers=_auth(admin_token))
+    assert r.status_code == 200
+    teachers = r.json()
+    assert len(teachers) >= 1
+    assert all("id" in t and "full_name" in t for t in teachers)
+
+
 async def test_create_unknown_category(client: AsyncClient):
     token, _ = await _teacher(client)
     r = await client.post("/api/v1/panel/webinar", json=_payload(999), headers=_auth(token))
