@@ -71,6 +71,18 @@ async def test_create_draft_first_minimal(client: AsyncClient):
     assert body["locale"] == "ru"
 
 
+async def test_webinar_draft_without_start_date_ok(client: AsyncClient):
+    """Wizard step 1: a webinar draft is created without a start_date (that's step 2)."""
+    token, _ = await _teacher(client)
+    r = await client.post(
+        "/api/v1/panel/webinar",
+        json={"type": "webinar", "title": "Live draft", "draft": True},
+        headers=_auth(token),
+    )
+    assert r.status_code == 201
+    assert r.json()["status"] == "is_draft"
+
+
 async def test_upload_course_media(client: AsyncClient):
     token, _ = await _teacher(client)
     r = await client.post(

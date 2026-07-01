@@ -144,15 +144,17 @@ async def instructor_dashboard(current_user: TeacherUser, db: DbSession) -> Inst
 async def create_course(payload: CourseCreate, current_user: TeacherUser, db: DbSession):
     """Create a course (legacy WebinarsController@storeAll)."""
     await _ensure_category(db, payload.category_id)
-    if payload.type == CourseType.webinar and payload.start_date is None:
+
+    # Draft unless the T&C were accepted and it wasn't explicitly saved as draft.
+    publishing = payload.rules and not payload.draft
+    # A webinar needs a start date only to be published; drafts (wizard step 1,
+    # where start_date lives on step 2) may be created without it.
+    if publishing and payload.type == CourseType.webinar and payload.start_date is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="start_date_required"
         )
 
-    # Draft unless the T&C were accepted and it wasn't explicitly saved as draft.
-    course_status = (
-        CourseStatus.pending if payload.rules and not payload.draft else CourseStatus.is_draft
-    )
+    course_status = CourseStatus.pending if publishing else CourseStatus.is_draft
     data = payload.model_dump(exclude={"rules", "draft"})
     course = Course(
         **data,
