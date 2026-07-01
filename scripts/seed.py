@@ -7,8 +7,10 @@ Idempotent — safe to run repeatedly.
 import asyncio
 
 from app.core.database import AsyncSessionLocal
+from app.models.category import Category
 from app.models.course import Course, CourseStatus, CourseType
 from app.models.role import Role
+from app.repositories import categories as categories_repo
 from app.repositories import courses as courses_repo
 from app.repositories import users as users_repo
 
@@ -38,6 +40,28 @@ async def main() -> None:
                 verified=True,
             )
             print(f"created teacher: {teacher.email} / teacher12345")
+
+        existing_cats = {c.title for c in await categories_repo.list_all(db)}
+        for order, title in enumerate(
+            [
+                "Искусственный интеллект",
+                "Программирование",
+                "Data Science",
+                "Дизайн",
+                "Бизнес и маркетинг",
+            ]
+        ):
+            if title not in existing_cats:
+                db.add(
+                    Category(
+                        title=title,
+                        slug=await categories_repo.unique_slug(db, title),
+                        order=order,
+                        enable=True,
+                    )
+                )
+                print(f"created category: {title}")
+        await db.commit()
 
         samples = [
             ("Introduction to AI", "introduction-to-ai", "Basics of artificial intelligence.", 0),
