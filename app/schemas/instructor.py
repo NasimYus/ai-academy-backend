@@ -47,6 +47,13 @@ class CourseCreate(BaseModel):
     downloadable: bool = False
     partner_instructor: bool = False
     subscribe: bool = False
+    # Admin single-page create sends the whole form at once (legacy admin create).
+    timezone: str | None = None
+    forum: bool = False
+    certificate: bool = False
+    only_for_students: bool = False
+    enable_waitlist: bool = False
+    message_for_reviewer: str | None = None
 
     # T&C accepted (legacy `rules` == 1); when false the course stays a draft.
     rules: bool = False

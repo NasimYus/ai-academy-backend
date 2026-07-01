@@ -418,6 +418,37 @@ async def test_admin_creates_course_for_instructor(client: AsyncClient):
     assert edit.status_code == 200
 
 
+async def test_create_persists_single_page_fields(client: AsyncClient):
+    # The admin single-page form submits the whole course at once.
+    token, uid = await _teacher(client, email="singlepage@aiacademy.tj")
+    cat = await _category()
+    payload = _payload(
+        cat,
+        timezone="Asia/Dushanbe",
+        forum=True,
+        certificate=True,
+        only_for_students=True,
+        enable_waitlist=True,
+        message_for_reviewer="Please review",
+        points=50,
+    )
+    r = await client.post("/api/v1/panel/webinar", json=payload, headers=_auth(token))
+    assert r.status_code == 201
+    course_id = r.json()["id"]
+
+    from app.models.course import Course
+
+    async with AsyncSessionLocal() as db:
+        c = await db.get(Course, course_id)
+        assert c.timezone == "Asia/Dushanbe"
+        assert c.forum is True
+        assert c.certificate is True
+        assert c.only_for_students is True
+        assert c.enable_waitlist is True
+        assert c.message_for_reviewer == "Please review"
+        assert c.points == 50
+
+
 async def test_admin_course_teachers_list(client: AsyncClient):
     await _teacher(client, email="pick-me-teacher@aiacademy.tj")
     admin_token, admin_id = await register_verified_user(client, email="courseadmin3@aiacademy.tj")
