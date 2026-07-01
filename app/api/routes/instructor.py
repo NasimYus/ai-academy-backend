@@ -37,6 +37,7 @@ from app.schemas.instructor import (
     CourseCreate,
     CourseMediaResult,
     CourseStatistics,
+    CourseSubmit,
     CourseUpdate,
     GradeInput,
     InstructorAssignmentRow,
@@ -89,6 +90,7 @@ _EDITABLE = (
     "subscribe",
     "forum",
     "certificate",
+    "message_for_reviewer",
 )
 
 
@@ -238,6 +240,44 @@ async def update_course(
     if "category_id" in changes:
         await _ensure_category(db, changes["category_id"])
     changes = {k: v for k, v in changes.items() if k in _EDITABLE}
+    course = await courses_repo.update_course(db, course, changes)
+    return to_detail(course)
+
+
+@router.post(
+    "/webinar/{course_id}/submit",
+    response_model=CourseDetail,
+    responses=error_responses(
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def submit_course(
+    course_id: int, payload: CourseSubmit, current_user: TeacherUser, db: DbSession
+) -> CourseDetail:
+    """Submit a course for review — flips draft → pending (legacy step 8 `rules`)."""
+    course = await _owned_course(db, course_id, current_user.id)
+    if not payload.rules:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="rules_required"
+        )
+    if not course.title:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="title_required"
+        )
+    if course.category_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="category_required"
+        )
+    if course.type == CourseType.webinar and course.start_date is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="start_date_required"
+        )
+    changes = {
+        "message_for_reviewer": payload.message_for_reviewer,
+        "status": CourseStatus.pending,
+    }
     course = await courses_repo.update_course(db, course, changes)
     return to_detail(course)
 

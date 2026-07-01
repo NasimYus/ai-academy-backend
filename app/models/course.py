@@ -75,6 +75,7 @@ class Course(Base):
     )
 
     locale: Mapped[str | None] = mapped_column(String(8))  # primary content language
+    message_for_reviewer: Mapped[str | None] = mapped_column(Text)
     summary: Mapped[str | None] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     seo_description: Mapped[str | None] = mapped_column(String(128))

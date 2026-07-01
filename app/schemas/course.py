@@ -82,6 +82,7 @@ class CourseDetail(CourseRead):
     summary: str | None = None
     icon: str | None = None
     timezone: str | None = None
+    message_for_reviewer: str | None = None
     description: str | None = None
     seo_description: str | None = None
     video_demo: str | None = None

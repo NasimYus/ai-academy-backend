@@ -56,6 +56,13 @@ class CourseMediaResult(BaseModel):
     path: str
 
 
+class CourseSubmit(BaseModel):
+    """Wizard step 8 — submit for review (legacy `rules` + message_for_reviewer)."""
+
+    message_for_reviewer: str | None = None
+    rules: bool = False
+
+
 class CourseUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     type: CourseType | None = None
@@ -84,6 +91,7 @@ class CourseUpdate(BaseModel):
     subscribe: bool | None = None
     forum: bool | None = None
     certificate: bool | None = None
+    message_for_reviewer: str | None = None
 
 
 # Instructor quiz CRUD — parity of Instructor\QuizzesController.

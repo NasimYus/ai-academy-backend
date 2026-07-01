@@ -151,6 +151,48 @@ async def test_chapter_crud(client: AsyncClient):
     assert [c["id"] for c in content.json()["chapters"]] == [ch2]
 
 
+async def test_submit_for_review(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    created = await client.post(
+        "/api/v1/panel/webinar", json=_payload(cat, draft=True, rules=False), headers=_auth(token)
+    )
+    cid = created.json()["id"]
+    assert created.json()["status"] == "is_draft"
+
+    # rules not accepted -> 422
+    no_rules = await client.post(
+        f"/api/v1/panel/webinar/{cid}/submit", json={"rules": False}, headers=_auth(token)
+    )
+    assert no_rules.status_code == 422
+    assert no_rules.json()["detail"] == "rules_required"
+
+    # accepted -> pending + message stored
+    ok = await client.post(
+        f"/api/v1/panel/webinar/{cid}/submit",
+        json={"rules": True, "message_for_reviewer": "Прошу проверить"},
+        headers=_auth(token),
+    )
+    assert ok.status_code == 200
+    assert ok.json()["status"] == "pending"
+    assert ok.json()["message_for_reviewer"] == "Прошу проверить"
+
+
+async def test_submit_requires_category(client: AsyncClient):
+    token, _ = await _teacher(client)
+    created = await client.post(
+        "/api/v1/panel/webinar",
+        json={"type": "course", "title": "No cat", "draft": True},
+        headers=_auth(token),
+    )
+    cid = created.json()["id"]
+    r = await client.post(
+        f"/api/v1/panel/webinar/{cid}/submit", json={"rules": True}, headers=_auth(token)
+    )
+    assert r.status_code == 422
+    assert r.json()["detail"] == "category_required"
+
+
 async def test_content_item_crud(client: AsyncClient):
     token, _ = await _teacher(client)
     cat = await _category()
