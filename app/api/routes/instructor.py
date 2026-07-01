@@ -20,6 +20,7 @@ from app.repositories import enrollments as enrollments_repo
 from app.repositories import meetings as meetings_repo
 from app.repositories import products as products_repo
 from app.repositories import quizzes as quizzes_repo
+from app.repositories import tickets as tickets_repo
 from app.schemas.bundle import BundleDashboard, BundleRead
 from app.schemas.common import error_responses
 from app.schemas.content import (
@@ -68,6 +69,7 @@ from app.schemas.instructor import (
     SubmissionView,
 )
 from app.schemas.review import CommentRead
+from app.schemas.ticket import TicketInput, TicketRead
 from app.schemas.user import UserBrief
 from app.services import blog_presenter, storage
 from app.services import statistics as statistics_service
@@ -661,6 +663,63 @@ async def delete_related(row_id: int, current_user: TeacherUser, db: DbSession) 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     await _owned_course(db, row.course_id, current_user.id)
     await relations_repo.delete_relation(db, row)
+
+
+# --- Step 3: tariff plans (tickets, legacy TicketController) ---
+
+
+def _ticket_read(t) -> TicketRead:
+    return TicketRead(
+        id=t.id,
+        title=t.title,
+        discount=float(t.discount),
+        capacity=t.capacity,
+        start_date=t.start_date,
+        end_date=t.end_date,
+    )
+
+
+@router.get(
+    "/webinar/{course_id}/tickets",
+    response_model=list[TicketRead],
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def list_tickets(
+    course_id: int, current_user: TeacherUser, db: DbSession
+) -> list[TicketRead]:
+    await _owned_course(db, course_id, current_user.id)
+    return [_ticket_read(t) for t in await tickets_repo.list_tickets(db, course_id)]
+
+
+@router.post(
+    "/webinar/{course_id}/tickets",
+    response_model=TicketRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def add_ticket(
+    course_id: int, payload: TicketInput, current_user: TeacherUser, db: DbSession
+) -> TicketRead:
+    await _owned_course(db, course_id, current_user.id)
+    ticket = await tickets_repo.add_ticket(db, course_id, payload.model_dump())
+    return _ticket_read(ticket)
+
+
+@router.delete(
+    "/tickets/{ticket_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def delete_ticket(ticket_id: int, current_user: TeacherUser, db: DbSession) -> None:
+    ticket = await tickets_repo.get_ticket(db, ticket_id)
+    if ticket is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    await _owned_course(db, ticket.course_id, current_user.id)
+    await tickets_repo.delete_ticket(db, ticket)
 
 
 # --- Step 6: FAQ / learning materials / requirements / company logos ---

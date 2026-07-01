@@ -96,6 +96,7 @@ from app.models.support import (
     SupportDepartment,
     SupportStatus,
 )
+from app.models.ticket import Ticket
 from app.models.translation import CategoryTranslation, CourseTranslation
 from app.models.user import MeetingType, ThemeColorMode, User, UserStatus
 from app.models.verification import Verification
@@ -113,6 +114,7 @@ __all__ = [
     "CourseExtra",
     "ExtraType",
     "CompanyLogo",
+    "Ticket",
     "CourseStatus",
     "CourseType",
     "VideoDemoSource",
