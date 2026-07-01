@@ -108,3 +108,72 @@ async def test_delete_foreign_bundle_404(client: AsyncClient):
 async def test_requires_teacher(client: AsyncClient):
     token, _ = await register_verified_user(client)
     assert (await client.get("/api/v1/panel/bundles", headers=_auth(token))).status_code == 403
+
+
+async def _admin(client: AsyncClient, email: str) -> tuple[str, int]:
+    token, uid = await register_verified_user(client, email=email)
+    async with AsyncSessionLocal() as db:
+        user = await db.get(User, uid)
+        user.role_name = Role.ADMIN
+        await db.commit()
+    return token, uid
+
+
+async def test_create_bundle_single_page(client: AsyncClient):
+    token, tid = await _teacher(client, email="bundlemaker@aiacademy.tj")
+    payload = {
+        "title": "Fullstack Pack",
+        "locale": "ru",
+        "points": 100,
+        "price": 500,
+        "certificate": True,
+        "private": True,
+        "subscribe": True,
+        "message_for_reviewer": "check",
+    }
+    r = await client.post("/api/v1/panel/bundles", json=payload, headers=_auth(token))
+    assert r.status_code == 201
+    bundle_id = r.json()["id"]
+    async with AsyncSessionLocal() as db:
+        b = await db.get(Bundle, bundle_id)
+        assert b.title == "Fullstack Pack"
+        assert b.certificate is True and b.private is True and b.subscribe is True
+        assert b.points == 100
+        assert b.creator_id == tid and b.teacher_id == tid
+        assert b.slug  # auto-generated
+
+
+async def test_admin_creates_bundle_for_instructor(client: AsyncClient):
+    _, teacher_id = await _teacher(client, email="bundleteacher@aiacademy.tj")
+    admin_token, admin_id = await _admin(client, email="bundleadmin@aiacademy.tj")
+    r = await client.post(
+        "/api/v1/panel/bundles",
+        json={"title": "Admin Pack", "teacher_id": teacher_id},
+        headers=_auth(admin_token),
+    )
+    assert r.status_code == 201
+    async with AsyncSessionLocal() as db:
+        b = await db.get(Bundle, r.json()["id"])
+        assert b.teacher_id == teacher_id
+        assert b.creator_id == admin_id
+
+
+async def test_admin_bundles_list(client: AsyncClient):
+    _, tid = await _teacher(client, email="blt@aiacademy.tj")
+    c = await _course(tid, "blc")
+    await _bundle(tid, [c], slug="admin-list-bundle")
+    admin_token, _ = await _admin(client, email="bundlelistadmin@aiacademy.tj")
+
+    # student forbidden
+    student_token, _ = await register_verified_user(client, email="bstudent@aiacademy.tj")
+    assert (
+        await client.get("/api/v1/admin/bundles", headers=_auth(student_token))
+    ).status_code == 403
+
+    r = await client.get("/api/v1/admin/bundles", headers=_auth(admin_token))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total"] >= 1
+    row = next(b for b in body["bundles"] if b["title"] == "My Bundle")
+    assert row["webinars_count"] == 1
+    assert row["teacher_name"] is not None

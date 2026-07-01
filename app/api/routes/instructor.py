@@ -21,7 +21,7 @@ from app.repositories import enrollments as enrollments_repo
 from app.repositories import meetings as meetings_repo
 from app.repositories import products as products_repo
 from app.repositories import quizzes as quizzes_repo
-from app.schemas.bundle import BundleDashboard, BundleRead
+from app.schemas.bundle import BundleCreate, BundleDashboard, BundleRead
 from app.schemas.common import error_responses
 from app.schemas.content import (
     ChapterCreate,
@@ -1159,6 +1159,70 @@ async def my_bundles(current_user: TeacherUser, db: DbSession) -> BundleDashboar
         bundle_sales_amount=0.0,
         bundle_sales_count=0,
         bundles_hours=hours,
+    )
+
+
+@router.post(
+    "/bundles",
+    response_model=BundleRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(
+        status.HTTP_401_UNAUTHORIZED,
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def create_bundle(payload: BundleCreate, current_user: TeacherUser, db: DbSession):
+    """Create a bundle (legacy BundleController@store). Single-page form.
+
+    Admins may assign the owner instructor via `teacher_id`; the creator stays
+    the caller so it keeps edit access. Published (pending) unless saved as draft.
+    """
+    from app.models.bundle import Bundle, BundleStatus
+
+    await _ensure_category(db, payload.category_id)
+    is_admin = current_user.role_name == Role.ADMIN
+    teacher_id = payload.teacher_id if (is_admin and payload.teacher_id) else current_user.id
+    publishing = payload.rules and not payload.draft
+    bundle_status = BundleStatus.pending if publishing else BundleStatus.is_draft
+    slug = payload.slug or await bundles_repo.unique_slug(db, payload.title)
+
+    bundle = Bundle(
+        creator_id=current_user.id,
+        teacher_id=teacher_id,
+        category_id=payload.category_id,
+        title=payload.title,
+        slug=slug,
+        locale=payload.locale,
+        summary=payload.summary,
+        description=payload.description,
+        seo_description=payload.seo_description,
+        thumbnail=payload.thumbnail,
+        image_cover=payload.image_cover,
+        video_demo=payload.video_demo,
+        video_demo_source=payload.video_demo_source if payload.video_demo else None,
+        price=payload.price,
+        points=payload.points,
+        subscribe=payload.subscribe,
+        private=payload.private,
+        certificate=payload.certificate,
+        only_for_students=payload.only_for_students,
+        access_days=payload.access_days,
+        message_for_reviewer=payload.message_for_reviewer,
+        status=bundle_status,
+    )
+    bundle = await bundles_repo.create(db, bundle)
+    return BundleRead(
+        id=bundle.id,
+        title=bundle.title,
+        slug=bundle.slug,
+        thumbnail=bundle.thumbnail,
+        image_cover=bundle.image_cover,
+        price=bundle.price,
+        status=bundle.status,
+        category=None,
+        webinars_count=0,
+        created_at=bundle.created_at,
     )
 
 

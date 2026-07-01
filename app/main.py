@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import (
+    admin_bundles,
     admin_courses,
     admin_dashboard,
     admin_marketing,
@@ -109,6 +110,7 @@ app.include_router(cart.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")
 app.include_router(admin_payments.router, prefix="/api/v1")
+app.include_router(admin_bundles.router, prefix="/api/v1")
 app.include_router(admin_courses.router, prefix="/api/v1")
 app.include_router(admin_dashboard.router, prefix="/api/v1")
 app.include_router(admin_marketing.router, prefix="/api/v1")
