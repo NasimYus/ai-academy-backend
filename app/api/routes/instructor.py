@@ -5,12 +5,14 @@ from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from app.api.deps import DbSession, require_level
 from app.models.assignment import AssignmentHistoryStatus
 from app.models.category import Category
+from app.models.content import Chapter
 from app.models.course import Course, CourseStatus, CourseType
 from app.models.quiz import Quiz, QuizStatus
 from app.models.user import User
 from app.repositories import assignments as assignments_repo
 from app.repositories import bundles as bundles_repo
 from app.repositories import comments as comments_repo
+from app.repositories import content as content_repo
 from app.repositories import courses as courses_repo
 from app.repositories import enrollments as enrollments_repo
 from app.repositories import meetings as meetings_repo
@@ -18,6 +20,13 @@ from app.repositories import products as products_repo
 from app.repositories import quizzes as quizzes_repo
 from app.schemas.bundle import BundleDashboard, BundleRead
 from app.schemas.common import error_responses
+from app.schemas.content import (
+    ChapterCreate,
+    ChapterManage,
+    ChapterReorder,
+    ChapterUpdate,
+    CourseContentManage,
+)
 from app.schemas.course import CourseDetail, CourseRead
 from app.schemas.instructor import (
     AssignmentDashboard,
@@ -256,6 +265,100 @@ async def course_statistics(
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
     return await statistics_service.build_course_statistics(db, course)
+
+
+# --- Content: chapters (wizard step 4, legacy ChapterController) ---
+
+
+async def _owned_course(db: DbSession, course_id: int, user_id: int):
+    course = await courses_repo.get_owned(db, course_id, user_id)
+    if course is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    return course
+
+
+async def _owned_chapter(db: DbSession, chapter_id: int, user_id: int) -> Chapter:
+    chapter = await content_repo.get_chapter(db, chapter_id)
+    if chapter is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
+    await _owned_course(db, chapter.course_id, user_id)
+    return chapter
+
+
+@router.get(
+    "/webinar/{course_id}/content",
+    response_model=CourseContentManage,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def course_content(
+    course_id: int, current_user: TeacherUser, db: DbSession
+) -> CourseContentManage:
+    """Chapters (+ item/duration counts) for the content editor."""
+    await _owned_course(db, course_id, current_user.id)
+    chapters = await content_repo.chapters_for_course(db, course_id)
+    counts = await content_repo.chapter_item_counts(db, course_id)
+    return CourseContentManage(
+        course_id=course_id,
+        chapters=[
+            ChapterManage(
+                id=c.id,
+                title=c.title,
+                order=c.order,
+                items_count=counts.get(c.id, (0, 0))[0],
+                duration=counts.get(c.id, (0, 0))[1],
+            )
+            for c in chapters
+        ],
+    )
+
+
+@router.post(
+    "/webinar/{course_id}/chapters",
+    response_model=ChapterManage,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def create_chapter(
+    course_id: int, payload: ChapterCreate, current_user: TeacherUser, db: DbSession
+) -> ChapterManage:
+    await _owned_course(db, course_id, current_user.id)
+    chapter = await content_repo.create_chapter(db, course_id, payload.title)
+    return ChapterManage(id=chapter.id, title=chapter.title, order=chapter.order)
+
+
+@router.put(
+    "/chapters/{chapter_id}",
+    response_model=ChapterManage,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def rename_chapter(
+    chapter_id: int, payload: ChapterUpdate, current_user: TeacherUser, db: DbSession
+) -> ChapterManage:
+    chapter = await _owned_chapter(db, chapter_id, current_user.id)
+    chapter = await content_repo.update_chapter(db, chapter, payload.title)
+    return ChapterManage(id=chapter.id, title=chapter.title, order=chapter.order)
+
+
+@router.delete(
+    "/chapters/{chapter_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def delete_chapter(chapter_id: int, current_user: TeacherUser, db: DbSession) -> None:
+    chapter = await _owned_chapter(db, chapter_id, current_user.id)
+    await content_repo.delete_chapter(db, chapter)
+
+
+@router.put(
+    "/webinar/{course_id}/chapters/order",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def reorder_chapters(
+    course_id: int, payload: ChapterReorder, current_user: TeacherUser, db: DbSession
+) -> None:
+    await _owned_course(db, course_id, current_user.id)
+    await content_repo.reorder_chapters(db, course_id, payload.ordered_ids)
 
 
 # --- Quizzes (Phase 6.2, legacy Instructor\QuizzesController) ---

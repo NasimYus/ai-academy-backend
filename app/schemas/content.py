@@ -1,6 +1,33 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class ChapterCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+
+
+class ChapterUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+
+
+class ChapterReorder(BaseModel):
+    ordered_ids: list[int]
+
+
+class ChapterManage(BaseModel):
+    """Instructor content-editor row (legacy chapter card)."""
+
+    id: int
+    title: str
+    order: int
+    items_count: int = 0
+    duration: int = 0  # minutes
+
+
+class CourseContentManage(BaseModel):
+    course_id: int
+    chapters: list[ChapterManage] = []
 
 
 class ContentItem(BaseModel):

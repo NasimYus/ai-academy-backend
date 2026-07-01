@@ -107,6 +107,67 @@ async def test_upload_course_media_invalid_kind(client: AsyncClient):
     assert r.json()["detail"] == "invalid_media_kind"
 
 
+async def test_chapter_crud(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    created = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    cid = created.json()["id"]
+
+    # create two chapters
+    c1 = await client.post(
+        f"/api/v1/panel/webinar/{cid}/chapters", json={"title": "Раздел 1"}, headers=_auth(token)
+    )
+    c2 = await client.post(
+        f"/api/v1/panel/webinar/{cid}/chapters", json={"title": "Раздел 2"}, headers=_auth(token)
+    )
+    assert c1.status_code == 201
+    ch1, ch2 = c1.json()["id"], c2.json()["id"]
+    assert c1.json()["order"] == 0 and c2.json()["order"] == 1
+
+    # list content
+    content = await client.get(f"/api/v1/panel/webinar/{cid}/content", headers=_auth(token))
+    assert [c["title"] for c in content.json()["chapters"]] == ["Раздел 1", "Раздел 2"]
+
+    # rename
+    rn = await client.put(
+        f"/api/v1/panel/chapters/{ch1}", json={"title": "Введение"}, headers=_auth(token)
+    )
+    assert rn.json()["title"] == "Введение"
+
+    # reorder
+    ro = await client.put(
+        f"/api/v1/panel/webinar/{cid}/chapters/order",
+        json={"ordered_ids": [ch2, ch1]},
+        headers=_auth(token),
+    )
+    assert ro.status_code == 204
+    content = await client.get(f"/api/v1/panel/webinar/{cid}/content", headers=_auth(token))
+    assert [c["id"] for c in content.json()["chapters"]] == [ch2, ch1]
+
+    # delete
+    dl = await client.delete(f"/api/v1/panel/chapters/{ch1}", headers=_auth(token))
+    assert dl.status_code == 204
+    content = await client.get(f"/api/v1/panel/webinar/{cid}/content", headers=_auth(token))
+    assert [c["id"] for c in content.json()["chapters"]] == [ch2]
+
+
+async def test_chapter_scoped_to_owner(client: AsyncClient):
+    owner, _ = await _teacher(client, email="owner2@aiacademy.tj")
+    cat = await _category()
+    created = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(owner))
+    cid = created.json()["id"]
+    ch = await client.post(
+        f"/api/v1/panel/webinar/{cid}/chapters", json={"title": "X"}, headers=_auth(owner)
+    )
+    chid = ch.json()["id"]
+
+    other, _ = await _teacher(client, email="other2@aiacademy.tj")
+    r = await client.put(
+        f"/api/v1/panel/chapters/{chid}", json={"title": "hack"}, headers=_auth(other)
+    )
+    assert r.status_code == 404
+
+
 async def test_create_as_draft_when_rules_not_accepted(client: AsyncClient):
     token, _ = await _teacher(client)
     cat = await _category()
