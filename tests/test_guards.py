@@ -14,9 +14,11 @@ async def _allows(dep, role: str) -> bool:
         return False
 
 
+# Admins are allowed at every access level (legacy admin panel shares the
+# instructor/teacher controllers and has full access).
 @pytest.mark.parametrize(
     "role,allowed",
-    [("user", True), ("teacher", True), ("organization", True), ("admin", False)],
+    [("user", True), ("teacher", True), ("organization", True), ("admin", True)],
 )
 async def test_require_level_user(role, allowed):
     assert await _allows(require_level("user"), role) is allowed
@@ -24,7 +26,7 @@ async def test_require_level_user(role, allowed):
 
 @pytest.mark.parametrize(
     "role,allowed",
-    [("user", False), ("teacher", True), ("organization", True), ("admin", False)],
+    [("user", False), ("teacher", True), ("organization", True), ("admin", True)],
 )
 async def test_require_level_teacher(role, allowed):
     assert await _allows(require_level("teacher"), role) is allowed
@@ -32,7 +34,7 @@ async def test_require_level_teacher(role, allowed):
 
 @pytest.mark.parametrize(
     "role,allowed",
-    [("organization", True), ("teacher", False), ("user", False)],
+    [("organization", True), ("teacher", False), ("user", False), ("admin", True)],
 )
 async def test_require_level_organization(role, allowed):
     assert await _allows(require_level("organization"), role) is allowed

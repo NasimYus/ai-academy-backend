@@ -2,12 +2,15 @@ from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy import select
 
 from app.api.deps import AdminUser, DbSession
 from app.models.course import Course, CourseStatus, CourseType
+from app.models.role import Role
+from app.models.user import User
 from app.repositories import courses as courses_repo
 from app.schemas.admin_course import AdminCourseList, AdminCourseRead
-from app.schemas.admin_course_manage import AdminCourseManageList, LiveSessionList
+from app.schemas.admin_course_manage import AdminCourseManageList, LiveSessionList, TeacherOption
 from app.schemas.common import error_responses
 from app.services import admin_course_manage as manage_service
 
@@ -74,6 +77,19 @@ async def manage_courses(
         sort=sort,
         page=page,
     )
+
+
+@router.get("/teachers", response_model=list[TeacherOption], responses=_ADMIN_ERRORS)
+async def course_teachers(admin: AdminUser, db: DbSession) -> list[TeacherOption]:
+    """Instructors selectable as a course owner (legacy admin create `teachers`)."""
+    rows = (
+        await db.execute(
+            select(User.id, User.full_name)
+            .where(User.role_name.in_([Role.TEACHER, Role.ORGANIZATION]))
+            .order_by(User.full_name)
+        )
+    ).all()
+    return [TeacherOption(id=r.id, full_name=r.full_name) for r in rows]
 
 
 @router.get("/live-sessions", response_model=LiveSessionList, responses=_ADMIN_ERRORS)

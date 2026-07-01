@@ -103,10 +103,15 @@ LEVEL_ACCESS: dict[str, set[str]] = {
 
 
 def require_level(level: str):
-    """Allow roles permitted at the given access level (legacy level-access)."""
+    """Allow roles permitted at the given access level (legacy level-access).
+
+    Admins are allowed at any level — the legacy admin panel shares the same
+    controllers and has full access to instructor/teacher features.
+    """
+    from app.models.role import Role
 
     async def checker(user: CurrentUser) -> User:
-        if user.role_name not in LEVEL_ACCESS.get(level, set()):
+        if user.role_name != Role.ADMIN and user.role_name not in LEVEL_ACCESS.get(level, set()):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
         return user
 

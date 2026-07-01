@@ -33,6 +33,10 @@ class CourseCreate(BaseModel):
     start_date: datetime | None = None
     capacity: int | None = None
 
+    # Admin-only: assign the course to a specific instructor (legacy admin
+    # WebinarController@store). Ignored for non-admin callers (teacher = self).
+    teacher_id: int | None = None
+
     price: float = 0
     organization_price: float | None = None
     points: int | None = None
@@ -73,6 +77,7 @@ class CourseUpdate(BaseModel):
     icon: str | None = None
     description: str | None = None
     category_id: int | None = None
+    teacher_id: int | None = None  # admin-only: reassign instructor
     duration: int | None = None
     start_date: datetime | None = None
     capacity: int | None = None

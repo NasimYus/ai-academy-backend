@@ -41,6 +41,13 @@ class AdminCourseManageList(BaseModel):
     courses: list[AdminCourseManageRow]
 
 
+class TeacherOption(BaseModel):
+    """Instructor picker option for admin course create (legacy `teachers` list)."""
+
+    id: int
+    full_name: str | None
+
+
 class LiveSessionRow(BaseModel):
     id: int
     course_title: str | None

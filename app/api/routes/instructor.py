@@ -8,6 +8,7 @@ from app.models.category import Category
 from app.models.content import Chapter
 from app.models.course import Course, CourseStatus, CourseType
 from app.models.quiz import Quiz, QuizStatus
+from app.models.role import Role
 from app.models.user import User
 from app.repositories import assignments as assignments_repo
 from app.repositories import bundles as bundles_repo
@@ -184,11 +185,16 @@ async def create_course(payload: CourseCreate, current_user: TeacherUser, db: Db
         )
 
     course_status = CourseStatus.pending if publishing else CourseStatus.is_draft
-    data = payload.model_dump(exclude={"rules", "draft"})
+    data = payload.model_dump(exclude={"rules", "draft", "teacher_id"})
+    # Admins may assign the course to any instructor (legacy admin create sets
+    # both teacher and creator to the chosen teacher). We keep creator_id = admin
+    # so the admin retains edit access across the wizard steps.
+    is_admin = current_user.role_name == Role.ADMIN
+    teacher_id = payload.teacher_id if (is_admin and payload.teacher_id) else current_user.id
     course = Course(
         **data,
         creator_id=current_user.id,
-        teacher_id=current_user.id,
+        teacher_id=teacher_id,
         status=course_status,
         slug=await courses_repo.unique_slug(db, payload.title),
     )
@@ -255,6 +261,9 @@ async def update_course(
     changes = payload.model_dump(exclude_unset=True)
     if "category_id" in changes:
         await _ensure_category(db, changes["category_id"])
+    # Admin-only: reassign the instructor.
+    if current_user.role_name == Role.ADMIN and changes.get("teacher_id"):
+        course.teacher_id = changes["teacher_id"]
     changes = {k: v for k, v in changes.items() if k in _EDITABLE}
     course = await courses_repo.update_course(db, course, changes)
     return to_detail(course)
