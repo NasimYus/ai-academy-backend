@@ -186,3 +186,33 @@ async def test_results_requires_teacher(client: AsyncClient):
     token, _ = await register_verified_user(client)
     r = await client.get("/api/v1/panel/quizzes/list", headers=_auth(token))
     assert r.status_code == 403
+
+
+async def test_create_quiz_with_new_fields_roundtrips(client: AsyncClient):
+    token, uid = await _teacher(client, email="quiz-fields@aiacademy.tj")
+    course_id = await _course(uid, slug="quiz-fields-course")
+    payload = _quiz_payload(
+        course_id,
+        title="Расширенный тест",
+        description="Описание теста",
+        time=120,
+        attempt=3,
+        expiry_days=30,
+        display_questions_randomly=True,
+        certificate=True,
+    )
+    r = await client.post("/api/v1/panel/quizzes", json=payload, headers=_auth(token))
+    assert r.status_code == 201
+    body = r.json()
+    assert body["description"] == "Описание теста"
+    assert body["expiry_days"] == 30
+    assert body["display_questions_randomly"] is True
+    assert body["time"] == 120
+    assert body["certificate"] is True
+
+    # the list dashboard echoes the quiz with question/student counts
+    listing = (await client.get("/api/v1/panel/quizzes/list", headers=_auth(token))).json()
+    row = next(q for q in listing["quizzes"] if q["id"] == body["id"])
+    assert row["question_count"] == 0
+    assert row["students_count"] == 0
+    assert row["expiry_days"] == 30
