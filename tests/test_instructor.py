@@ -151,6 +151,72 @@ async def test_chapter_crud(client: AsyncClient):
     assert [c["id"] for c in content.json()["chapters"]] == [ch2]
 
 
+async def test_content_item_crud(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    created = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    cid = created.json()["id"]
+    ch = await client.post(
+        f"/api/v1/panel/webinar/{cid}/chapters", json={"title": "Гл. 1"}, headers=_auth(token)
+    )
+    chid = ch.json()["id"]
+
+    # add a session + a text lesson
+    s = await client.post(
+        f"/api/v1/panel/chapters/{chid}/items/session",
+        json={"title": "Вводная сессия", "duration": 45, "link": "https://meet"},
+        headers=_auth(token),
+    )
+    assert s.status_code == 201
+    assert s.json()["type"] == "session" and s.json()["duration"] == 45
+    sid = s.json()["id"]
+
+    tl = await client.post(
+        f"/api/v1/panel/chapters/{chid}/items/text_lesson",
+        json={"title": "Теория", "content": "<p>hi</p>", "accessibility": "free"},
+        headers=_auth(token),
+    )
+    assert tl.status_code == 201
+
+    # content lists both items under the chapter
+    content = await client.get(f"/api/v1/panel/webinar/{cid}/content", headers=_auth(token))
+    chapter = content.json()["chapters"][0]
+    assert chapter["items_count"] == 2
+    titles = {i["title"] for i in chapter["items"]}
+    assert titles == {"Вводная сессия", "Теория"}
+
+    # update the session
+    up = await client.put(
+        f"/api/v1/panel/content/session/{sid}",
+        json={"title": "Обновлённая", "duration": 60},
+        headers=_auth(token),
+    )
+    assert up.json()["title"] == "Обновлённая" and up.json()["duration"] == 60
+
+    # delete it
+    dl = await client.delete(f"/api/v1/panel/content/session/{sid}", headers=_auth(token))
+    assert dl.status_code == 204
+    content = await client.get(f"/api/v1/panel/webinar/{cid}/content", headers=_auth(token))
+    assert content.json()["chapters"][0]["items_count"] == 1
+
+
+async def test_content_item_invalid_type(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    created = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    cid = created.json()["id"]
+    ch = await client.post(
+        f"/api/v1/panel/webinar/{cid}/chapters", json={"title": "c"}, headers=_auth(token)
+    )
+    r = await client.post(
+        f"/api/v1/panel/chapters/{ch.json()['id']}/items/bogus",
+        json={"title": "x"},
+        headers=_auth(token),
+    )
+    assert r.status_code == 422
+    assert r.json()["detail"] == "invalid_item_type"
+
+
 async def test_chapter_scoped_to_owner(client: AsyncClient):
     owner, _ = await _teacher(client, email="owner2@aiacademy.tj")
     cat = await _category()

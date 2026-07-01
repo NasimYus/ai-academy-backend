@@ -25,6 +25,8 @@ from app.schemas.content import (
     ChapterManage,
     ChapterReorder,
     ChapterUpdate,
+    ContentItemInput,
+    ContentItemManage,
     CourseContentManage,
 )
 from app.schemas.course import CourseDetail, CourseRead
@@ -293,10 +295,47 @@ async def _owned_chapter(db: DbSession, chapter_id: int, user_id: int) -> Chapte
 async def course_content(
     course_id: int, current_user: TeacherUser, db: DbSession
 ) -> CourseContentManage:
-    """Chapters (+ item/duration counts) for the content editor."""
+    """Chapters + their items (sessions/files/text lessons) for the content editor."""
     await _owned_course(db, course_id, current_user.id)
     chapters = await content_repo.chapters_for_course(db, course_id)
     counts = await content_repo.chapter_item_counts(db, course_id)
+
+    items_by_chapter: dict[int, list[ContentItemManage]] = {}
+    for session in await content_repo.sessions_for_course(db, course_id):
+        items_by_chapter.setdefault(session.chapter_id, []).append(
+            ContentItemManage(
+                id=session.id,
+                type="session",
+                title=session.title,
+                accessibility=session.accessibility,
+                order=session.order,
+                duration=session.duration,
+                session_date=session.session_date,
+            )
+        )
+    for f in await content_repo.files_for_course(db, course_id):
+        items_by_chapter.setdefault(f.chapter_id, []).append(
+            ContentItemManage(
+                id=f.id,
+                type="file",
+                title=f.title,
+                accessibility=f.accessibility,
+                order=f.order,
+                file=f.file,
+            )
+        )
+    for lesson in await content_repo.text_lessons_for_course(db, course_id):
+        items_by_chapter.setdefault(lesson.chapter_id, []).append(
+            ContentItemManage(
+                id=lesson.id,
+                type="text_lesson",
+                title=lesson.title,
+                accessibility=lesson.accessibility,
+                order=lesson.order,
+                duration=lesson.study_time,
+            )
+        )
+
     return CourseContentManage(
         course_id=course_id,
         chapters=[
@@ -306,6 +345,7 @@ async def course_content(
                 order=c.order,
                 items_count=counts.get(c.id, (0, 0))[0],
                 duration=counts.get(c.id, (0, 0))[1],
+                items=sorted(items_by_chapter.get(c.id, []), key=lambda i: i.order),
             )
             for c in chapters
         ],
@@ -359,6 +399,102 @@ async def reorder_chapters(
 ) -> None:
     await _owned_course(db, course_id, current_user.id)
     await content_repo.reorder_chapters(db, course_id, payload.ordered_ids)
+
+
+# --- Content: chapter items (sessions / files / text lessons) ---
+
+_ITEM_TYPES = {"session", "file", "text_lesson"}
+
+
+def _item_read(item, item_type: str) -> ContentItemManage:
+    return ContentItemManage(
+        id=item.id,
+        type=item_type,
+        title=item.title,
+        accessibility=item.accessibility,
+        order=item.order,
+        duration=getattr(item, "duration", None) or getattr(item, "study_time", None),
+        file=getattr(item, "file", None),
+        session_date=getattr(item, "session_date", None),
+    )
+
+
+def _validate_item_type(item_type: str) -> None:
+    if item_type not in _ITEM_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="invalid_item_type"
+        )
+
+
+@router.post(
+    "/chapters/{chapter_id}/items/{item_type}",
+    response_model=ContentItemManage,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def create_content_item(
+    chapter_id: int,
+    item_type: str,
+    payload: ContentItemInput,
+    current_user: TeacherUser,
+    db: DbSession,
+) -> ContentItemManage:
+    """Add a session/file/text-lesson to a chapter (legacy Session/File/TextLesson store)."""
+    _validate_item_type(item_type)
+    chapter = await _owned_chapter(db, chapter_id, current_user.id)
+    item = await content_repo.create_item(
+        db, item_type, chapter.course_id, chapter.id, payload.model_dump()
+    )
+    return _item_read(item, item_type)
+
+
+@router.put(
+    "/content/{item_type}/{item_id}",
+    response_model=ContentItemManage,
+    responses=error_responses(
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def update_content_item(
+    item_type: str,
+    item_id: int,
+    payload: ContentItemInput,
+    current_user: TeacherUser,
+    db: DbSession,
+) -> ContentItemManage:
+    _validate_item_type(item_type)
+    item = await content_repo.get_item(db, item_type, item_id)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    await _owned_course(db, item.course_id, current_user.id)
+    item = await content_repo.update_item(db, item, item_type, payload.model_dump())
+    return _item_read(item, item_type)
+
+
+@router.delete(
+    "/content/{item_type}/{item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def delete_content_item(
+    item_type: str, item_id: int, current_user: TeacherUser, db: DbSession
+) -> None:
+    _validate_item_type(item_type)
+    item = await content_repo.get_item(db, item_type, item_id)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    await _owned_course(db, item.course_id, current_user.id)
+    await content_repo.delete_item(db, item)
 
 
 # --- Quizzes (Phase 6.2, legacy Instructor\QuizzesController) ---

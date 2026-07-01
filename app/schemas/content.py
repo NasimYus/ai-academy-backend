@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.models.content import Accessibility
+
 
 class ChapterCreate(BaseModel):
     title: str = Field(min_length=1, max_length=255)
@@ -15,6 +17,19 @@ class ChapterReorder(BaseModel):
     ordered_ids: list[int]
 
 
+class ContentItemManage(BaseModel):
+    """A chapter item (session/file/text_lesson) in the content editor."""
+
+    id: int
+    type: str  # "session" | "file" | "text_lesson"
+    title: str
+    accessibility: Accessibility
+    order: int
+    duration: int | None = None  # session / study_time (minutes)
+    file: str | None = None
+    session_date: datetime | None = None
+
+
 class ChapterManage(BaseModel):
     """Instructor content-editor row (legacy chapter card)."""
 
@@ -23,11 +38,34 @@ class ChapterManage(BaseModel):
     order: int
     items_count: int = 0
     duration: int = 0  # minutes
+    items: list[ContentItemManage] = []
 
 
 class CourseContentManage(BaseModel):
     course_id: int
     chapters: list[ChapterManage] = []
+
+
+class ContentItemInput(BaseModel):
+    """Unified create/update payload; the endpoint keeps the fields relevant to
+    the item type (legacy Session/File/TextLesson controllers)."""
+
+    title: str = Field(min_length=1, max_length=255)
+    accessibility: Accessibility = Accessibility.paid
+    description: str | None = None
+    # session
+    session_date: datetime | None = None
+    duration: int | None = None
+    link: str | None = None
+    # file
+    file: str | None = None
+    volume: str | None = None
+    file_type: str | None = None
+    # text lesson
+    image: str | None = None
+    study_time: int | None = None
+    summary: str | None = None
+    content: str | None = None
 
 
 class ContentItem(BaseModel):

@@ -112,3 +112,48 @@ async def sessions_for_course(db: AsyncSession, course_id: int) -> list[CourseSe
         .order_by(CourseSession.order.asc())
     )
     return list(result.scalars().all())
+
+
+ITEM_MODELS = {"session": CourseSession, "file": File, "text_lesson": TextLesson}
+
+_ITEM_FIELDS = {
+    "session": ("title", "session_date", "duration", "link", "description", "accessibility"),
+    "file": ("title", "file", "volume", "file_type", "description", "accessibility"),
+    "text_lesson": ("title", "image", "study_time", "summary", "content", "accessibility"),
+}
+
+
+async def create_item(
+    db: AsyncSession, item_type: str, course_id: int, chapter_id: int, data: dict
+):
+    model = ITEM_MODELS[item_type]
+    fields = {k: data[k] for k in _ITEM_FIELDS[item_type] if k in data}
+    next_order = await db.scalar(
+        select(func.coalesce(func.max(model.order), -1) + 1).where(model.chapter_id == chapter_id)
+    )
+    obj = model(course_id=course_id, chapter_id=chapter_id, order=next_order or 0, **fields)
+    db.add(obj)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
+
+async def get_item(db: AsyncSession, item_type: str, item_id: int):
+    model = ITEM_MODELS.get(item_type)
+    if model is None:
+        return None
+    return await db.get(model, item_id)
+
+
+async def update_item(db: AsyncSession, obj, item_type: str, data: dict):
+    for key in _ITEM_FIELDS[item_type]:
+        if key in data:
+            setattr(obj, key, data[key])
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
+
+async def delete_item(db: AsyncSession, obj) -> None:
+    await db.delete(obj)
+    await db.commit()
