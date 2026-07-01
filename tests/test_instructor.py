@@ -151,6 +151,55 @@ async def test_chapter_crud(client: AsyncClient):
     assert [c["id"] for c in content.json()["chapters"]] == [ch2]
 
 
+async def test_prerequisites_and_related(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    a = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    b = await client.post(
+        "/api/v1/panel/webinar", json=_payload(cat, title="Base course"), headers=_auth(token)
+    )
+    course_id, base_id = a.json()["id"], b.json()["id"]
+
+    # add prerequisite
+    p = await client.post(
+        f"/api/v1/panel/webinar/{course_id}/prerequisites",
+        json={"prerequisite_id": base_id, "required": True},
+        headers=_auth(token),
+    )
+    assert p.status_code == 201
+    assert p.json()["title"] == "Base course" and p.json()["required"] is True
+    pid = p.json()["id"]
+
+    lst = await client.get(
+        f"/api/v1/panel/webinar/{course_id}/prerequisites", headers=_auth(token)
+    )
+    assert len(lst.json()) == 1
+
+    # add related
+    r = await client.post(
+        f"/api/v1/panel/webinar/{course_id}/related",
+        json={"related_id": base_id},
+        headers=_auth(token),
+    )
+    assert r.status_code == 201 and r.json()["title"] == "Base course"
+
+    # unknown course -> 422
+    bad = await client.post(
+        f"/api/v1/panel/webinar/{course_id}/related",
+        json={"related_id": 999999},
+        headers=_auth(token),
+    )
+    assert bad.status_code == 422
+
+    # delete prerequisite
+    dl = await client.delete(f"/api/v1/panel/prerequisites/{pid}", headers=_auth(token))
+    assert dl.status_code == 204
+    lst = await client.get(
+        f"/api/v1/panel/webinar/{course_id}/prerequisites", headers=_auth(token)
+    )
+    assert lst.json() == []
+
+
 async def test_submit_for_review(client: AsyncClient):
     token, _ = await _teacher(client)
     cat = await _category()

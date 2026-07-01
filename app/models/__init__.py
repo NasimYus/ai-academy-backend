@@ -29,6 +29,7 @@ from app.models.content import (
     TextLesson,
 )
 from app.models.course import Course, CourseStatus, CourseType, VideoDemoSource
+from app.models.course_relation import Prerequisite, RelatedCourse
 from app.models.currency import Currency
 from app.models.discount import (
     Discount,
@@ -105,6 +106,8 @@ __all__ = [
     "ThemeColorMode",
     "Role",
     "Course",
+    "Prerequisite",
+    "RelatedCourse",
     "CourseStatus",
     "CourseType",
     "VideoDemoSource",

@@ -13,6 +13,7 @@ from app.repositories import assignments as assignments_repo
 from app.repositories import bundles as bundles_repo
 from app.repositories import comments as comments_repo
 from app.repositories import content as content_repo
+from app.repositories import course_relations as relations_repo
 from app.repositories import courses as courses_repo
 from app.repositories import enrollments as enrollments_repo
 from app.repositories import meetings as meetings_repo
@@ -30,6 +31,12 @@ from app.schemas.content import (
     CourseContentManage,
 )
 from app.schemas.course import CourseDetail, CourseRead
+from app.schemas.course_relation import (
+    PrerequisiteInput,
+    PrerequisiteRead,
+    RelatedInput,
+    RelatedRead,
+)
 from app.schemas.instructor import (
     AssignmentDashboard,
     AssignmentHistoryRow,
@@ -535,6 +542,116 @@ async def delete_content_item(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     await _owned_course(db, item.course_id, current_user.id)
     await content_repo.delete_item(db, item)
+
+
+# --- Step 5: prerequisites + related courses (legacy Prerequisite/RelatedCourses) ---
+
+
+@router.get(
+    "/webinar/{course_id}/prerequisites",
+    response_model=list[PrerequisiteRead],
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def list_prerequisites(
+    course_id: int, current_user: TeacherUser, db: DbSession
+) -> list[PrerequisiteRead]:
+    await _owned_course(db, course_id, current_user.id)
+    rows = await relations_repo.list_prerequisites(db, course_id)
+    return [
+        PrerequisiteRead(
+            id=p.id, prerequisite_id=p.prerequisite_id, title=title, required=p.required
+        )
+        for p, title in rows
+    ]
+
+
+@router.post(
+    "/webinar/{course_id}/prerequisites",
+    response_model=PrerequisiteRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def add_prerequisite(
+    course_id: int, payload: PrerequisiteInput, current_user: TeacherUser, db: DbSession
+) -> PrerequisiteRead:
+    await _owned_course(db, course_id, current_user.id)
+    target = await db.get(Course, payload.prerequisite_id)
+    if target is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="course_not_found"
+        )
+    row = await relations_repo.add_prerequisite(
+        db, course_id, payload.prerequisite_id, payload.required
+    )
+    return PrerequisiteRead(
+        id=row.id, prerequisite_id=row.prerequisite_id, title=target.title, required=row.required
+    )
+
+
+@router.delete(
+    "/prerequisites/{row_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def delete_prerequisite(row_id: int, current_user: TeacherUser, db: DbSession) -> None:
+    row = await relations_repo.get_prerequisite(db, row_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    await _owned_course(db, row.course_id, current_user.id)
+    await relations_repo.delete_relation(db, row)
+
+
+@router.get(
+    "/webinar/{course_id}/related",
+    response_model=list[RelatedRead],
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def list_related(
+    course_id: int, current_user: TeacherUser, db: DbSession
+) -> list[RelatedRead]:
+    await _owned_course(db, course_id, current_user.id)
+    rows = await relations_repo.list_related(db, course_id)
+    return [RelatedRead(id=r.id, related_id=r.related_id, title=title) for r, title in rows]
+
+
+@router.post(
+    "/webinar/{course_id}/related",
+    response_model=RelatedRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+    ),
+)
+async def add_related(
+    course_id: int, payload: RelatedInput, current_user: TeacherUser, db: DbSession
+) -> RelatedRead:
+    await _owned_course(db, course_id, current_user.id)
+    target = await db.get(Course, payload.related_id)
+    if target is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="course_not_found"
+        )
+    row = await relations_repo.add_related(db, course_id, payload.related_id)
+    return RelatedRead(id=row.id, related_id=row.related_id, title=target.title)
+
+
+@router.delete(
+    "/related/{row_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def delete_related(row_id: int, current_user: TeacherUser, db: DbSession) -> None:
+    row = await relations_repo.get_related(db, row_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    await _owned_course(db, row.course_id, current_user.id)
+    await relations_repo.delete_relation(db, row)
 
 
 # --- Quizzes (Phase 6.2, legacy Instructor\QuizzesController) ---
