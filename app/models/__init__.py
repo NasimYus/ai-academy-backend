@@ -19,6 +19,12 @@ from app.models.cart import CartItem
 from app.models.category import Category, TrendCategory
 from app.models.certificate import Certificate
 from app.models.comment import Comment, CommentStatus
+from app.models.community_forum import (
+    ForumCategory,
+    ForumCategoryStatus,
+    ForumTopic,
+    ForumTopicPost,
+)
 from app.models.contact import Contact
 from app.models.content import (
     Accessibility,
@@ -115,6 +121,10 @@ __all__ = [
     "ExtraType",
     "CompanyLogo",
     "Ticket",
+    "ForumCategory",
+    "ForumCategoryStatus",
+    "ForumTopic",
+    "ForumTopicPost",
     "CourseStatus",
     "CourseType",
     "VideoDemoSource",

@@ -8,9 +8,11 @@ import asyncio
 
 from app.core.database import AsyncSessionLocal
 from app.models.category import Category
+from app.models.community_forum import ForumCategory
 from app.models.course import Course, CourseStatus, CourseType
 from app.models.role import Role
 from app.repositories import categories as categories_repo
+from app.repositories import community_forum as forum_repo
 from app.repositories import courses as courses_repo
 from app.repositories import users as users_repo
 
@@ -61,6 +63,28 @@ async def main() -> None:
                     )
                 )
                 print(f"created category: {title}")
+        await db.commit()
+
+        existing_forums = {
+            f.title for f, _ in await forum_repo.list_categories(db)
+        }
+        for order, (title, desc) in enumerate(
+            [
+                ("Общие вопросы", "Обсуждаем всё об обучении и платформе."),
+                ("Помощь по курсам", "Вопросы по материалам и заданиям."),
+                ("Карьера в AI", "Резюме, вакансии, развитие."),
+            ]
+        ):
+            if title not in existing_forums:
+                db.add(
+                    ForumCategory(
+                        title=title,
+                        description=desc,
+                        slug=await forum_repo.unique_category_slug(db, title),
+                        order=order,
+                    )
+                )
+                print(f"created forum category: {title}")
         await db.commit()
 
         samples = [

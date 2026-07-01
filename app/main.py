@@ -20,6 +20,7 @@ from app.api.routes import (
     categories,
     certificates,
     comments,
+    community_forum,
     contact,
     courses,
     currencies,
@@ -71,6 +72,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(courses.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
+app.include_router(community_forum.router, prefix="/api/v1")
 app.include_router(contact.router, prefix="/api/v1")
 app.include_router(currencies.router, prefix="/api/v1")
 app.include_router(featured.router, prefix="/api/v1")
