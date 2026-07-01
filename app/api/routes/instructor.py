@@ -13,6 +13,7 @@ from app.repositories import assignments as assignments_repo
 from app.repositories import bundles as bundles_repo
 from app.repositories import comments as comments_repo
 from app.repositories import content as content_repo
+from app.repositories import course_extras as extras_repo
 from app.repositories import course_relations as relations_repo
 from app.repositories import courses as courses_repo
 from app.repositories import enrollments as enrollments_repo
@@ -31,6 +32,14 @@ from app.schemas.content import (
     CourseContentManage,
 )
 from app.schemas.course import CourseDetail, CourseRead
+from app.schemas.course_extra import (
+    ExtraInput,
+    ExtraRead,
+    FaqInput,
+    FaqRead,
+    LogoInput,
+    LogoRead,
+)
 from app.schemas.course_relation import (
     PrerequisiteInput,
     PrerequisiteRead,
@@ -652,6 +661,127 @@ async def delete_related(row_id: int, current_user: TeacherUser, db: DbSession) 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     await _owned_course(db, row.course_id, current_user.id)
     await relations_repo.delete_relation(db, row)
+
+
+# --- Step 6: FAQ / learning materials / requirements / company logos ---
+
+
+@router.get(
+    "/webinar/{course_id}/faqs",
+    response_model=list[FaqRead],
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def list_faqs(course_id: int, current_user: TeacherUser, db: DbSession) -> list[FaqRead]:
+    await _owned_course(db, course_id, current_user.id)
+    return [
+        FaqRead(id=f.id, question=f.question, answer=f.answer, locale=f.locale)
+        for f in await extras_repo.list_faqs(db, course_id)
+    ]
+
+
+@router.post(
+    "/webinar/{course_id}/faqs",
+    response_model=FaqRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def add_faq(
+    course_id: int, payload: FaqInput, current_user: TeacherUser, db: DbSession
+) -> FaqRead:
+    await _owned_course(db, course_id, current_user.id)
+    f = await extras_repo.add_faq(db, course_id, payload.question, payload.answer, payload.locale)
+    return FaqRead(id=f.id, question=f.question, answer=f.answer, locale=f.locale)
+
+
+@router.delete(
+    "/faqs/{faq_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def delete_faq(faq_id: int, current_user: TeacherUser, db: DbSession) -> None:
+    f = await extras_repo.get_faq(db, faq_id)
+    if f is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    await _owned_course(db, f.course_id, current_user.id)
+    await extras_repo.delete_row(db, f)
+
+
+@router.get(
+    "/webinar/{course_id}/extras",
+    response_model=list[ExtraRead],
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def list_extras(course_id: int, current_user: TeacherUser, db: DbSession) -> list[ExtraRead]:
+    await _owned_course(db, course_id, current_user.id)
+    return [
+        ExtraRead(id=e.id, type=e.type, title=e.title, locale=e.locale)
+        for e in await extras_repo.list_extras(db, course_id)
+    ]
+
+
+@router.post(
+    "/webinar/{course_id}/extras",
+    response_model=ExtraRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def add_extra(
+    course_id: int, payload: ExtraInput, current_user: TeacherUser, db: DbSession
+) -> ExtraRead:
+    await _owned_course(db, course_id, current_user.id)
+    e = await extras_repo.add_extra(db, course_id, payload.type, payload.title, payload.locale)
+    return ExtraRead(id=e.id, type=e.type, title=e.title, locale=e.locale)
+
+
+@router.delete(
+    "/extras/{extra_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def delete_extra(extra_id: int, current_user: TeacherUser, db: DbSession) -> None:
+    e = await extras_repo.get_extra(db, extra_id)
+    if e is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    await _owned_course(db, e.course_id, current_user.id)
+    await extras_repo.delete_row(db, e)
+
+
+@router.get(
+    "/webinar/{course_id}/logos",
+    response_model=list[LogoRead],
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def list_logos(course_id: int, current_user: TeacherUser, db: DbSession) -> list[LogoRead]:
+    await _owned_course(db, course_id, current_user.id)
+    logos = await extras_repo.list_logos(db, course_id)
+    return [LogoRead(id=logo.id, image=logo.image) for logo in logos]
+
+
+@router.post(
+    "/webinar/{course_id}/logos",
+    response_model=LogoRead,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def add_logo(
+    course_id: int, payload: LogoInput, current_user: TeacherUser, db: DbSession
+) -> LogoRead:
+    await _owned_course(db, course_id, current_user.id)
+    logo = await extras_repo.add_logo(db, course_id, payload.image)
+    return LogoRead(id=logo.id, image=logo.image)
+
+
+@router.delete(
+    "/logos/{logo_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=error_responses(status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
+)
+async def delete_logo(logo_id: int, current_user: TeacherUser, db: DbSession) -> None:
+    logo = await extras_repo.get_logo(db, logo_id)
+    if logo is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    await _owned_course(db, logo.course_id, current_user.id)
+    await extras_repo.delete_row(db, logo)
 
 
 # --- Quizzes (Phase 6.2, legacy Instructor\QuizzesController) ---

@@ -151,6 +151,52 @@ async def test_chapter_crud(client: AsyncClient):
     assert [c["id"] for c in content.json()["chapters"]] == [ch2]
 
 
+async def test_step6_faq_extras_logos(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    created = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    cid = created.json()["id"]
+
+    # FAQ
+    fq = await client.post(
+        f"/api/v1/panel/webinar/{cid}/faqs",
+        json={"question": "Что нужно?", "answer": "Ноутбук"},
+        headers=_auth(token),
+    )
+    assert fq.status_code == 201 and fq.json()["question"] == "Что нужно?"
+    faq_id = fq.json()["id"]
+
+    # extras (learning + requirement)
+    e1 = await client.post(
+        f"/api/v1/panel/webinar/{cid}/extras",
+        json={"type": "learning", "title": "Основы Python"},
+        headers=_auth(token),
+    )
+    e2 = await client.post(
+        f"/api/v1/panel/webinar/{cid}/extras",
+        json={"type": "requirement", "title": "Базовая математика"},
+        headers=_auth(token),
+    )
+    assert e1.status_code == 201 and e2.json()["type"] == "requirement"
+
+    extras = await client.get(f"/api/v1/panel/webinar/{cid}/extras", headers=_auth(token))
+    assert {e["type"] for e in extras.json()} == {"learning", "requirement"}
+
+    # logo
+    lg = await client.post(
+        f"/api/v1/panel/webinar/{cid}/logos",
+        json={"image": "/media/logo.png"},
+        headers=_auth(token),
+    )
+    assert lg.status_code == 201 and lg.json()["image"] == "/media/logo.png"
+
+    # delete faq
+    dl = await client.delete(f"/api/v1/panel/faqs/{faq_id}", headers=_auth(token))
+    assert dl.status_code == 204
+    faqs = await client.get(f"/api/v1/panel/webinar/{cid}/faqs", headers=_auth(token))
+    assert faqs.json() == []
+
+
 async def test_prerequisites_and_related(client: AsyncClient):
     token, _ = await _teacher(client)
     cat = await _category()
