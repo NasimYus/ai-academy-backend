@@ -1,11 +1,13 @@
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
 
-from app.api.deps import CurrentUser, DbSession
+from app.api.deps import CurrentUser, DbSession, require_level
 from app.core.config import settings
 from app.models.quiz import ResultStatus
+from app.models.user import User
 from app.repositories import certificates as certificates_repo
 from app.repositories import courses as courses_repo
 from app.repositories import quizzes as quizzes_repo
@@ -13,12 +15,17 @@ from app.schemas.certificate import (
     Achievement,
     CertificateBrief,
     CertificateValidation,
+    InstructorCertificatesList,
+    InstructorCertificateSource,
+    IssuedCertificate,
     ValidatedCertificate,
 )
 from app.schemas.common import error_responses
 from app.services import certificates as certificates_service
 
 router = APIRouter(tags=["certificates"])
+
+TeacherUser = Annotated[User, Depends(require_level("teacher"))]
 
 
 def _brief(certificate) -> CertificateBrief:
@@ -57,6 +64,58 @@ async def achievements(current_user: CurrentUser, db: DbSession) -> list[Achieve
             )
         )
     return out
+
+
+@router.get(
+    "/panel/certificates/list",
+    response_model=InstructorCertificatesList,
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+)
+async def instructor_certificates_list(
+    current_user: TeacherUser, db: DbSession
+) -> InstructorCertificatesList:
+    """Instructor's certificate-issuing quizzes + issued counts (legacy list)."""
+    rows = await certificates_repo.instructor_sources(db, current_user.id)
+    sources = [
+        InstructorCertificateSource(
+            quiz_id=quiz_id,
+            quiz_title=quiz_title,
+            course_id=course_id,
+            course_title=course_title,
+            certificates_count=count,
+        )
+        for quiz_id, quiz_title, course_id, course_title, count in rows
+    ]
+    total = await certificates_repo.count_for_creator(db, current_user.id)
+    return InstructorCertificatesList(
+        certificates_count=total,
+        students_count=total,  # one certificate per student-quiz pass
+        sources=sources,
+    )
+
+
+@router.get(
+    "/panel/certificates/students",
+    response_model=list[IssuedCertificate],
+    responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+)
+async def instructor_certificate_students(
+    current_user: TeacherUser, db: DbSession
+) -> list[IssuedCertificate]:
+    """Students who earned certificates on the instructor's quizzes (all_students)."""
+    rows = await certificates_repo.instructor_certificates(db, current_user.id)
+    return [
+        IssuedCertificate(
+            id=cert.id,
+            student_name=student_name,
+            quiz_title=quiz_title,
+            course_title=course_title,
+            user_grade=cert.user_grade,
+            file=cert.file,
+            created_at=cert.created_at,
+        )
+        for cert, student_name, quiz_title, course_title in rows
+    ]
 
 
 @router.get(

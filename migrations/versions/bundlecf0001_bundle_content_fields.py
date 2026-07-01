@@ -1,7 +1,7 @@
 """bundle content fields (summary/description/seo/video/flags)
 
-Revision ID: b2c3d4e5f6a7
-Revises: a1b2c3d4e5f6
+Revision ID: bundlecf0001
+Revises: f1b2c3d4e5a6
 Create Date: 2026-07-01
 
 """
@@ -11,8 +11,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "b2c3d4e5f6a7"
-down_revision: str | None = "a1b2c3d4e5f6"
+revision: str = "bundlecf0001"
+down_revision: str | None = "f1b2c3d4e5a6"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

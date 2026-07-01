@@ -1,6 +1,7 @@
 from httpx import AsyncClient
 
 from app.core.database import AsyncSessionLocal
+from app.models.certificate import Certificate
 from app.models.course import Course, CourseStatus, CourseType
 from app.models.quiz import Quiz, QuizResult, QuizStatus, ResultStatus
 from app.models.role import Role
@@ -55,6 +56,74 @@ async def _seed_passed_result(quiz_id: int, user_id: int, grade: int = 10) -> in
 
 def _auth(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
+
+
+async def _promote_teacher(uid: int) -> None:
+    async with AsyncSessionLocal() as db:
+        user = await db.get(User, uid)
+        user.role_name = Role.TEACHER
+        user.role_id = 4
+        await db.commit()
+
+
+async def test_instructor_certificate_list_and_students(client: AsyncClient):
+    token, uid = await register_verified_user(client, email="certteacher@aiacademy.tj")
+    await _promote_teacher(uid)
+
+    # a certificate-quiz owned by this teacher + a passed result + issued certificate
+    async with AsyncSessionLocal() as db:
+        course = Course(
+            title="C", slug="c-cert", type=CourseType.course, status=CourseStatus.active, price=0
+        )
+        db.add(course)
+        await db.flush()
+        quiz = Quiz(
+            course_id=course.id,
+            creator_id=uid,
+            title="Exam",
+            time=0,
+            pass_mark=5,
+            certificate=True,
+            status=QuizStatus.active,
+            total_mark=10,
+        )
+        db.add(quiz)
+        await db.flush()
+        student = User(
+            full_name="Stud", email="s2@aiacademy.tj", password="x", role_id=1, role_name=Role.USER
+        )
+        db.add(student)
+        await db.flush()
+        result = QuizResult(
+            quiz_id=quiz.id, user_id=student.id, user_grade=9, status=ResultStatus.passed
+        )
+        db.add(result)
+        await db.flush()
+        db.add(
+            Certificate(
+                quiz_id=quiz.id, quiz_result_id=result.id, student_id=student.id, user_grade=9
+            )
+        )
+        await db.commit()
+
+    lst = await client.get("/api/v1/panel/certificates/list", headers=_auth(token))
+    assert lst.status_code == 200
+    body = lst.json()
+    assert body["certificates_count"] == 1
+    assert len(body["sources"]) == 1
+    assert body["sources"][0]["quiz_title"] == "Exam"
+    assert body["sources"][0]["certificates_count"] == 1
+
+    students = await client.get("/api/v1/panel/certificates/students", headers=_auth(token))
+    assert students.status_code == 200
+    assert students.json()[0]["student_name"] == "Stud"
+    assert students.json()[0]["user_grade"] == 9
+
+
+async def test_instructor_certificate_list_forbidden_for_student(client: AsyncClient):
+    token, _ = await register_verified_user(client, email="plainstudent@aiacademy.tj")
+    r = await client.get("/api/v1/panel/certificates/list", headers=_auth(token))
+    assert r.status_code == 403
 
 
 async def test_show_issues_and_renders_pdf(client: AsyncClient):

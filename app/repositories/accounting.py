@@ -15,14 +15,11 @@ from app.models.accounting import (
 async def charge_for_user(db: AsyncSession, user_id: int) -> float:
     """Wallet balance — legacy `getAccountingCharge`: asset additions minus
     deductions (system/tax excluded), floored at 0."""
-    base = (
-        select(func.coalesce(func.sum(Accounting.amount), 0))
-        .where(
-            Accounting.user_id == user_id,
-            Accounting.type_account == AccountingTypeAccount.asset,
-            Accounting.system.is_(False),
-            Accounting.tax.is_(False),
-        )
+    base = select(func.coalesce(func.sum(Accounting.amount), 0)).where(
+        Accounting.user_id == user_id,
+        Accounting.type_account == AccountingTypeAccount.asset,
+        Accounting.system.is_(False),
+        Accounting.tax.is_(False),
     )
     additions = await db.scalar(base.where(Accounting.type == AccountingType.addiction))
     deductions = await db.scalar(base.where(Accounting.type == AccountingType.deduction))
@@ -88,6 +85,53 @@ async def create_offline(
         status=OfflinePaymentStatus.waiting,
     )
     db.add(payment)
+    await db.commit()
+    await db.refresh(payment)
+    return payment
+
+
+async def list_offline_all(
+    db: AsyncSession, status_filter: OfflinePaymentStatus | None = None
+) -> list[tuple]:
+    """All offline payments (+ user name/email) for admin review."""
+    from app.models.user import User
+
+    query = (
+        select(OfflinePayment, User.full_name, User.email)
+        .join(User, User.id == OfflinePayment.user_id)
+        .order_by(OfflinePayment.created_at.desc())
+    )
+    if status_filter is not None:
+        query = query.where(OfflinePayment.status == status_filter)
+    result = await db.execute(query)
+    return list(result.all())
+
+
+async def get_offline(db: AsyncSession, payment_id: int) -> OfflinePayment | None:
+    return await db.get(OfflinePayment, payment_id)
+
+
+async def approve_offline(db: AsyncSession, payment: OfflinePayment) -> OfflinePayment:
+    """Approve a top-up: mark approved + credit the wallet via an asset addition."""
+    payment.status = OfflinePaymentStatus.approved
+    db.add(
+        Accounting(
+            user_id=payment.user_id,
+            amount=payment.amount,
+            type=AccountingType.addiction,
+            type_account=AccountingTypeAccount.asset,
+            system=False,
+            tax=False,
+            description="Пополнение счёта (офлайн-платёж)",
+        )
+    )
+    await db.commit()
+    await db.refresh(payment)
+    return payment
+
+
+async def reject_offline(db: AsyncSession, payment: OfflinePayment) -> OfflinePayment:
+    payment.status = OfflinePaymentStatus.reject
     await db.commit()
     await db.refresh(payment)
     return payment

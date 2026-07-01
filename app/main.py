@@ -6,9 +6,11 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import (
     admin_bundles,
+    admin_categories,
     admin_courses,
     admin_dashboard,
     admin_marketing,
+    admin_offline_payments,
     admin_payments,
     admin_reviews,
     admin_users,
@@ -21,6 +23,7 @@ from app.api.routes import (
     categories,
     certificates,
     comments,
+    community_forum,
     contact,
     courses,
     currencies,
@@ -72,6 +75,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(courses.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
+app.include_router(community_forum.router, prefix="/api/v1")
 app.include_router(contact.router, prefix="/api/v1")
 app.include_router(currencies.router, prefix="/api/v1")
 app.include_router(featured.router, prefix="/api/v1")
@@ -114,6 +118,8 @@ app.include_router(admin_bundles.router, prefix="/api/v1")
 app.include_router(admin_courses.router, prefix="/api/v1")
 app.include_router(admin_dashboard.router, prefix="/api/v1")
 app.include_router(admin_marketing.router, prefix="/api/v1")
+app.include_router(admin_categories.router, prefix="/api/v1")
+app.include_router(admin_offline_payments.router, prefix="/api/v1")
 app.include_router(admin_users.router, prefix="/api/v1")
 app.include_router(admin_reviews.router, prefix="/api/v1")
 

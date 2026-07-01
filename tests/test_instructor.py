@@ -151,6 +151,38 @@ async def test_chapter_crud(client: AsyncClient):
     assert [c["id"] for c in content.json()["chapters"]] == [ch2]
 
 
+async def test_tickets_crud(client: AsyncClient):
+    token, _ = await _teacher(client)
+    cat = await _category()
+    created = await client.post("/api/v1/panel/webinar", json=_payload(cat), headers=_auth(token))
+    cid = created.json()["id"]
+
+    t = await client.post(
+        f"/api/v1/panel/webinar/{cid}/tickets",
+        json={"title": "Ранняя пташка", "discount": 20, "capacity": 50},
+        headers=_auth(token),
+    )
+    assert t.status_code == 201
+    assert t.json()["title"] == "Ранняя пташка" and t.json()["discount"] == 20
+    tid = t.json()["id"]
+
+    lst = await client.get(f"/api/v1/panel/webinar/{cid}/tickets", headers=_auth(token))
+    assert len(lst.json()) == 1
+
+    # discount out of range -> 422
+    bad = await client.post(
+        f"/api/v1/panel/webinar/{cid}/tickets",
+        json={"title": "x", "discount": 150},
+        headers=_auth(token),
+    )
+    assert bad.status_code == 422
+
+    dl = await client.delete(f"/api/v1/panel/tickets/{tid}", headers=_auth(token))
+    assert dl.status_code == 204
+    lst = await client.get(f"/api/v1/panel/webinar/{cid}/tickets", headers=_auth(token))
+    assert lst.json() == []
+
+
 async def test_step6_faq_extras_logos(client: AsyncClient):
     token, _ = await _teacher(client)
     cat = await _category()

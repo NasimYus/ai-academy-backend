@@ -19,6 +19,12 @@ from app.models.cart import CartItem
 from app.models.category import Category, TrendCategory
 from app.models.certificate import Certificate
 from app.models.comment import Comment, CommentStatus
+from app.models.community_forum import (
+    ForumCategory,
+    ForumCategoryStatus,
+    ForumTopic,
+    ForumTopicPost,
+)
 from app.models.contact import Contact
 from app.models.content import (
     Accessibility,
@@ -96,6 +102,7 @@ from app.models.support import (
     SupportDepartment,
     SupportStatus,
 )
+from app.models.ticket import Ticket
 from app.models.translation import CategoryTranslation, CourseTranslation
 from app.models.user import MeetingType, ThemeColorMode, User, UserStatus
 from app.models.verification import Verification
@@ -113,6 +120,11 @@ __all__ = [
     "CourseExtra",
     "ExtraType",
     "CompanyLogo",
+    "Ticket",
+    "ForumCategory",
+    "ForumCategoryStatus",
+    "ForumTopic",
+    "ForumTopicPost",
     "CourseStatus",
     "CourseType",
     "VideoDemoSource",
