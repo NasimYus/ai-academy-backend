@@ -47,6 +47,7 @@ class Quiz(Base):
     )
     creator_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
     time: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     # null attempt == unlimited tries (legacy `isset($this->attempt)`)
     attempt: Mapped[int | None] = mapped_column(Integer)

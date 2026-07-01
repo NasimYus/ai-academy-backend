@@ -95,9 +95,12 @@ class QuizCreate(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     course_id: int  # legacy webinar_id; required here (our quizzes belong to a course)
     chapter_id: int | None = None
+    description: str | None = None
     pass_mark: int = Field(ge=0)
     attempt: int | None = Field(default=None, ge=1)
     time: int | None = Field(default=None, ge=0)
+    expiry_days: int | None = Field(default=None, ge=0)
+    display_questions_randomly: bool = False
     active: bool = False
     certificate: bool = False
 
@@ -111,9 +114,15 @@ class QuizManageRead(BaseModel):
     title: str
     course_id: int
     chapter_id: int | None
+    description: str | None = None
     pass_mark: int
     attempt: int | None
     time: int
+    expiry_days: int | None = None
+    display_questions_randomly: bool = False
+    total_mark: int = 0
+    question_count: int = 0
+    students_count: int = 0
     status: QuizStatus
     certificate: bool
     created_at: datetime

@@ -261,15 +261,21 @@ async def course_statistics(
 # --- Quizzes (Phase 6.2, legacy Instructor\QuizzesController) ---
 
 
-def _quiz_read(quiz: Quiz) -> QuizManageRead:
+def _quiz_read(quiz: Quiz, *, question_count: int = 0, students_count: int = 0) -> QuizManageRead:
     return QuizManageRead(
         id=quiz.id,
         title=quiz.title,
         course_id=quiz.course_id,
         chapter_id=quiz.chapter_id,
+        description=quiz.description,
         pass_mark=quiz.pass_mark,
         attempt=quiz.attempt,
         time=quiz.time,
+        expiry_days=quiz.expiry_days,
+        display_questions_randomly=quiz.display_questions_randomly,
+        total_mark=quiz.total_mark or 0,
+        question_count=question_count,
+        students_count=students_count,
         status=quiz.status,
         certificate=quiz.certificate,
         created_at=quiz.created_at,
@@ -305,13 +311,26 @@ async def quiz_results(current_user: TeacherUser, db: DbSession) -> QuizResultsO
     waiting = sum(1 for r in results if r.status.value == "waiting")
     graded = [r.user_grade for r in results if r.user_grade is not None]
     avg = round(sum(graded) / len(graded), 2) if graded else 0.0
+    # per-quiz question counts + distinct students who attempted
+    question_counts = await quizzes_repo.question_counts(db, [q.id for q in quizzes])
+    students_by_quiz: dict[int, set[int]] = {}
+    for r in results:
+        if r.user_id is not None:
+            students_by_quiz.setdefault(r.quiz_id, set()).add(r.user_id)
     return QuizResultsOverview(
         quiz_results_count=total,
         passed_count=passed,
         waiting_count=waiting,
         success_rate=round(passed / total * 100) if total else 0,
         avg_grade=avg,
-        quizzes=[_quiz_read(q) for q in quizzes],
+        quizzes=[
+            _quiz_read(
+                q,
+                question_count=question_counts.get(q.id, 0),
+                students_count=len(students_by_quiz.get(q.id, ())),
+            )
+            for q in quizzes
+        ],
         results=[
             QuizResultRow(
                 id=r.id,
@@ -345,9 +364,12 @@ async def create_quiz(
         course_id=course_id,
         chapter_id=chapter_id,
         creator_id=current_user.id,
+        description=payload.description,
         pass_mark=payload.pass_mark,
         attempt=payload.attempt,
         time=payload.time or 0,
+        expiry_days=payload.expiry_days,
+        display_questions_randomly=payload.display_questions_randomly,
         certificate=payload.certificate,
         status=QuizStatus.active if payload.active else QuizStatus.inactive,
     )
@@ -377,9 +399,12 @@ async def update_quiz(
             "title": payload.title,
             "course_id": course_id,
             "chapter_id": chapter_id,
+            "description": payload.description,
             "pass_mark": payload.pass_mark,
             "attempt": payload.attempt,
             "time": payload.time or 0,
+            "expiry_days": payload.expiry_days,
+            "display_questions_randomly": payload.display_questions_randomly,
             "certificate": payload.certificate,
             "status": QuizStatus.active if payload.active else QuizStatus.inactive,
         },
