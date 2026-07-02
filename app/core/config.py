@@ -1,6 +1,9 @@
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_INSECURE_SECRET = "change-me-in-production"
 
 
 class Settings(BaseSettings):
@@ -12,9 +15,21 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://aiacademy:aiacademy@localhost:5432/aiacademy"
 
-    secret_key: str = "change-me-in-production"
+    secret_key: str = _INSECURE_SECRET
     access_token_expire_minutes: int = 60
     algorithm: str = "HS256"
+
+    @model_validator(mode="after")
+    def _enforce_prod_secrets(self) -> "Settings":
+        # Fail-closed in production: never run with debug on or the default JWT
+        # secret. Debug leaks reset tokens/codes; the default key lets anyone
+        # forge JWTs. Both are fine only for local dev (debug=True).
+        if not self.debug:
+            if self.secret_key == _INSECURE_SECRET or len(self.secret_key) < 32:
+                raise ValueError(
+                    "SECRET_KEY must be set to a strong value (>=32 chars) in production"
+                )
+        return self
 
     # --- registration (legacy "general settings" parity) ---
     # Which identifier registration uses: "email" or "mobile".
