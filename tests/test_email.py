@@ -11,7 +11,7 @@ async def test_registration_sends_verification_email(client: AsyncClient):
     email = "mailer1@aiacademy.tj"
     r = await client.post(
         "/api/v1/auth/register/step/1",
-        json={"email": email, "password": "secret12345", "password_confirmation": "secret12345"},
+        json={"email": email, "password": "Secret123!", "password_confirmation": "Secret123!"},
     )
     assert r.status_code == 200
     sent = [m for m in outbox.messages if m.to == email]
@@ -26,7 +26,7 @@ async def test_forgot_password_sends_reset_email(client: AsyncClient):
     # register + verify so the account exists
     r = await client.post(
         "/api/v1/auth/register/step/1",
-        json={"email": email, "password": "secret12345", "password_confirmation": "secret12345"},
+        json={"email": email, "password": "Secret123!", "password_confirmation": "Secret123!"},
     )
     body = r.json()
     await client.post(

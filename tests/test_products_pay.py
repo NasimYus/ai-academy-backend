@@ -93,7 +93,7 @@ async def test_buy_virtual_product_success_and_sale(client: AsyncClient):
     # product Sale recorded for the seller
     seller_login = await client.post(
         "/api/v1/auth/login",
-        json={"username": "pseller@aiacademy.tj", "password": "secret12345"},
+        json={"username": "pseller@aiacademy.tj", "password": "Secret123!"},
     )
     seller_token = seller_login.json()["access_token"]
     sales = (await client.get("/api/v1/panel/sales", headers=_auth(seller_token))).json()

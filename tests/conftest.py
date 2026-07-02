@@ -115,7 +115,7 @@ async def client():
 
 
 async def register_verified_user(
-    client: AsyncClient, email: str = "user@aiacademy.tj", password: str = "secret12345"
+    client: AsyncClient, email: str = "user@aiacademy.tj", password: str = "Secret123!"
 ) -> tuple[str, int]:
     """Run the 3-step registration and return (access_token, user_id)."""
     r = await client.post(

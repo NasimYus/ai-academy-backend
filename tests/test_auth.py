@@ -8,8 +8,8 @@ async def test_register_three_steps_then_login_and_me(client: AsyncClient):
         "/api/v1/auth/register/step/1",
         json={
             "email": "a@aiacademy.tj",
-            "password": "secret12345",
-            "password_confirmation": "secret12345",
+            "password": "Secret123!",
+            "password_confirmation": "Secret123!",
         },
     )
     assert r.status_code == 200
@@ -30,7 +30,7 @@ async def test_register_three_steps_then_login_and_me(client: AsyncClient):
     token = r.json()["access_token"]
 
     r = await client.post(
-        "/api/v1/auth/login", json={"username": "a@aiacademy.tj", "password": "secret12345"}
+        "/api/v1/auth/login", json={"username": "a@aiacademy.tj", "password": "Secret123!"}
     )
     assert r.status_code == 200
     assert r.json()["profile_completion"] == []
@@ -41,13 +41,27 @@ async def test_register_three_steps_then_login_and_me(client: AsyncClient):
     assert r.json()["role_name"] == "user"
 
 
+async def test_register_rejects_weak_password(client: AsyncClient):
+    # no special char / too short / common — all must 422
+    for weak in ["secret12345", "short1!", "admin12345", "onlyletters!"]:
+        r = await client.post(
+            "/api/v1/auth/register/step/1",
+            json={
+                "email": "weak@aiacademy.tj",
+                "password": weak,
+                "password_confirmation": weak,
+            },
+        )
+        assert r.status_code == 422, f"{weak!r} should be rejected"
+
+
 async def test_register_step2_rejects_wrong_code(client: AsyncClient):
     r = await client.post(
         "/api/v1/auth/register/step/1",
         json={
             "email": "b@aiacademy.tj",
-            "password": "secret12345",
-            "password_confirmation": "secret12345",
+            "password": "Secret123!",
+            "password_confirmation": "Secret123!",
         },
     )
     uid = r.json()["user_id"]
@@ -69,12 +83,12 @@ async def test_login_pending_account_is_not_verified(client: AsyncClient):
         "/api/v1/auth/register/step/1",
         json={
             "email": "d@aiacademy.tj",
-            "password": "secret12345",
-            "password_confirmation": "secret12345",
+            "password": "Secret123!",
+            "password_confirmation": "Secret123!",
         },
     )
     r = await client.post(
-        "/api/v1/auth/login", json={"username": "d@aiacademy.tj", "password": "secret12345"}
+        "/api/v1/auth/login", json={"username": "d@aiacademy.tj", "password": "Secret123!"}
     )
     assert r.status_code == 403
     assert r.json()["detail"] == "not_verified"
@@ -98,14 +112,14 @@ async def test_forgot_then_reset_password(client: AsyncClient):
         f"/api/v1/auth/reset-password/{token}",
         json={
             "email": "f@aiacademy.tj",
-            "password": "newpass123",
-            "password_confirmation": "newpass123",
+            "password": "Newpass123!",
+            "password_confirmation": "Newpass123!",
         },
     )
     assert r.json()["status"] == "reset"
 
     r = await client.post(
-        "/api/v1/auth/login", json={"username": "f@aiacademy.tj", "password": "newpass123"}
+        "/api/v1/auth/login", json={"username": "f@aiacademy.tj", "password": "Newpass123!"}
     )
     assert r.status_code == 200
 
@@ -116,8 +130,8 @@ async def test_reset_password_unknown_token_is_benign(client: AsyncClient):
         "/api/v1/auth/reset-password/NOPE",
         json={
             "email": "g@aiacademy.tj",
-            "password": "newpass123",
-            "password_confirmation": "newpass123",
+            "password": "Newpass123!",
+            "password_confirmation": "Newpass123!",
         },
     )
     assert r.status_code == 200

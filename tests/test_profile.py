@@ -30,7 +30,7 @@ async def test_change_password(client: AsyncClient):
     r = await client.put(
         "/api/v1/panel/profile-setting/password",
         headers=headers,
-        json={"current_password": "secret12345", "new_password": "brandnew123"},
+        json={"current_password": "Secret123!", "new_password": "Brandnew123!"},
     )
     assert r.status_code == 200
     assert r.json()["token"]
@@ -38,7 +38,7 @@ async def test_change_password(client: AsyncClient):
     r = await client.put(
         "/api/v1/panel/profile-setting/password",
         headers=headers,
-        json={"current_password": "WRONG", "new_password": "another123"},
+        json={"current_password": "WRONG", "new_password": "Another123!"},
     )
     assert r.status_code == 403
 

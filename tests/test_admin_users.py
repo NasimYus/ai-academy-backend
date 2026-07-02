@@ -55,7 +55,7 @@ async def test_ban_and_unban_blocks_login(client: AsyncClient):
     # login now blocked
     login = await client.post(
         "/api/v1/auth/login",
-        json={"username": "victim@aiacademy.tj", "password": "secret12345"},
+        json={"username": "victim@aiacademy.tj", "password": "Secret123!"},
     )
     assert login.status_code == 403
     assert login.json()["detail"] == "banned_account"
@@ -67,7 +67,7 @@ async def test_ban_and_unban_blocks_login(client: AsyncClient):
     assert unbanned.json()["ban"] is False
     login2 = await client.post(
         "/api/v1/auth/login",
-        json={"username": "victim@aiacademy.tj", "password": "secret12345"},
+        json={"username": "victim@aiacademy.tj", "password": "Secret123!"},
     )
     assert login2.status_code == 200
 

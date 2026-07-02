@@ -124,7 +124,7 @@ async def test_pay_bundle_records_bundle_sale(client: AsyncClient):
     # seller logs in to view sales
     seller_login = await client.post(
         "/api/v1/auth/login",
-        json={"username": "bseller2@aiacademy.tj", "password": "secret12345"},
+        json={"username": "bseller2@aiacademy.tj", "password": "Secret123!"},
     )
     seller_token = seller_login.json()["access_token"]
     sales = (await client.get("/api/v1/panel/sales", headers=_auth(seller_token))).json()

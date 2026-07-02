@@ -104,7 +104,7 @@ async def test_gift_paid_enrols_existing_recipient_and_records_sale(client: Asyn
     # gift Sale recorded for the seller
     seller_login = await client.post(
         "/api/v1/auth/login",
-        json={"username": "giftseller@aiacademy.tj", "password": "secret12345"},
+        json={"username": "giftseller@aiacademy.tj", "password": "Secret123!"},
     )
     sales = (
         await client.get("/api/v1/panel/sales", headers=_auth(seller_login.json()["access_token"]))

@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.user import MeetingType, ThemeColorMode, UserStatus
+from app.schemas.validators import StrongPassword
 
 
 class ProfileRead(BaseModel):
@@ -52,7 +53,7 @@ class ProfileUpdate(BaseModel):
     newsletter: bool | None = None
     public_message: bool | None = None
     timezone: str | None = None
-    password: str | None = Field(default=None, min_length=6)
+    password: StrongPassword | None = None
     about: str | None = None
     bio: str | None = Field(default=None, min_length=3, max_length=48)
     address: str | None = None
@@ -71,7 +72,7 @@ class ProfileUpdate(BaseModel):
 
 class PasswordUpdate(BaseModel):
     current_password: str
-    new_password: str = Field(min_length=6)
+    new_password: StrongPassword
 
 
 class PasswordUpdateResult(BaseModel):

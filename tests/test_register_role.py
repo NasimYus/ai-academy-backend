@@ -6,7 +6,7 @@ def _auth(token: str) -> dict:
 
 
 async def _register(client: AsyncClient, email: str, account_type: str | None) -> str:
-    body = {"email": email, "password": "secret12345", "password_confirmation": "secret12345"}
+    body = {"email": email, "password": "Secret123!", "password_confirmation": "Secret123!"}
     if account_type is not None:
         body["account_type"] = account_type
     r = await client.post("/api/v1/auth/register/step/1", json=body)
