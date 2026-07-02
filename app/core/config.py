@@ -67,6 +67,9 @@ class Settings(BaseSettings):
 
     # Comma-separated in env; use `cors_origins` (the parsed list) in code.
     cors_origins_raw: str = "http://localhost:3000,http://localhost:5173"
+    # Regex for local dev origins (any localhost/127.0.0.1 port). Prod domains
+    # go in `cors_origins_raw`. Matches http(s)://localhost|127.0.0.1[:port].
+    cors_origin_regex: str = r"https?://(localhost|127\.0\.0\.1)(:\d+)?"
 
     @property
     def cors_origins(self) -> list[str]:
