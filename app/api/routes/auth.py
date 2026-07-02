@@ -2,10 +2,11 @@ import secrets
 import string
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.deps import CurrentUser, DbSession
 from app.core.config import settings
+from app.core.rate_limit import rate_limit
 from app.core.security import create_token, hash_password, verify_password
 from app.models.reward import RewardType
 from app.models.role import Role
@@ -48,6 +49,7 @@ def _random_password(length: int = 6) -> str:
     "/register/step/1",
     response_model=RegisterStep1Response,
     responses=error_responses(status.HTTP_409_CONFLICT, status.HTTP_422_UNPROCESSABLE_CONTENT),
+    dependencies=[Depends(rate_limit(10))],
 )
 async def register_step_one(payload: RegisterStep1, db: DbSession) -> RegisterStep1Response:
     # Determine the identifier type from what was sent.
@@ -174,7 +176,8 @@ async def verification(payload: VerificationConfirm, db: DbSession) -> Verificat
 @router.post(
     "/forget-password",
     response_model=ForgotPasswordResult,
-    responses=error_responses(status.HTTP_404_NOT_FOUND, status.HTTP_422_UNPROCESSABLE_CONTENT),
+    responses=error_responses(status.HTTP_422_UNPROCESSABLE_CONTENT),
+    dependencies=[Depends(rate_limit(5))],
 )
 async def forget_password(payload: ForgotPasswordRequest, db: DbSession) -> ForgotPasswordResult:
     if payload.type == "mobile":
@@ -185,10 +188,11 @@ async def forget_password(payload: ForgotPasswordRequest, db: DbSession) -> Forg
             )
         mobile = payload.country_code.lstrip("+") + payload.mobile.lstrip("0")
         user = await users_repo.get_by_mobile(db, mobile)
+        # Do not reveal whether the account exists (anti-enumeration).
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="mobile not found")
+            return ForgotPasswordResult(status="done")
         # Legacy generates a new password and SMSes it. SMS delivery is deferred (F.3).
-        new_password = _random_password(6)
+        new_password = _random_password(12)
         user.password = hash_password(new_password)
         await db.commit()
         return ForgotPasswordResult(
@@ -201,8 +205,10 @@ async def forget_password(payload: ForgotPasswordRequest, db: DbSession) -> Forg
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="email is required"
         )
     user = await users_repo.get_by_email(db, payload.email)
+    # Do not reveal whether the account exists (anti-enumeration): return the
+    # same `done` response either way, only sending the email when it exists.
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="email not found")
+        return ForgotPasswordResult(status="done")
 
     token = secrets.token_urlsafe(45)  # ~60 chars, like legacy Str::random(60)
     await password_resets_repo.create(db, email=payload.email, token=token)
@@ -293,6 +299,7 @@ async def facebook_callback(payload: OAuthCallback, db: DbSession) -> OAuthResul
     "/login",
     response_model=LoginResponse,
     responses=error_responses(status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+    dependencies=[Depends(rate_limit(10))],
 )
 async def login(payload: LoginRequest, db: DbSession) -> LoginResponse:
     field = verification_svc.detect_field(payload.username)

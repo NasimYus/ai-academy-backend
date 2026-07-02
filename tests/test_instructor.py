@@ -95,6 +95,18 @@ async def test_upload_course_media(client: AsyncClient):
     assert r.json()["path"].startswith("/media/courses/")
 
 
+async def test_upload_rejects_dangerous_file_type(client: AsyncClient):
+    token, _ = await _teacher(client)
+    r = await client.post(
+        "/api/v1/panel/webinar/media",
+        files={"file": ("evil.php", b"<?php echo 1; ?>", "application/x-php")},
+        data={"kind": "thumbnail"},
+        headers=_auth(token),
+    )
+    assert r.status_code == 422
+    assert r.json()["detail"] == "file_type_not_allowed"
+
+
 async def test_upload_course_media_invalid_kind(client: AsyncClient):
     token, _ = await _teacher(client)
     r = await client.post(

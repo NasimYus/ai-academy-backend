@@ -45,11 +45,12 @@ async def test_forgot_password_sends_reset_email(client: AsyncClient):
 
 
 async def test_no_email_for_unknown_recipient(client: AsyncClient):
-    # forget-password for a non-existent email -> 404, no email sent
+    # Anti-enumeration: unknown email -> same 200 "done", but no email sent.
     r = await client.post(
         "/api/v1/auth/forget-password", json={"type": "email", "email": "nobody@aiacademy.tj"}
     )
-    assert r.status_code == 404
+    assert r.status_code == 200
+    assert r.json()["status"] == "done"
     assert outbox.messages == []
 
 
